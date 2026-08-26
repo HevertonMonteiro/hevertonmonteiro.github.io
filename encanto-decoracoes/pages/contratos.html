@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#1AA894">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Encanto Decorações">
+<meta property="og:title" content="Encanto Decorações">
+<meta property="og:description" content="Sistema de gestão de eventos e decoração.">
+<meta property="og:image" content="https://encanto-decoracoes.vercel.app/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://encanto-decoracoes.vercel.app/assets/og-image.png">
+<title>Contratos · Encanto Decorações</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/app-shell.css">
+<link rel="stylesheet" href="../css/clientes.css">
+<link rel="stylesheet" href="../css/contratos.css">
+<link rel="stylesheet" href="../css/demo.css">
+</head>
+<body>
+
+<div class="app-shell">
+  <div id="sidebar-mount"></div>
+
+  <div>
+    <div id="topbar-mount"></div>
+
+    <main class="app-main">
+      <div class="page-header">
+        <div>
+          <h1>Contratos</h1>
+          <p>Modelo padrão usado para gerar o contrato de cada evento.</p>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab-btn" data-tab="modelo">Modelo padrão</button>
+        <button class="tab-btn is-active" data-tab="gerados">Contratos gerados</button>
+      </div>
+
+      <div class="tab-panel" id="tab-modelo">
+        <div class="card modelo-editor">
+          <h3 class="card-title">O que é gerado automaticamente</h3>
+          <p class="field-hint" style="margin-bottom:var(--sp-4)">
+            O cabeçalho (logo e dados da empresa), a tabela de <strong>Contratante</strong>
+            e a tabela de <strong>Descrição</strong> do evento são montados automaticamente
+            a partir dos cadastros de Cliente, Evento e Configurações. Não precisam
+            ser escritos aqui. O texto abaixo é só a parte que você mesmo redige:
+            as cláusulas/termos de pagamento.
+          </p>
+
+          <h3 class="card-title">Placeholders disponíveis neste texto</h3>
+          <div class="placeholders-list">
+            <span class="placeholder-chip">{{FORMA_PAGAMENTO}}</span>
+            <span class="placeholder-chip">{{NOME}}</span>
+            <span class="placeholder-chip">{{VALOR}}</span>
+            <span class="placeholder-chip">{{DATA}}</span>
+            <span class="placeholder-chip">{{EMPRESA_NOME}}</span>
+          </div>
+
+          <div class="field">
+            <label for="m-conteudo">Cláusulas / termos de pagamento</label>
+            <textarea class="textarea" id="m-conteudo"></textarea>
+          </div>
+
+          <button class="btn btn-primary" id="btn-salvar-modelo">Salvar modelo</button>
+        </div>
+      </div>
+
+      <div class="tab-panel is-active" id="tab-gerados">
+        <div class="clientes-table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Cliente</th><th>Evento</th><th>Data do evento</th><th>Gerado em</th><th></th></tr></thead>
+            <tbody id="contratos-tbody">
+              <tr><td colspan="5"><div class="skeleton" style="height:20px;width:100%"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="empty-state" style="display:none">
+          <h3>Nenhum contrato gerado ainda</h3>
+          <p>Gere o primeiro contrato a partir da página de um evento.</p>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script type="module">
+  import { protegerRota } from '../js/modules/route-guard.js';
+  import { renderSidebar } from '../components/sidebar.js';
+  import { renderTopbar } from '../components/topbar.js';
+  import { showToast } from '../js/lib/toast.js';
+  import { escapeHtml } from '../js/lib/sanitize.js';
+  import { buscarModelo, salvarModelo, listarContratos, urlContrato } from '../js/modules/contratos.js';
+  import { SITE_URL } from '../js/lib/config.js';
+
+  await protegerRota();
+  renderSidebar('contratos');
+  renderTopbar();
+
+  // ---------- Abas ----------
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('is-active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('is-active'));
+      btn.classList.add('is-active');
+      document.getElementById(`tab-${btn.dataset.tab}`).classList.add('is-active');
+      if (btn.dataset.tab === 'gerados') carregarGerados();
+    });
+  });
+
+  // ---------- Modelo ----------
+  async function carregarModelo() {
+    const { data } = await buscarModelo();
+    document.getElementById('m-conteudo').value = data?.conteudo || '';
+  }
+
+  document.getElementById('btn-salvar-modelo').addEventListener('click', async () => {
+    const btn = document.getElementById('btn-salvar-modelo');
+    btn.disabled = true; btn.textContent = 'Salvando...';
+    const { error } = await salvarModelo(document.getElementById('m-conteudo').value);
+    btn.disabled = false; btn.textContent = 'Salvar modelo';
+    if (error) { showToast('Não foi possível salvar o modelo.', 'danger'); return; }
+    showToast('Modelo de contrato atualizado.', 'success');
+  });
+
+  // ---------- Contratos gerados ----------
+  async function carregarGerados() {
+    const tbody = document.getElementById('contratos-tbody');
+    const emptyState = document.getElementById('empty-state');
+    const { data, error } = await listarContratos();
+
+    if (error || !data || !data.length) {
+      tbody.innerHTML = '';
+      emptyState.style.display = 'block';
+      return;
+    }
+    emptyState.style.display = 'none';
+
+    tbody.innerHTML = (await Promise.all(data.map(async c => {
+      const link = await urlContrato(c.arquivo_url);
+      const linkCurto = c.codigo_curto ? `${SITE_URL}/api/c/${c.codigo_curto}` : null;
+      const dataEvento = c.eventos?.data ? new Date(c.eventos.data + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
+      return `
+        <tr>
+          <td>${escapeHtml(c.eventos?.clientes?.nome) || '—'}</td>
+          <td>${escapeHtml(c.eventos?.tipo_evento) || '—'}</td>
+          <td>${dataEvento}</td>
+          <td>${new Date(c.gerado_em).toLocaleDateString('pt-BR')}</td>
+          <td>
+            <div class="row-actions">
+              <a class="btn btn-secondary btn-sm" href="${link}" target="_blank">Abrir</a>
+              ${linkCurto ? `<button class="btn btn-ghost btn-sm btn-copiar-link" data-link="${escapeHtml(linkCurto)}">Copiar link</button>` : ''}
+            </div>
+          </td>
+        </tr>`;
+    }))).join('');
+  }
+
+  document.getElementById('contratos-tbody').addEventListener('click', (e) => {
+    const btn = e.target.closest('.btn-copiar-link');
+    if (!btn) return;
+    navigator.clipboard.writeText(btn.dataset.link);
+    const textoOriginal = btn.textContent;
+    btn.textContent = 'Copiado!';
+    setTimeout(() => { btn.textContent = textoOriginal; }, 2000);
+  });
+
+  carregarModelo();
+  carregarGerados();
+</script>
+
+</body>
+</html>

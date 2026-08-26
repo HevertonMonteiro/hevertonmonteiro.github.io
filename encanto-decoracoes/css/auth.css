@@ -1,0 +1,141 @@
+/* ==========================================================================
+   ENCANTO DECORAÇÕES — Páginas de Autenticação
+   ========================================================================== */
+
+.auth-screen {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 900px) {
+  .auth-screen { grid-template-columns: 1fr 1fr; }
+}
+
+/* Painel de marca — some em telas pequenas (mobile first) */
+.auth-brand {
+  display: none;
+  position: relative;
+  background: var(--color-accent-900);
+  color: var(--color-text-inverse);
+  padding: var(--sp-12);
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+@media (min-width: 900px) {
+  .auth-brand { display: flex; }
+}
+
+.auth-brand::before {
+  /* Textura sutil: um único "traço" curvo, referência a laço/decoração,
+     sem virar clipart — o elemento de assinatura da tela. */
+  content: '';
+  position: absolute;
+  right: -120px;
+  bottom: -120px;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  border: 60px solid var(--color-accent-700);
+  opacity: 0.5;
+}
+
+.auth-brand-logo {
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  z-index: 1;
+}
+
+.auth-brand-quote {
+  z-index: 1;
+  max-width: 380px;
+}
+.auth-brand-quote p {
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  color: var(--color-text-inverse);
+  line-height: var(--lh-relaxed);
+}
+.auth-brand-quote span {
+  display: block;
+  margin-top: var(--sp-3);
+  font-size: var(--fs-sm);
+  color: var(--color-gold);
+  font-weight: 600;
+}
+
+.auth-form-side {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-6);
+}
+
+.auth-form-box {
+  width: 100%;
+  max-width: 360px;
+}
+
+.auth-form-box .logo-mark {
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  color: var(--color-accent-700);
+  margin-bottom: var(--sp-8);
+}
+
+.auth-form-box h1 {
+  font-size: var(--fs-xl);
+  margin-bottom: var(--sp-1);
+}
+
+.auth-form-box .auth-subtitle {
+  color: var(--color-text-muted);
+  margin-bottom: var(--sp-6);
+}
+
+.auth-form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--sp-2);
+  margin-bottom: var(--sp-6);
+  font-size: var(--fs-sm);
+}
+
+.auth-alert {
+  display: none;
+  padding: var(--sp-3);
+  border-radius: var(--radius-md);
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+  font-size: var(--fs-sm);
+  margin-bottom: var(--sp-4);
+}
+.auth-alert.is-visible { display: block; }
+
+.auth-alert.is-success {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.auth-switch {
+  text-align: center;
+  margin-top: var(--sp-6);
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+}
+
+/* ---------- Tela pública de retorno de pagamento ---------- */
+.pagamento-status-icone {
+  width: 72px; height: 72px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+}
+.pagamento-status-icone.is-aprovado { background: var(--color-success-bg); color: var(--color-success); }
+.pagamento-status-icone.is-pendente { background: var(--color-warning-bg); color: var(--color-warning); }
+.pagamento-status-icone.is-recusado { background: var(--color-danger-bg); color: var(--color-danger); }

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Vitrine completa de imóveis disponíveis. Busque por texto e filtre por negócio, tipo, cidade, bairro, quartos e valor.">
+<title>Imóveis · Corretora de Milhões</title>
+<meta property="og:type" content="website">
+<meta property="og:title" content="Imóveis · Corretora de Milhões">
+<meta property="og:image" content="assets/og-image.png">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="navbar-mount"></div>
+
+<main>
+<section class="container">
+  <span class="kicker reveal">Vitrine completa</span>
+  <h2 class="reveal">Imóveis disponíveis</h2>
+
+  <form class="filtros" id="form-filtros">
+    <div>
+      <label>Buscar</label>
+      <input type="text" name="q" placeholder="Título do imóvel">
+    </div>
+    <div>
+      <label>Negócio</label>
+      <select name="tipo_negocio" id="select-tipo-negocio"><option value="">Todos</option></select>
+    </div>
+    <div>
+      <label>Tipo</label>
+      <select name="tipo_imovel" id="select-tipo-imovel"><option value="">Todos</option></select>
+    </div>
+    <div>
+      <label>Cidade</label>
+      <input type="text" name="cidade">
+    </div>
+    <div>
+      <label>Bairro</label>
+      <input type="text" name="bairro">
+    </div>
+    <div>
+      <label>Quartos (mín.)</label>
+      <input type="number" name="quartos_min" min="0">
+    </div>
+    <div>
+      <label>Valor mín.</label>
+      <input type="number" name="valor_min" min="0">
+    </div>
+    <div>
+      <label>Valor máx.</label>
+      <input type="number" name="valor_max" min="0">
+    </div>
+    <div class="filtros-acoes">
+      <button type="submit" class="btn btn-primary">Filtrar</button>
+    </div>
+  </form>
+  <p class="resultados-status" id="resultados-status" aria-live="polite"></p>
+
+  <div id="resultados-imoveis">
+    <div class="grid" id="resultados-grid"></div>
+  </div>
+</section>
+</main>
+
+<div id="footer-mount"></div>
+<div id="social-float-mount"></div>
+
+<script src="js/data.js"></script>
+<script src="js/store.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/layout.js"></script>
+<script>
+  montarLayout({ ativo: 'imoveis' });
+
+  const selectNegocio = document.getElementById('select-tipo-negocio');
+  Object.entries(TIPOS_NEGOCIO).forEach(([valor, rotulo]) => {
+    selectNegocio.insertAdjacentHTML('beforeend', `<option value="${valor}">${rotulo}</option>`);
+  });
+  const selectTipo = document.getElementById('select-tipo-imovel');
+  Object.entries(TIPOS_IMOVEL).forEach(([valor, rotulo]) => {
+    selectTipo.insertAdjacentHTML('beforeend', `<option value="${valor}">${rotulo}</option>`);
+  });
+
+  function cardImovel(imovel) {
+    const capa = imovel.fotos[0];
+    const disponivel = imovel.status === 'disponivel';
+    return `
+      <a class="card reveal is-visible" href="imovel.html?slug=${encodeURIComponent(imovel.slug)}">
+        ${capa ? `<img src="${capa.url}" alt="${escapeHtml(imovel.titulo)}" loading="lazy">` : `<div class="card-img-placeholder">Sem foto</div>`}
+        <div class="card-body">
+          <span class="badge ${disponivel ? 'badge-disponivel' : 'badge-vendido'}">${STATUS_IMOVEL[imovel.status]}</span>
+          <h3>${escapeHtml(imovel.titulo)}</h3>
+          <p>${escapeHtml(imovel.bairro)}, ${escapeHtml(imovel.cidade)} · ${imovel.quartos} quarto(s)</p>
+          <p class="preco">R$ ${formatoMoeda(imovel.valor)}</p>
+        </div>
+      </a>`;
+  }
+
+  function aplicarFiltros() {
+    const dados = new FormData(document.getElementById('form-filtros'));
+    let imoveis = getImoveis().filter((i) => i.status !== 'inativo');
+
+    const q = dados.get('q')?.trim().toLowerCase();
+    const tipoNegocio = dados.get('tipo_negocio');
+    const tipoImovel = dados.get('tipo_imovel');
+    const cidade = dados.get('cidade')?.trim().toLowerCase();
+    const bairro = dados.get('bairro')?.trim().toLowerCase();
+    const quartosMin = dados.get('quartos_min');
+    const valorMin = dados.get('valor_min');
+    const valorMax = dados.get('valor_max');
+
+    if (q) imoveis = imoveis.filter((i) => i.titulo.toLowerCase().includes(q));
+    if (tipoNegocio) imoveis = imoveis.filter((i) => i.tipo_negocio === tipoNegocio);
+    if (tipoImovel) imoveis = imoveis.filter((i) => i.tipo_imovel === tipoImovel);
+    if (cidade) imoveis = imoveis.filter((i) => i.cidade.toLowerCase().includes(cidade));
+    if (bairro) imoveis = imoveis.filter((i) => i.bairro.toLowerCase().includes(bairro));
+    if (quartosMin) imoveis = imoveis.filter((i) => i.quartos >= Number(quartosMin));
+    if (valorMin) imoveis = imoveis.filter((i) => Number(i.valor) >= Number(valorMin));
+    if (valorMax) imoveis = imoveis.filter((i) => Number(i.valor) <= Number(valorMax));
+
+    const grid = document.getElementById('resultados-grid');
+    grid.innerHTML = imoveis.length ? imoveis.map(cardImovel).join('') : '<p>Nenhum imóvel encontrado com esses filtros.</p>';
+    document.getElementById('resultados-status').textContent = imoveis.length
+      ? `${imoveis.length} imóvel(is) encontrado(s).`
+      : 'Nenhum imóvel encontrado com esses filtros.';
+
+    const params = new URLSearchParams(dados);
+    Array.from(params.keys()).forEach((k) => { if (!params.get(k)) params.delete(k); });
+    const qs = params.toString();
+    history.replaceState({}, '', qs ? `?${qs}` : location.pathname);
+  }
+
+  // Restaura filtros a partir da URL (ex: link compartilhado)
+  const paramsUrl = new URLSearchParams(location.search);
+  Array.from(document.getElementById('form-filtros').elements).forEach((campo) => {
+    if (campo.name && paramsUrl.has(campo.name)) campo.value = paramsUrl.get(campo.name);
+  });
+
+  document.getElementById('form-filtros').addEventListener('submit', (e) => { e.preventDefault(); aplicarFiltros(); });
+  document.querySelectorAll('#form-filtros select').forEach((c) => c.addEventListener('change', aplicarFiltros));
+  let debounceId = null;
+  document.querySelectorAll('#form-filtros input[type=text], #form-filtros input[type=number]').forEach((c) => {
+    c.addEventListener('input', () => { clearTimeout(debounceId); debounceId = setTimeout(aplicarFiltros, 350); });
+  });
+
+  aplicarFiltros();
+</script>
+
+</body>
+</html>

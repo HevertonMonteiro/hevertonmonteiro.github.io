@@ -1,0 +1,62 @@
+/* ==========================================================================
+   ENCANTO DECORAÇÕES — Acervo
+   ========================================================================== */
+
+.acervo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--sp-4);
+}
+
+.acervo-card {
+  overflow: hidden;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+}
+.acervo-card-foto {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: var(--color-surface-alt);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-faint);
+  overflow: hidden;
+}
+.acervo-card-foto img { width: 100%; height: 100%; object-fit: cover; }
+
+.acervo-card-body { padding: var(--sp-3) var(--sp-4); }
+.acervo-card-body strong { display: block; font-size: var(--fs-sm); }
+.acervo-card-body .preco { font-family: var(--font-display); font-weight: 700; color: var(--color-accent-700); }
+.acervo-card-body .categoria-tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+  margin-bottom: 4px;
+}
+
+/* ---------- Modal do item ---------- */
+.acervo-modal .modal { max-width: 640px; }
+.fotos-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
+}
+.foto-preview-item { position: relative; width: 76px; height: 76px; border-radius: var(--radius-sm); overflow: hidden; }
+.foto-preview-item img { width: 100%; height: 100%; object-fit: cover; }
+.foto-preview-item button {
+  position: absolute; top: 2px; right: 2px;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  border: none;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+}

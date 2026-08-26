@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#1AA894">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Encanto Decorações">
+<meta property="og:title" content="Encanto Decorações">
+<meta property="og:description" content="Sistema de gestão de eventos e decoração.">
+<meta property="og:image" content="https://encanto-decoracoes.vercel.app/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://encanto-decoracoes.vercel.app/assets/og-image.png">
+<title>Eventos · Encanto Decorações</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/app-shell.css">
+<link rel="stylesheet" href="../css/clientes.css">
+<link rel="stylesheet" href="../css/eventos.css">
+<link rel="stylesheet" href="../css/demo.css">
+</head>
+<body>
+
+<div class="app-shell">
+  <div id="sidebar-mount"></div>
+
+  <div>
+    <div id="topbar-mount"></div>
+
+    <main class="app-main">
+      <div class="page-header">
+        <div>
+          <h1>Eventos</h1>
+          <p>Todos os eventos, orçamentos e ensaios da operação.</p>
+        </div>
+        <a class="btn btn-primary" href="./evento-detalhe.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          Novo evento
+        </a>
+      </div>
+
+      <div class="eventos-toolbar">
+        <div class="input-group">
+          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <input class="input" type="search" id="busca" placeholder="Buscar por cliente, tipo ou tema...">
+        </div>
+
+        <select class="select" id="filtro-limite" style="max-width:160px">
+          <option value="10">Últimos 10</option>
+          <option value="50">Últimos 50</option>
+          <option value="100">Últimos 100</option>
+          <option value="">Todos</option>
+        </select>
+
+        <div class="status-filter" id="status-filter">
+          <button class="is-active" data-status="">Todos</button>
+          <button data-status="orcamento">Orçamento</button>
+          <button data-status="confirmado">Confirmado</button>
+          <button data-status="concluido">Concluído</button>
+          <button data-status="concluido,finalizado">Finalizados</button>
+          <button data-status="cancelado">Cancelado</button>
+        </div>
+      </div>
+
+      <div class="clientes-table-wrap">
+        <table class="data-table" id="tabela-eventos">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Cliente</th>
+              <th>Tipo / Tema</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="eventos-tbody">
+            <tr><td colspan="5"><div class="skeleton" style="height:20px;width:100%"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="empty-state" id="empty-state" style="display:none">
+        <h3>Nenhum evento encontrado</h3>
+        <p>Cadastre o primeiro evento ou ajuste os filtros.</p>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script type="module">
+  import { protegerRota } from '../js/modules/route-guard.js';
+  import { renderSidebar } from '../components/sidebar.js';
+  import { renderTopbar } from '../components/topbar.js';
+  import { showToast } from '../js/lib/toast.js';
+  import { listarEventos, excluirEvento } from '../js/modules/eventos.js';
+  import { escapeHtml } from '../js/lib/sanitize.js';
+
+  await protegerRota();
+  renderSidebar('eventos');
+  renderTopbar();
+
+  const tbody = document.getElementById('eventos-tbody');
+  const emptyState = document.getElementById('empty-state');
+  let debounceTimer;
+  let statusAtual = '';
+
+  const BADGE_STATUS = {
+    orcamento: 'badge-orcamento', confirmado: 'badge-confirmado',
+    concluido: 'badge-concluido', finalizado: 'badge-finalizado', cancelado: 'badge-cancelado',
+  };
+  const LABEL_STATUS = {
+    orcamento: 'Orçamento', confirmado: 'Confirmado',
+    concluido: 'Concluído', finalizado: 'Finalizado', cancelado: 'Cancelado',
+  };
+  const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const formatoMoeda = (v) => Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+  async function carregar() {
+    tbody.innerHTML = `<tr><td colspan="5"><div class="skeleton" style="height:20px;width:100%"></div></td></tr>`;
+
+    const limiteValor = document.getElementById('filtro-limite').value;
+    const { data, error } = await listarEventos({
+      termo: document.getElementById('busca').value,
+      status: statusAtual,
+      limite: limiteValor ? Number(limiteValor) : null,
+    });
+
+    if (error) { showToast('Não foi possível carregar os eventos.', 'danger'); return; }
+
+    if (!data.length) {
+      tbody.innerHTML = '';
+      emptyState.style.display = 'block';
+      return;
+    }
+    emptyState.style.display = 'none';
+
+    tbody.innerHTML = data.map(ev => {
+      const d = new Date(ev.data + 'T00:00:00');
+      return `
+      <tr data-id="${ev.id}">
+        <td>
+          <div class="evento-data-cell">
+            <strong>${d.getDate()} ${MESES[d.getMonth()]} ${d.getFullYear()}</strong>
+            <span>${ev.horario ? ev.horario.slice(0,5) : 'sem horário'}</span>
+          </div>
+        </td>
+        <td>${escapeHtml(ev.clientes?.nome) || '—'}</td>
+        <td>${escapeHtml(ev.tipo_evento) || '—'}${ev.tema ? ' · ' + escapeHtml(ev.tema) : ''}</td>
+        <td>
+          <div class="evento-status-cell">
+            <span class="badge ${BADGE_STATUS[ev.status]}">${LABEL_STATUS[ev.status]}</span>
+            <span class="badge badge-${ev.statusPagamento}">${ev.statusPagamento === 'quitado' ? 'Pago' : 'Pagamento pendente'}</span>
+            <strong class="evento-status-valor">${formatoMoeda(ev.valor_orcamento || 0)}</strong>
+          </div>
+        </td>
+        <td>
+          <div class="row-actions">
+            <button class="btn btn-ghost btn-sm btn-excluir" data-id="${ev.id}" title="Excluir">🗑️</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  document.getElementById('busca').addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(carregar, 300);
+  });
+
+  document.getElementById('filtro-limite').addEventListener('change', carregar);
+
+  document.getElementById('status-filter').addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    document.querySelectorAll('#status-filter button').forEach(b => b.classList.remove('is-active'));
+    btn.classList.add('is-active');
+    statusAtual = btn.dataset.status.includes(',') ? btn.dataset.status.split(',') : btn.dataset.status;
+    carregar();
+  });
+
+  tbody.addEventListener('click', async (e) => {
+    const excluirBtn = e.target.closest('.btn-excluir');
+    const linha = e.target.closest('tr[data-id]');
+
+    if (excluirBtn) {
+      if (!confirm('Tem certeza que deseja excluir este evento? Pagamentos e contratos ligados a ele também serão apagados.')) return;
+      const { error } = await excluirEvento(excluirBtn.dataset.id);
+      if (error) { showToast('Não foi possível excluir o evento.', 'danger'); return; }
+      showToast('Evento excluído.', 'success');
+      carregar();
+      return;
+    }
+
+    if (linha) window.location.href = `./evento-detalhe.html?id=${linha.dataset.id}`;
+  });
+
+  carregar();
+</script>
+
+</body>
+</html>

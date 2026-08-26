@@ -1,0 +1,224 @@
+/* ==========================================================================
+   ENCANTO DECORAÇÕES — App Shell (sidebar + topbar)
+   Usado por todas as páginas internas (dashboard, clientes, eventos...).
+   ========================================================================== */
+
+.app-shell {
+  display: grid;
+  grid-template-columns: 1fr;
+  min-height: 100vh;
+}
+
+@media (min-width: 900px) {
+  .app-shell { grid-template-columns: var(--sidebar-width) 1fr; }
+}
+
+/* ---------- Sidebar ----------
+   Mobile (abaixo de 900px): vira um menu "gaveta" que desliza da esquerda,
+   escondido por padrão e revelado pelo botão hambúrguer da Topbar.
+   Desktop (900px+): volta a ser uma coluna fixa, sempre visível. */
+.sidebar {
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  width: 260px;
+  max-width: 82vw;
+  transform: translateX(-100%);
+  transition: transform var(--duration-base) var(--ease);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-accent-900);
+  color: var(--color-text-inverse);
+  padding: var(--sp-5) var(--sp-3);
+  overflow-y: auto;
+}
+.sidebar.is-open { transform: translateX(0); }
+
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 190;
+}
+.sidebar-backdrop.is-open { display: block; }
+
+.sidebar-mobile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--sp-6);
+}
+.sidebar-close-btn {
+  background: rgba(255,255,255,0.08);
+  border: none;
+  color: #fff;
+  width: 32px; height: 32px;
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+@media (min-width: 900px) {
+  .sidebar {
+    position: static;
+    width: auto;
+    max-width: none;
+    transform: none;
+    z-index: 1;
+  }
+  .sidebar-backdrop { display: none !important; }
+  .sidebar-close-btn { display: none; }
+}
+
+.sidebar-logo {
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  padding: var(--sp-2) var(--sp-3) 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.sidebar-logo img { max-height: 32px; display: block; flex-shrink: 0; }
+.sidebar-logo span { color: var(--color-text-inverse); }
+
+.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+
+.sidebar-group-label {
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgba(255,255,255,0.45);
+  padding: var(--sp-4) var(--sp-3) var(--sp-1);
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-3);
+  border-radius: var(--radius-md);
+  color: rgba(255,255,255,0.75);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+}
+@media (min-width: 900px) { .sidebar-link { padding: var(--sp-2) var(--sp-3); } }
+.sidebar-link:hover { background: rgba(255,255,255,0.06); text-decoration: none; color: #fff; }
+.sidebar-link.is-active { background: var(--color-accent-700); color: #fff; }
+.sidebar-link.is-disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+.sidebar-link .icon { width: 18px; height: 18px; flex-shrink: 0; }
+.sidebar-link .soon {
+  margin-left: auto;
+  font-size: 10px;
+  background: rgba(255,255,255,0.12);
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+}
+
+.sidebar-footer {
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: var(--sp-3);
+  margin-top: var(--sp-3);
+}
+
+/* ---------- Topbar ---------- */
+.topbar {
+  height: var(--topbar-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: 0 var(--sp-4);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+@media (min-width: 900px) { .topbar { gap: var(--sp-4); padding: 0 var(--sp-5); } }
+
+.topbar-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px; height: 36px;
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-text);
+  border-radius: var(--radius-sm);
+}
+.topbar-menu-btn:hover { background: var(--color-surface-alt); }
+.topbar-menu-btn svg { width: 22px; height: 22px; }
+@media (min-width: 900px) { .topbar-menu-btn { display: none; } }
+
+.topbar-search {
+  flex: 1;
+  min-width: 0;
+  max-width: 420px;
+}
+
+.topbar-user {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  font-size: var(--fs-sm);
+  flex-shrink: 0;
+}
+.topbar-user span { display: none; }
+@media (min-width: 640px) { .topbar-user span { display: inline; } }
+
+.topbar-user-avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--color-accent-100);
+  color: var(--color-accent-700);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700;
+  font-size: var(--fs-sm);
+  flex-shrink: 0;
+}
+
+.app-main {
+  padding: var(--sp-4);
+  min-width: 0;
+}
+@media (min-width: 900px) { .app-main { padding: var(--sp-8); } }
+
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-5);
+}
+@media (min-width: 900px) { .page-header { margin-bottom: var(--sp-6); } }
+
+/* ---------- Autocomplete (usado pela Pesquisa Global da Topbar) ---------- */
+.autocomplete { position: relative; }
+.autocomplete-results {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0; right: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  max-height: 320px;
+  overflow-y: auto;
+  z-index: 60;
+  display: none;
+}
+.autocomplete-results.is-open { display: block; }
+.autocomplete-item {
+  padding: var(--sp-2) var(--sp-3);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+.autocomplete-item:hover { background: var(--color-surface-alt); }
+.autocomplete-empty { padding: var(--sp-3); font-size: var(--fs-sm); color: var(--color-text-faint); }

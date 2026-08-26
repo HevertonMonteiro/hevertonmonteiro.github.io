@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#1AA894">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Encanto Decorações">
+<meta property="og:title" content="Encanto Decorações">
+<meta property="og:description" content="Sistema de gestão de eventos e decoração.">
+<meta property="og:image" content="https://encanto-decoracoes.vercel.app/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://encanto-decoracoes.vercel.app/assets/og-image.png">
+<title>Recuperar senha · Encanto Decorações</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/auth.css">
+<link rel="stylesheet" href="../css/demo.css">
+</head>
+<body>
+
+<div class="auth-screen">
+
+  <aside class="auth-brand">
+    <div class="auth-brand-logo">Encanto Decorações</div>
+    <div class="auth-brand-quote">
+      <p>Sem senha, sem problema. Em poucos passos você volta a acessar sua operação.</p>
+      <span>Sistema Operacional para Decoração de Festas</span>
+    </div>
+  </aside>
+
+  <main class="auth-form-side">
+    <div class="auth-form-box">
+      <div class="logo-mark">Encanto Decorações</div>
+      <h1>Recuperar senha</h1>
+      <p class="auth-subtitle">Enviaremos um link para redefinir sua senha.</p>
+
+      <div class="auth-alert" id="auth-alert" role="alert"></div>
+
+      <form id="reset-form" novalidate>
+        <div class="field">
+          <label for="email">E-mail cadastrado</label>
+          <input class="input" type="email" id="email" name="email" autocomplete="email" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" id="submit-btn">Enviar link</button>
+      </form>
+
+      <p class="auth-switch"><a href="./login.html">Voltar para o login</a></p>
+    </div>
+  </main>
+
+</div>
+
+<script type="module">
+  import { sendPasswordReset } from '../js/modules/auth.js';
+
+  const form = document.getElementById('reset-form');
+  const alertBox = document.getElementById('auth-alert');
+  const submitBtn = document.getElementById('submit-btn');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = form.email.value.trim();
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Enviando...';
+
+    const { error } = await sendPasswordReset(email);
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Enviar link';
+
+    alertBox.classList.remove('is-success');
+    alertBox.classList.add('is-visible');
+
+    if (error) {
+      alertBox.textContent = 'Não foi possível enviar o link. Verifique o e-mail informado.';
+      return;
+    }
+
+    alertBox.classList.add('is-success');
+    alertBox.textContent = 'Link enviado! Verifique sua caixa de entrada (e o spam).';
+    form.reset();
+  });
+</script>
+
+</body>
+</html>

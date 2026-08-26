@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#1AA894">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Encanto Decorações">
+<meta property="og:title" content="Encanto Decorações">
+<meta property="og:description" content="Sistema de gestão de eventos e decoração.">
+<meta property="og:image" content="https://encanto-decoracoes.vercel.app/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://encanto-decoracoes.vercel.app/assets/og-image.png">
+<title>Configurações · Encanto Decorações</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/app-shell.css">
+<link rel="stylesheet" href="../css/financeiro.css">
+<link rel="stylesheet" href="../css/eventos.css">
+<link rel="stylesheet" href="../css/configuracoes.css">
+<link rel="stylesheet" href="../css/demo.css">
+</head>
+<body>
+
+<div class="app-shell">
+  <div id="sidebar-mount"></div>
+
+  <div>
+    <div id="topbar-mount"></div>
+
+    <main class="app-main">
+      <div class="page-header">
+        <div>
+          <h1>Configurações</h1>
+          <p>Dados que alimentam o sistema inteiro, cadastre uma vez, use em todo lugar.</p>
+        </div>
+      </div>
+
+      <div class="config-grid">
+
+        <!-- Empresa -->
+        <div class="card">
+          <h3 class="card-title">Empresa</h3>
+          <div class="logo-preview" id="logo-preview">Sem logo</div>
+          <div class="field">
+            <label for="logo-input">Logo</label>
+            <input class="input" type="file" id="logo-input" accept="image/*">
+          </div>
+          <div class="field">
+            <label for="emp-nome">Nome da empresa</label>
+            <input class="input" id="emp-nome">
+          </div>
+          <div class="field-row field-row-2">
+            <div class="field">
+              <label for="emp-cnpj">CNPJ</label>
+              <input class="input" id="emp-cnpj" placeholder="00.000.000/0001-00">
+            </div>
+            <div class="field">
+              <label for="emp-telefone">Telefone</label>
+              <input class="input" id="emp-telefone">
+            </div>
+          </div>
+          <div class="field">
+            <label for="emp-endereco">Endereço</label>
+            <input class="input" id="emp-endereco">
+          </div>
+          <div class="field">
+            <label for="emp-whatsapp">WhatsApp</label>
+            <input class="input" id="emp-whatsapp">
+          </div>
+
+          <h3 class="card-title" style="margin-top:var(--sp-5)">Dados bancários (usados no contrato)</h3>
+          <div class="field-row field-row-2">
+            <div class="field">
+              <label for="emp-banco">Banco</label>
+              <input class="input" id="emp-banco" placeholder="Ex: Banco Fictício S.A.">
+            </div>
+            <div class="field">
+              <label for="emp-titular">Titular da conta</label>
+              <input class="input" id="emp-titular">
+            </div>
+          </div>
+          <div class="field-row field-row-2">
+            <div class="field">
+              <label for="emp-agencia">Agência</label>
+              <input class="input" id="emp-agencia">
+            </div>
+            <div class="field">
+              <label for="emp-conta">Conta</label>
+              <input class="input" id="emp-conta">
+            </div>
+          </div>
+          <div class="field">
+            <label for="emp-pix">Chave PIX</label>
+            <input class="input" id="emp-pix">
+          </div>
+
+          <button class="btn btn-primary" id="btn-salvar-empresa">Salvar empresa</button>
+        </div>
+
+        <!-- Equipe -->
+        <div class="card">
+          <h3 class="card-title">Equipe</h3>
+          <p class="field-hint" style="margin-bottom:var(--sp-3)">Lista de referência usada na "equipe responsável" dos eventos.</p>
+          <div class="tag-list" id="lista-equipe"></div>
+          <div class="tag-add-row">
+            <input class="input" id="novo-membro" placeholder="Nome do membro da equipe">
+            <button class="btn btn-secondary" id="btn-add-membro">Adicionar</button>
+          </div>
+        </div>
+
+        <!-- Tipos de evento -->
+        <div class="card">
+          <h3 class="card-title">Tipos de evento</h3>
+          <p class="field-hint" style="margin-bottom:var(--sp-3)">Sugestões automáticas no campo "Tipo de evento" ao cadastrar um evento.</p>
+          <div class="tag-list" id="lista-tipos"></div>
+          <div class="tag-add-row">
+            <input class="input" id="novo-tipo" placeholder="Ex: Debutante">
+            <button class="btn btn-secondary" id="btn-add-tipo">Adicionar</button>
+          </div>
+        </div>
+
+        <!-- Temas e pacotes -->
+        <div class="card">
+          <h3 class="card-title">Temas e pacotes</h3>
+          <p class="field-hint" style="margin-bottom:var(--sp-3)">
+            Temas e pacotes são gerenciados na tela de Acervo. Lá, cada um
+            já tem fotos, preço sugerido e itens inclusos, então não
+            duplicamos o cadastro aqui.
+          </p>
+          <a class="btn btn-secondary" href="./acervo.html">Ir para o Acervo</a>
+        </div>
+
+        <!-- Taxas de cartão -->
+        <div class="card config-full">
+          <h3 class="card-title">Taxas das maquininhas</h3>
+          <p class="field-hint" style="margin-bottom:var(--sp-3)">Usadas pelo Simulador de Cartão. Edite e salve por parcela.</p>
+          <div class="taxas-table-wrap">
+            <table class="taxas-table">
+              <thead><tr><th>Parcelas</th><th>Taxa (%)</th><th></th></tr></thead>
+              <tbody id="taxas-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<script type="module">
+  import { protegerRota } from '../js/modules/route-guard.js';
+  import { renderSidebar } from '../components/sidebar.js';
+  import { renderTopbar } from '../components/topbar.js';
+  import { showToast } from '../js/lib/toast.js';
+  import { escapeHtml } from '../js/lib/sanitize.js';
+  import {
+    buscarEmpresa, salvarEmpresa, uploadLogo,
+    listarEquipe, adicionarMembroEquipe, removerMembroEquipe,
+    listarTiposEvento, adicionarTipoEvento, removerTipoEvento,
+  } from '../js/modules/configuracoes.js';
+  import { buscarTaxas, atualizarTaxa } from '../js/modules/simulador.js';
+
+  await protegerRota();
+  renderSidebar('configuracoes');
+  renderTopbar();
+
+  let logoUrlAtual = null;
+
+  // ---------- Empresa ----------
+  async function carregarEmpresa() {
+    const { data } = await buscarEmpresa();
+    document.getElementById('emp-nome').value = data?.nome || '';
+    document.getElementById('emp-cnpj').value = data?.cnpj || '';
+    document.getElementById('emp-telefone').value = data?.telefone || '';
+    document.getElementById('emp-endereco').value = data?.endereco || '';
+    document.getElementById('emp-whatsapp').value = data?.whatsapp || '';
+    document.getElementById('emp-banco').value = data?.banco || '';
+    document.getElementById('emp-titular').value = data?.titular_conta || '';
+    document.getElementById('emp-agencia').value = data?.agencia || '';
+    document.getElementById('emp-conta').value = data?.conta || '';
+    document.getElementById('emp-pix').value = data?.pix_chave || '';
+    logoUrlAtual = data?.logo_url || null;
+    document.getElementById('logo-preview').innerHTML = logoUrlAtual ? `<img src="${logoUrlAtual}">` : 'Sem logo';
+  }
+
+  document.getElementById('logo-input').addEventListener('change', async (e) => {
+    const arquivo = e.target.files[0];
+    if (!arquivo) return;
+    try {
+      logoUrlAtual = await uploadLogo(arquivo);
+      document.getElementById('logo-preview').innerHTML = `<img src="${logoUrlAtual}">`;
+      showToast('Logo enviada. Clique em "Salvar empresa" para confirmar.', 'success');
+    } catch {
+      showToast('Não foi possível enviar a logo.', 'danger');
+    }
+  });
+
+  document.getElementById('btn-salvar-empresa').addEventListener('click', async () => {
+    const btn = document.getElementById('btn-salvar-empresa');
+    btn.disabled = true; btn.textContent = 'Salvando...';
+    const { error } = await salvarEmpresa({
+      nome: document.getElementById('emp-nome').value.trim() || null,
+      cnpj: document.getElementById('emp-cnpj').value.trim() || null,
+      telefone: document.getElementById('emp-telefone').value.trim() || null,
+      endereco: document.getElementById('emp-endereco').value.trim() || null,
+      whatsapp: document.getElementById('emp-whatsapp').value.trim() || null,
+      banco: document.getElementById('emp-banco').value.trim() || null,
+      titular_conta: document.getElementById('emp-titular').value.trim() || null,
+      agencia: document.getElementById('emp-agencia').value.trim() || null,
+      conta: document.getElementById('emp-conta').value.trim() || null,
+      pix_chave: document.getElementById('emp-pix').value.trim() || null,
+      logo_url: logoUrlAtual,
+    });
+    btn.disabled = false; btn.textContent = 'Salvar empresa';
+    if (error) { showToast('Não foi possível salvar.', 'danger'); return; }
+    showToast('Dados da empresa atualizados.', 'success');
+  });
+
+  // ---------- Equipe ----------
+  async function carregarEquipe() {
+    const { data } = await listarEquipe();
+    document.getElementById('lista-equipe').innerHTML = (data || []).map(m => `
+      <span class="tag-chip">${escapeHtml(m.nome)}<button data-id="${m.id}" class="btn-remover-membro">×</button></span>
+    `).join('') || '<span class="field-hint">Nenhum membro cadastrado ainda.</span>';
+
+    document.querySelectorAll('.btn-remover-membro').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        await removerMembroEquipe(btn.dataset.id);
+        carregarEquipe();
+      });
+    });
+  }
+
+  document.getElementById('btn-add-membro').addEventListener('click', async () => {
+    const input = document.getElementById('novo-membro');
+    const nome = input.value.trim();
+    if (!nome) return;
+    const { error } = await adicionarMembroEquipe(nome);
+    if (error) { showToast('Não foi possível adicionar.', 'danger'); return; }
+    input.value = '';
+    carregarEquipe();
+  });
+
+  // ---------- Tipos de evento ----------
+  async function carregarTipos() {
+    const { data } = await listarTiposEvento();
+    document.getElementById('lista-tipos').innerHTML = (data || []).map(t => `
+      <span class="tag-chip">${escapeHtml(t.nome)}<button data-id="${t.id}" class="btn-remover-tipo">×</button></span>
+    `).join('') || '<span class="field-hint">Nenhum tipo cadastrado ainda.</span>';
+
+    document.querySelectorAll('.btn-remover-tipo').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        await removerTipoEvento(btn.dataset.id);
+        carregarTipos();
+      });
+    });
+  }
+
+  document.getElementById('btn-add-tipo').addEventListener('click', async () => {
+    const input = document.getElementById('novo-tipo');
+    const nome = input.value.trim();
+    if (!nome) return;
+    const { error } = await adicionarTipoEvento(nome);
+    if (error) { showToast('Esse tipo já existe ou não pôde ser adicionado.', 'danger'); return; }
+    input.value = '';
+    carregarTipos();
+  });
+
+  // ---------- Taxas de cartão ----------
+  async function carregarTaxas() {
+    const { data } = await buscarTaxas();
+    document.getElementById('taxas-tbody').innerHTML = (data || []).map(t => `
+      <tr>
+        <td>${t.parcela}x</td>
+        <td><input type="number" step="0.01" min="0" value="${t.taxa_percentual}" data-parcela="${t.parcela}" class="taxa-input"></td>
+        <td><button class="btn btn-ghost btn-sm btn-salvar-taxa" data-parcela="${t.parcela}">Salvar</button></td>
+      </tr>
+    `).join('');
+
+    document.querySelectorAll('.btn-salvar-taxa').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const parcela = btn.dataset.parcela;
+        const valor = Number(document.querySelector(`.taxa-input[data-parcela="${parcela}"]`).value);
+        await atualizarTaxa(parcela, valor);
+        showToast(`Taxa de ${parcela}x atualizada.`, 'success');
+      });
+    });
+  }
+
+  carregarEmpresa();
+  carregarEquipe();
+  carregarTipos();
+  carregarTaxas();
+</script>
+
+</body>
+</html>

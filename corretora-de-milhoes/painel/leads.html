@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contatos recebidos · Corretora de Milhões</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div id="navbar-mount"></div>
+
+<main>
+<section class="container">
+  <h2>Contatos recebidos</h2>
+  <table>
+    <thead><tr><th>Nome</th><th>Telefone</th><th>Imóvel</th><th>Data</th><th>Status</th></tr></thead>
+    <tbody id="tbody-leads"></tbody>
+  </table>
+</section>
+</main>
+
+<script src="../js/data.js"></script>
+<script src="../js/store.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/layout.js"></script>
+<script>
+  if (!exigirLogin('login.html')) { /* redireciona */ } else {
+    montarLayout({ painel: true, base: '../' });
+
+    function renderLista() {
+      const leads = getLeads();
+      const tbody = document.getElementById('tbody-leads');
+      if (!leads.length) {
+        tbody.innerHTML = '<tr><td colspan="5">Nenhum contato recebido ainda.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = leads.map((l) => {
+        const imovel = l.imovel_id ? getImovel(l.imovel_id) : null;
+        const data = new Date(l.criado_em);
+        return `
+          <tr>
+            <td>${escapeHtml(l.nome)}</td>
+            <td>${escapeHtml(l.telefone)}</td>
+            <td>${imovel ? escapeHtml(imovel.titulo) : '—'}</td>
+            <td>${data.toLocaleDateString('pt-BR')} ${data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td>
+            <td><button type="button" class="btn btn-sm btn-outline btn-atendido" data-id="${l.id}">${l.atendido ? 'Atendido ✓' : 'Marcar como atendido'}</button></td>
+          </tr>`;
+      }).join('');
+
+      tbody.querySelectorAll('.btn-atendido').forEach((b) => b.addEventListener('click', () => { alternarLeadAtendido(b.dataset.id); renderLista(); }));
+    }
+    renderLista();
+  }
+</script>
+
+</body>
+</html>

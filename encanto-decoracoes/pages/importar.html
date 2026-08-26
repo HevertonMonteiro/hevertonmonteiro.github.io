@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#1AA894">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Encanto Decorações">
+<meta property="og:title" content="Encanto Decorações">
+<meta property="og:description" content="Sistema de gestão de eventos e decoração.">
+<meta property="og:image" content="https://encanto-decoracoes.vercel.app/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://encanto-decoracoes.vercel.app/assets/og-image.png">
+<title>Importar conversa · Encanto Decorações</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/app-shell.css">
+<link rel="stylesheet" href="../css/eventos.css">
+<link rel="stylesheet" href="../css/importar.css">
+<link rel="stylesheet" href="../css/demo.css">
+</head>
+<body>
+
+<div class="app-shell">
+  <div id="sidebar-mount"></div>
+
+  <div>
+    <div id="topbar-mount"></div>
+
+    <main class="app-main">
+      <div class="page-header">
+        <div>
+          <h1>Importar conversa</h1>
+          <p>Cole a conversa do WhatsApp e deixe a IA preencher o cadastro para você.</p>
+        </div>
+      </div>
+
+      <div class="import-steps">
+        <span class="step is-active" id="step-1">1. Colar conversa</span>
+        <span>→</span>
+        <span class="step" id="step-2">2. Revisar e confirmar</span>
+      </div>
+
+      <div class="importar-grid">
+
+        <!-- Coluna: colar conversa -->
+        <div class="card paste-area">
+          <h3 class="card-title">Conversa do WhatsApp</h3>
+          <div class="field">
+            <textarea class="textarea" id="texto-conversa" placeholder="Cole aqui a conversa completa. Ex:
+
+Oi, meu nome é Maria Silva
+Quero um chá revelação, tema safári
+Pacote completo
+Dia 20 de agosto, às 15h
+Rua das Flores, 123 - perto do mercado São José
+Vou pagar por pix"></textarea>
+          </div>
+          <button class="btn btn-primary btn-block" id="btn-interpretar">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v3m0 12v3m9-9h-3M6 12H3m14.5-6.5-2 2m-9 9-2 2m13-2 2 2m-13-13-2-2"/><circle cx="12" cy="12" r="3.5"/></svg>
+            Interpretar com IA
+          </button>
+          <p class="field-hint">A IA identifica nome, WhatsApp, tema, pacote, data, horário, endereço e forma de pagamento automaticamente. Nada é salvo até você confirmar.</p>
+        </div>
+
+        <!-- Coluna: revisão -->
+        <div class="card review-card" id="review-card">
+          <h3 class="card-title">Confira os dados <span class="field-ia-badge">✦ preenchido pela IA</span></h3>
+
+          <div class="duplicate-alert" id="duplicate-alert">
+            <span id="duplicate-texto"></span>
+            <label><input type="checkbox" id="usar-existente" checked> usar cliente existente</label>
+          </div>
+
+          <div class="field-row field-row-2">
+            <div class="field">
+              <label for="r-nome">Nome do cliente *</label>
+              <input class="input" id="r-nome">
+            </div>
+            <div class="field">
+              <label for="r-whatsapp">WhatsApp</label>
+              <input class="input" id="r-whatsapp">
+            </div>
+          </div>
+
+          <div class="field-row field-row-2">
+            <div class="field">
+              <label for="r-email">E-mail do cliente</label>
+              <input class="input" type="email" id="r-email">
+            </div>
+            <div class="field">
+              <label for="r-cpf">CPF do cliente</label>
+              <input class="input" id="r-cpf">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="r-endereco-cliente">Endereço do cliente</label>
+            <input class="input" id="r-endereco-cliente" placeholder="Só se for diferente do endereço do evento">
+          </div>
+
+          <div class="field-row field-row-2">
+            <div class="field">
+              <label for="r-tipo">Tipo de evento</label>
+              <input class="input" id="r-tipo">
+            </div>
+            <div class="field">
+              <label for="r-tema">Tema</label>
+              <input class="input" id="r-tema">
+            </div>
+          </div>
+
+          <div class="field-row field-row-3">
+            <div class="field">
+              <label for="r-pacote">Pacote</label>
+              <input class="input" id="r-pacote">
+            </div>
+            <div class="field">
+              <label for="r-idade">Idade</label>
+              <input class="input" type="number" min="0" step="1" id="r-idade">
+            </div>
+            <div class="field">
+              <label for="r-convidados">Nº de convidados</label>
+              <input class="input" type="number" min="0" step="1" id="r-convidados">
+            </div>
+          </div>
+
+          <div class="field-row field-row-3">
+            <div class="field">
+              <label for="r-valor">Valor do orçamento (R$)</label>
+              <input class="input" type="number" step="0.01" min="0" id="r-valor">
+            </div>
+            <div class="field">
+              <label for="r-sinal">Sinal já pago (R$)</label>
+              <input class="input" type="number" step="0.01" min="0" id="r-sinal">
+            </div>
+            <div class="field">
+              <label for="r-pagamento">Forma de pagamento</label>
+              <input class="input" id="r-pagamento">
+            </div>
+          </div>
+
+          <div class="field-row field-row-3">
+            <div class="field">
+              <label for="r-data">Data *</label>
+              <input class="input" type="date" id="r-data">
+            </div>
+            <div class="field">
+              <label for="r-horario-montagem">Horário de montagem</label>
+              <input class="input" type="time" id="r-horario-montagem">
+            </div>
+            <div class="field">
+              <label for="r-horario">Horário marcado</label>
+              <input class="input" type="time" id="r-horario">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="r-endereco">Endereço</label>
+            <input class="input" id="r-endereco">
+          </div>
+          <div class="field">
+            <label for="r-referencia">Ponto de referência</label>
+            <input class="input" id="r-referencia">
+          </div>
+          <div class="field">
+            <label for="r-obs">Observações</label>
+            <textarea class="textarea" id="r-obs"></textarea>
+          </div>
+
+          <button class="btn btn-primary btn-block" id="btn-confirmar">Confirmar e criar cliente + evento</button>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<script type="module">
+  import { protegerRota } from '../js/modules/route-guard.js';
+  import { renderSidebar } from '../components/sidebar.js';
+  import { renderTopbar } from '../components/topbar.js';
+  import { showToast } from '../js/lib/toast.js';
+  import { interpretarConversa, buscarClientePorWhatsapp, confirmarImportacao } from '../js/modules/importar.js';
+
+  await protegerRota();
+  renderSidebar('importar');
+  renderTopbar();
+
+  const btnInterpretar = document.getElementById('btn-interpretar');
+  const reviewCard = document.getElementById('review-card');
+  const duplicateAlert = document.getElementById('duplicate-alert');
+  let clienteExistente = null;
+
+  btnInterpretar.addEventListener('click', async () => {
+    const texto = document.getElementById('texto-conversa').value.trim();
+    if (!texto) { showToast('Cole a conversa antes de interpretar.', 'danger'); return; }
+
+    btnInterpretar.disabled = true;
+    btnInterpretar.textContent = 'Interpretando...';
+
+    try {
+      const dados = await interpretarConversa(texto);
+
+      document.getElementById('r-nome').value = dados.nome || '';
+      document.getElementById('r-whatsapp').value = dados.whatsapp || '';
+      document.getElementById('r-email').value = dados.email || '';
+      document.getElementById('r-cpf').value = dados.cpf || '';
+      document.getElementById('r-endereco-cliente').value = dados.endereco_cliente || '';
+      document.getElementById('r-tipo').value = dados.tipo_evento || '';
+      document.getElementById('r-tema').value = dados.tema || '';
+      document.getElementById('r-pacote').value = dados.pacote || '';
+      document.getElementById('r-idade').value = dados.idade ?? '';
+      document.getElementById('r-convidados').value = dados.quantidade_convidados ?? '';
+      document.getElementById('r-valor').value = dados.valor_orcamento ?? '';
+      document.getElementById('r-sinal').value = dados.sinal_pago ?? '';
+      document.getElementById('r-pagamento').value = dados.forma_pagamento || '';
+      document.getElementById('r-data').value = dados.data || '';
+      document.getElementById('r-horario-montagem').value = dados.horario_montagem || '';
+      document.getElementById('r-horario').value = dados.horario || '';
+      document.getElementById('r-endereco').value = dados.endereco || '';
+      document.getElementById('r-referencia').value = dados.ponto_referencia || '';
+      document.getElementById('r-obs').value = dados.observacoes || '';
+
+      // Verifica se já existe cliente com esse WhatsApp
+      clienteExistente = await buscarClientePorWhatsapp(dados.whatsapp);
+      if (clienteExistente) {
+        document.getElementById('duplicate-texto').textContent =
+          `Já existe um cliente com esse WhatsApp: ${clienteExistente.nome}.`;
+        duplicateAlert.classList.add('is-visible');
+      } else {
+        duplicateAlert.classList.remove('is-visible');
+      }
+
+      reviewCard.classList.add('is-visible');
+      document.getElementById('step-2').classList.add('is-active');
+      reviewCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (err) {
+      showToast(err.message || 'Não foi possível interpretar a conversa.', 'danger');
+    } finally {
+      btnInterpretar.disabled = false;
+      btnInterpretar.textContent = 'Interpretar com IA';
+    }
+  });
+
+  document.getElementById('btn-confirmar').addEventListener('click', async () => {
+    const nome = document.getElementById('r-nome').value.trim();
+    const data = document.getElementById('r-data').value;
+
+    if (!nome) { showToast('Informe o nome do cliente.', 'danger'); return; }
+    if (!data) { showToast('Informe a data do evento.', 'danger'); return; }
+
+    const whatsapp = document.getElementById('r-whatsapp').value.trim() || null;
+    if (!whatsapp) { showToast('Informe o WhatsApp do cliente.', 'danger'); return; }
+    const pagamento = document.getElementById('r-pagamento').value.trim();
+    const convidados = document.getElementById('r-convidados').value.trim();
+    const sinal = document.getElementById('r-sinal').value.trim();
+    let observacoes = document.getElementById('r-obs').value.trim() || null;
+
+    const notas = [];
+    if (convidados) notas.push(`Convidados estimados: ${convidados}.`);
+    if (sinal) notas.push(`Sinal identificado na conversa: R$ ${sinal}. Confirme e registre o pagamento na aba Financeiro do evento, anexando o comprovante.`);
+    if (notas.length) observacoes = `${notas.join(' ')}${observacoes ? ' ' + observacoes : ''}`;
+
+    const usarExistente = clienteExistente && document.getElementById('usar-existente').checked;
+
+    const btn = document.getElementById('btn-confirmar');
+    btn.disabled = true; btn.textContent = 'Criando...';
+
+    try {
+      const { eventoId } = await confirmarImportacao({
+        clienteExistenteId: usarExistente ? clienteExistente.id : null,
+        dadosCliente: {
+          nome,
+          whatsapp,
+          email: document.getElementById('r-email').value.trim() || null,
+          cpf: document.getElementById('r-cpf').value.trim() || null,
+          endereco: document.getElementById('r-endereco-cliente').value.trim() || null,
+        },
+        dadosEvento: {
+          tipo_evento: document.getElementById('r-tipo').value.trim() || null,
+          tema: document.getElementById('r-tema').value.trim() || null,
+          pacote: document.getElementById('r-pacote').value.trim() || null,
+          idade: document.getElementById('r-idade').value ? Number(document.getElementById('r-idade').value) : null,
+          data,
+          horario: document.getElementById('r-horario').value || null,
+          horario_montagem: document.getElementById('r-horario-montagem').value || null,
+          endereco: document.getElementById('r-endereco').value.trim() || null,
+          ponto_referencia: document.getElementById('r-referencia').value.trim() || null,
+          forma_pagamento_combinada: pagamento || null,
+          observacoes,
+          status: 'orcamento',
+          valor_orcamento: Number(document.getElementById('r-valor').value) || 0,
+        },
+      });
+
+      showToast('Cliente e evento criados com sucesso!', 'success');
+      window.location.href = `./evento-detalhe.html?id=${eventoId}`;
+    } catch (err) {
+      showToast(err.message || 'Não foi possível concluir a importação.', 'danger');
+      btn.disabled = false; btn.textContent = 'Confirmar e criar cliente + evento';
+    }
+  });
+</script>
+
+</body>
+</html>

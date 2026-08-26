@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#1AA894">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Encanto Decorações">
+<meta property="og:title" content="Encanto Decorações">
+<meta property="og:description" content="Sistema de gestão de eventos e decoração.">
+<meta property="og:image" content="https://encanto-decoracoes.vercel.app/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://encanto-decoracoes.vercel.app/assets/og-image.png">
+<title>Agenda · Encanto Decorações</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/app-shell.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+<link rel="stylesheet" href="../css/agenda.css">
+<link rel="stylesheet" href="../css/demo.css">
+</head>
+<body>
+
+<div class="app-shell">
+  <div id="sidebar-mount"></div>
+
+  <div>
+    <div id="topbar-mount"></div>
+
+    <main class="app-main">
+      <div class="page-header">
+        <div>
+          <h1>Agenda</h1>
+          <p>Visão diária, semanal e mensal de todos os eventos.</p>
+        </div>
+        <a class="btn btn-primary" href="./evento-detalhe.html">Novo evento</a>
+      </div>
+
+      <div class="period-bar">
+        <div class="period-tabs" id="view-tabs">
+          <button class="period-tab" data-view="dia">Diário</button>
+          <button class="period-tab" data-view="semana">Semanal</button>
+          <button class="period-tab is-active" data-view="mes">Mensal</button>
+        </div>
+        <div class="period-nav">
+          <button class="period-nav-btn" id="btn-anterior" aria-label="Anterior">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <span class="period-label" id="period-label">—</span>
+          <button class="period-nav-btn" id="btn-proximo" aria-label="Próximo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+        </div>
+        <button class="btn btn-secondary btn-sm" id="btn-hoje">Hoje</button>
+      </div>
+
+      <div class="agenda-layout">
+
+        <!-- Calendário -->
+        <div class="card" id="calendario-card">
+          <div id="calendario-mount">Carregando...</div>
+        </div>
+
+        <!-- Coluna lateral -->
+        <div>
+          <div class="card" style="margin-bottom: var(--sp-4)">
+            <h3 class="card-title">Pesquisa de disponibilidade</h3>
+            <div class="field">
+              <label for="disp-data">Data</label>
+              <input class="input" type="date" id="disp-data">
+            </div>
+            <button class="btn btn-secondary btn-block" id="btn-verificar">Verificar disponibilidade</button>
+            <div class="disponibilidade-result" id="disp-resultado"></div>
+          </div>
+
+          <div class="card" style="margin-bottom: var(--sp-4)">
+            <h3 class="card-title">Bloquear dia</h3>
+            <div class="field">
+              <label for="bloq-data">Data</label>
+              <input class="input" type="date" id="bloq-data">
+            </div>
+            <div class="field">
+              <label for="bloq-motivo">Motivo</label>
+              <select class="select" id="bloq-motivo"></select>
+            </div>
+            <div class="field" id="bloq-observacao-wrap" style="display:none">
+              <label for="bloq-observacao">Descreva o motivo</label>
+              <input class="input" id="bloq-observacao" placeholder="Ex: Manutenção do espaço">
+            </div>
+            <button class="btn btn-secondary btn-block" id="btn-bloquear">Bloquear dia</button>
+            <div id="bloqueios-lista" style="margin-top:var(--sp-3)"></div>
+          </div>
+
+          <div class="card">
+            <h3 class="card-title">Google Agenda</h3>
+            <div class="google-sync-status" id="google-status">
+              <span class="dot" id="google-status-dot"></span>
+              <span id="google-status-texto">Verificando...</span>
+            </div>
+            <p class="field-hint" style="margin-top:var(--sp-2)">
+              Uma vez conectado, toda criação, edição e cancelamento de
+              evento passa a ser refletido automaticamente no seu Google
+              Agenda.
+            </p>
+            <a class="btn btn-secondary btn-block" id="btn-google-conectar" href="/api/google-agenda-conectar" style="margin-top:var(--sp-3); display:none">Conectar Google Agenda</a>
+            <button class="btn btn-ghost btn-block" id="btn-google-desconectar" style="margin-top:var(--sp-3); display:none">Desconectar</button>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<script type="module">
+  import { protegerRota } from '../js/modules/route-guard.js';
+  import { renderSidebar } from '../components/sidebar.js';
+  import { renderTopbar } from '../components/topbar.js';
+  import { showToast } from '../js/lib/toast.js';
+  import { escapeHtml } from '../js/lib/sanitize.js';
+  import {
+    eventosNoIntervalo, limitesDoMes, limitesDaSemana, toISO, disponibilidadeDoDia,
+  } from '../js/modules/agenda.js';
+  import {
+    MOTIVOS_BLOQUEIO, bloqueiosNoIntervalo, criarBloqueio, removerBloqueio,
+  } from '../js/modules/bloqueios.js';
+  import { cabecalhoAutenticado } from '../js/lib/supabase-client.js';
+
+  await protegerRota();
+  renderSidebar('agenda');
+  renderTopbar();
+
+  const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const DIAS_ABREV = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+  let viewAtual = 'mes';
+  let referencia = new Date();
+  referencia.setHours(0,0,0,0);
+
+  function mesmodia(a, b) { return toISO(a) === toISO(b); }
+
+  function atualizarLabel() {
+    const label = document.getElementById('period-label');
+    if (viewAtual === 'mes') {
+      label.textContent = `${MESES[referencia.getMonth()]} ${referencia.getFullYear()}`;
+    } else if (viewAtual === 'semana') {
+      const { inicio, fim } = limitesDaSemana(referencia);
+      label.textContent = `${inicio.getDate()} ${MESES[inicio.getMonth()].slice(0,3)} a ${fim.getDate()} ${MESES[fim.getMonth()].slice(0,3)}`;
+    } else {
+      label.textContent = `${referencia.getDate()} de ${MESES[referencia.getMonth()]}`;
+    }
+  }
+
+  async function renderMes() {
+    const { inicio, fim, inicioISO, fimISO } = limitesDoMes(referencia);
+    // Amplia a busca para preencher a grade com dias do mês anterior/seguinte
+    const primeiroDiaGrade = new Date(inicio);
+    primeiroDiaGrade.setDate(inicio.getDate() - inicio.getDay());
+    const ultimoDiaGrade = new Date(fim);
+    ultimoDiaGrade.setDate(fim.getDate() + (6 - fim.getDay()));
+
+    const [{ data: eventos }, bloqueios] = await Promise.all([
+      eventosNoIntervalo(toISO(primeiroDiaGrade), toISO(ultimoDiaGrade)),
+      bloqueiosNoIntervalo(toISO(primeiroDiaGrade), toISO(ultimoDiaGrade)),
+    ]);
+    const porDia = {};
+    (eventos || []).forEach(ev => { (porDia[ev.data] ||= []).push(ev); });
+    const bloqueioPorDia = Object.fromEntries(bloqueios.map(b => [b.data, b]));
+
+    const hoje = new Date(); hoje.setHours(0,0,0,0);
+
+    let html = DIAS_ABREV.map(d => `<div class="month-weekday">${d}</div>`).join('');
+    const cursor = new Date(primeiroDiaGrade);
+    while (cursor <= ultimoDiaGrade) {
+      const iso = toISO(cursor);
+      const eventosDia = porDia[iso] || [];
+      const bloqueioDia = bloqueioPorDia[iso];
+      const isOutside = cursor.getMonth() !== referencia.getMonth();
+      const isToday = mesmodia(cursor, hoje);
+
+      const pills = eventosDia.slice(0, 3).map(ev =>
+        `<div class="month-event-pill st-${ev.status}" onclick="event.stopPropagation(); window.location.href='./evento-detalhe.html?id=${ev.id}'">${ev.horario ? ev.horario.slice(0,5)+' ' : ''}${escapeHtml(ev.clientes?.nome || ev.tipo_evento || 'Evento')}</div>`
+      ).join('');
+      const mais = eventosDia.length > 3 ? `<span class="month-more">+${eventosDia.length - 3} mais</span>` : '';
+      const tagBloqueio = bloqueioDia ? `<div class="month-event-pill is-bloqueio">🔒 ${escapeHtml(MOTIVOS_BLOQUEIO[bloqueioDia.motivo] || bloqueioDia.motivo)}</div>` : '';
+
+      html += `
+        <div class="month-cell ${isOutside ? 'is-outside' : ''} ${isToday ? 'is-today' : ''} ${bloqueioDia ? 'is-bloqueado' : ''}" data-data="${iso}" ${bloqueioDia ? `title="Bloqueado: ${escapeHtml(MOTIVOS_BLOQUEIO[bloqueioDia.motivo] || bloqueioDia.motivo)}"` : ''}>
+          <span class="month-cell-number">${cursor.getDate()}</span>
+          ${tagBloqueio}${pills}${mais}
+        </div>`;
+      cursor.setDate(cursor.getDate() + 1);
+    }
+
+    document.getElementById('calendario-mount').innerHTML = `<div class="month-grid">${html}</div>`;
+  }
+
+  async function renderSemana() {
+    const { inicio, inicioISO, fimISO } = limitesDaSemana(referencia);
+    const [{ data: eventos }, bloqueios] = await Promise.all([
+      eventosNoIntervalo(inicioISO, fimISO),
+      bloqueiosNoIntervalo(inicioISO, fimISO),
+    ]);
+    const porDia = {};
+    (eventos || []).forEach(ev => { (porDia[ev.data] ||= []).push(ev); });
+    const bloqueioPorDia = Object.fromEntries(bloqueios.map(b => [b.data, b]));
+
+    const hoje = new Date(); hoje.setHours(0,0,0,0);
+    let colunas = '';
+    for (let i = 0; i < 7; i++) {
+      const dia = new Date(inicio); dia.setDate(inicio.getDate() + i);
+      const iso = toISO(dia);
+      const isToday = mesmodia(dia, hoje);
+      const bloqueioDia = bloqueioPorDia[iso];
+      const cards = (porDia[iso] || []).map(ev => `
+        <div class="event-card-mini" onclick="window.location.href='./evento-detalhe.html?id=${ev.id}'">
+          <strong>${ev.horario ? ev.horario.slice(0,5) : 'Sem horário'}</strong>
+          ${escapeHtml(ev.clientes?.nome || ev.tipo_evento || 'Evento')}
+        </div>`).join('');
+      const tagBloqueio = bloqueioDia ? `<div class="event-card-mini is-bloqueio">🔒 ${escapeHtml(MOTIVOS_BLOQUEIO[bloqueioDia.motivo] || bloqueioDia.motivo)}</div>` : '';
+      colunas += `
+        <div>
+          <div class="day-column-title ${isToday ? 'is-today' : ''}">${DIAS_ABREV[i]} ${dia.getDate()}</div>
+          <div class="day-column ${bloqueioDia ? 'is-bloqueado' : ''}">${tagBloqueio}${cards || ''}</div>
+        </div>`;
+    }
+    document.getElementById('calendario-mount').innerHTML = `<div class="week-grid">${colunas}</div>`;
+  }
+
+  async function renderDia() {
+    const iso = toISO(referencia);
+    const [{ data: eventos }, bloqueios] = await Promise.all([
+      eventosNoIntervalo(iso, iso),
+      bloqueiosNoIntervalo(iso, iso),
+    ]);
+    const bloqueioDia = bloqueios[0] || null;
+
+    const bannerBloqueio = bloqueioDia
+      ? `<div class="conflito-alert" style="margin-bottom:var(--sp-4); justify-content:space-between">
+           <span>🔒 Dia bloqueado: ${escapeHtml(MOTIVOS_BLOQUEIO[bloqueioDia.motivo] || bloqueioDia.motivo)}${bloqueioDia.observacao ? ' · ' + escapeHtml(bloqueioDia.observacao) : ''}</span>
+           <button type="button" class="btn btn-ghost btn-sm btn-remover-bloqueio-dia" data-id="${bloqueioDia.id}">Remover bloqueio</button>
+         </div>`
+      : '';
+
+    if (!eventos || !eventos.length) {
+      document.getElementById('calendario-mount').innerHTML = bannerBloqueio +
+        `<div class="empty-state"><h3>Nenhum evento neste dia</h3><p>A agenda está livre.</p></div>`;
+      return;
+    }
+
+    const html = eventos.map(ev => `
+      <div class="day-list-item" onclick="window.location.href='./evento-detalhe.html?id=${ev.id}'">
+        <div class="day-list-hora">${ev.horario ? ev.horario.slice(0,5) : '—'}</div>
+        <div class="day-list-info">
+          <strong>${escapeHtml(ev.clientes?.nome || 'Cliente')}</strong>
+          <div style="font-size:var(--fs-xs); color:var(--color-text-muted)">${escapeHtml(ev.tipo_evento) || ''}${ev.tema ? ' · ' + escapeHtml(ev.tema) : ''}</div>
+        </div>
+        <span class="badge badge-${ev.status}" style="margin-left:auto; flex-shrink:0">${ev.status}</span>
+      </div>
+    `).join('');
+    document.getElementById('calendario-mount').innerHTML = bannerBloqueio + `<div class="day-list">${html}</div>`;
+  }
+
+  async function renderCalendario() {
+    atualizarLabel();
+    if (viewAtual === 'mes') await renderMes();
+    else if (viewAtual === 'semana') await renderSemana();
+    else await renderDia();
+  }
+
+  document.getElementById('view-tabs').addEventListener('click', (e) => {
+    const btn = e.target.closest('.period-tab');
+    if (!btn) return;
+    document.querySelectorAll('#view-tabs .period-tab').forEach(b => b.classList.remove('is-active'));
+    btn.classList.add('is-active');
+    viewAtual = btn.dataset.view;
+    renderCalendario();
+  });
+
+  document.getElementById('btn-anterior').addEventListener('click', () => {
+    if (viewAtual === 'mes') referencia.setMonth(referencia.getMonth() - 1);
+    else if (viewAtual === 'semana') referencia.setDate(referencia.getDate() - 7);
+    else referencia.setDate(referencia.getDate() - 1);
+    renderCalendario();
+  });
+  document.getElementById('btn-proximo').addEventListener('click', () => {
+    if (viewAtual === 'mes') referencia.setMonth(referencia.getMonth() + 1);
+    else if (viewAtual === 'semana') referencia.setDate(referencia.getDate() + 7);
+    else referencia.setDate(referencia.getDate() + 1);
+    renderCalendario();
+  });
+  document.getElementById('btn-hoje').addEventListener('click', () => {
+    referencia = new Date(); referencia.setHours(0,0,0,0);
+    renderCalendario();
+  });
+
+  // Clique num dia do mês leva pra visão diária daquele dia
+  document.getElementById('calendario-mount').addEventListener('click', async (e) => {
+    const btnRemover = e.target.closest('.btn-remover-bloqueio-dia');
+    if (btnRemover) {
+      await removerBloqueio(btnRemover.dataset.id);
+      showToast('Dia desbloqueado.', 'success');
+      await carregarBloqueios();
+      renderCalendario();
+      return;
+    }
+
+    const cell = e.target.closest('.month-cell');
+    if (!cell) return;
+    referencia = new Date(cell.dataset.data + 'T00:00:00');
+    viewAtual = 'dia';
+    document.querySelectorAll('#view-tabs .period-tab').forEach(b => b.classList.remove('is-active'));
+    document.querySelector('#view-tabs [data-view="dia"]').classList.add('is-active');
+    renderCalendario();
+  });
+
+  // ---------- Pesquisa de disponibilidade (por dia, não por horário) ----------
+  document.getElementById('btn-verificar').addEventListener('click', async () => {
+    const data = document.getElementById('disp-data').value;
+    const resultado = document.getElementById('disp-resultado');
+
+    if (!data) { showToast('Informe a data.', 'danger'); return; }
+
+    const { bloqueado, motivo, eventos } = await disponibilidadeDoDia(data);
+    resultado.classList.remove('is-livre', 'is-ocupado');
+
+    if (bloqueado) {
+      resultado.classList.add('is-ocupado');
+      resultado.textContent = `Dia bloqueado: ${MOTIVOS_BLOQUEIO[motivo] || motivo}.`;
+    } else if (!eventos.length) {
+      resultado.classList.add('is-livre');
+      resultado.textContent = 'Dia livre. Nenhum evento marcado.';
+    } else {
+      resultado.classList.add('is-ocupado');
+      const lista = eventos.map(ev => `${ev.horario ? ev.horario.slice(0,5) + ' · ' : ''}${ev.clientes?.nome || 'cliente'} (${ev.tipo_evento || ev.tema || 'evento'})`).join('; ');
+      resultado.textContent = `Ocupado: ${eventos.length} evento(s) neste dia: ${lista}.`;
+    }
+  });
+
+  // ---------- Bloqueio manual de dia ----------
+  const selectMotivo = document.getElementById('bloq-motivo');
+  selectMotivo.innerHTML = Object.entries(MOTIVOS_BLOQUEIO)
+    .map(([valor, rotulo]) => `<option value="${valor}">${escapeHtml(rotulo)}</option>`).join('');
+
+  selectMotivo.addEventListener('change', () => {
+    document.getElementById('bloq-observacao-wrap').style.display = selectMotivo.value === 'outro' ? '' : 'none';
+  });
+
+  async function carregarBloqueios() {
+    const hojeISO = toISO(new Date());
+    const emUmAno = new Date(); emUmAno.setFullYear(emUmAno.getFullYear() + 1);
+    const bloqueios = await bloqueiosNoIntervalo(hojeISO, toISO(emUmAno));
+    const lista = document.getElementById('bloqueios-lista');
+
+    if (!bloqueios.length) {
+      lista.innerHTML = `<p class="field-hint">Nenhum dia bloqueado no momento.</p>`;
+      return;
+    }
+
+    lista.innerHTML = bloqueios.map(b => {
+      const d = new Date(b.data + 'T00:00:00');
+      return `
+        <div class="bloqueio-item" data-id="${b.id}" style="display:flex; align-items:center; justify-content:space-between; gap:var(--sp-2); padding:var(--sp-2) 0; border-bottom:1px solid var(--color-border)">
+          <div>
+            <strong>${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}</strong>
+            <div style="font-size:var(--fs-xs); color:var(--color-text-muted)">${escapeHtml(MOTIVOS_BLOQUEIO[b.motivo] || b.motivo)}${b.observacao ? ' · ' + escapeHtml(b.observacao) : ''}</div>
+          </div>
+          <button type="button" class="btn btn-ghost btn-sm btn-desbloquear" data-id="${b.id}">Desbloquear</button>
+        </div>`;
+    }).join('');
+  }
+
+  document.getElementById('btn-bloquear').addEventListener('click', async () => {
+    const data = document.getElementById('bloq-data').value;
+    const motivo = selectMotivo.value;
+    const observacao = document.getElementById('bloq-observacao').value.trim();
+
+    if (!data) { showToast('Informe a data a bloquear.', 'danger'); return; }
+    if (motivo === 'outro' && !observacao) { showToast('Descreva o motivo do bloqueio.', 'danger'); return; }
+
+    const { error } = await criarBloqueio({ data, motivo, observacao: observacao || null });
+    if (error) {
+      showToast(error.code === '23505' ? 'Esse dia já está bloqueado.' : 'Não foi possível bloquear o dia.', 'danger');
+      return;
+    }
+
+    showToast('Dia bloqueado com sucesso.', 'success');
+    document.getElementById('bloq-data').value = '';
+    document.getElementById('bloq-observacao').value = '';
+    await carregarBloqueios();
+    renderCalendario();
+  });
+
+  document.getElementById('bloqueios-lista').addEventListener('click', async (e) => {
+    const btn = e.target.closest('.btn-desbloquear');
+    if (!btn) return;
+    await removerBloqueio(btn.dataset.id);
+    showToast('Dia desbloqueado.', 'success');
+    await carregarBloqueios();
+    renderCalendario();
+  });
+
+  carregarBloqueios();
+  renderCalendario();
+
+  // ---------- Status da conexão com o Google Agenda ----------
+  async function carregarStatusGoogle() {
+    const dot = document.getElementById('google-status-dot');
+    const texto = document.getElementById('google-status-texto');
+    const btnConectar = document.getElementById('btn-google-conectar');
+    const btnDesconectar = document.getElementById('btn-google-desconectar');
+
+    // O link de conectar é uma navegação normal (não um fetch), então o
+    // token da sessão vai como parâmetro na própria URL — é como a rota
+    // api/google-agenda-conectar.js confirma que quem está iniciando a
+    // conexão é alguém logado no sistema, e não um estranho na internet.
+    const { Authorization } = await cabecalhoAutenticado();
+    if (Authorization) {
+      btnConectar.href = `/api/google-agenda-conectar?token=${encodeURIComponent(Authorization.slice(7))}`;
+    }
+
+    try {
+      const resp = await fetch('/api/google-agenda-status', { headers: await cabecalhoAutenticado() });
+      const { conectado, email } = await resp.json();
+      dot.classList.toggle('is-conectado', conectado);
+      texto.textContent = conectado ? `Conectado (${email})` : 'Não conectado';
+      btnConectar.style.display = conectado ? 'none' : '';
+      btnDesconectar.style.display = conectado ? '' : 'none';
+    } catch {
+      texto.textContent = 'Não foi possível verificar a conexão.';
+    }
+  }
+
+  document.getElementById('btn-google-desconectar').addEventListener('click', async () => {
+    const btn = document.getElementById('btn-google-desconectar');
+    btn.disabled = true;
+    await fetch('/api/google-agenda-desconectar', { method: 'POST', headers: await cabecalhoAutenticado() }).catch(() => {});
+    btn.disabled = false;
+    showToast('Google Agenda desconectado.', 'success');
+    carregarStatusGoogle();
+  });
+
+  // Depois do callback do OAuth (api/google-agenda-callback.js), a Vercel
+  // redireciona de volta pra cá com ?google=conectado|cancelado|erro.
+  const resultadoGoogle = new URLSearchParams(window.location.search).get('google');
+  if (resultadoGoogle === 'conectado') showToast('Google Agenda conectado com sucesso!', 'success');
+  else if (resultadoGoogle === 'erro') showToast('Não foi possível conectar o Google Agenda. Confira as variáveis de ambiente na Vercel.', 'danger');
+  if (resultadoGoogle) window.history.replaceState({}, '', window.location.pathname);
+
+  carregarStatusGoogle();
+</script>
+
+</body>
+</html>

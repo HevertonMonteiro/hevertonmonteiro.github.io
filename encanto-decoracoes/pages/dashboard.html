@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#1AA894">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Encanto Decorações">
+<meta property="og:title" content="Encanto Decorações">
+<meta property="og:description" content="Sistema de gestão de eventos e decoração.">
+<meta property="og:image" content="https://encanto-decoracoes.vercel.app/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://encanto-decoracoes.vercel.app/assets/og-image.png">
+<title>Dashboard · Encanto Decorações</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/app-shell.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+<link rel="stylesheet" href="../css/usuarios.css">
+<link rel="stylesheet" href="../css/demo.css">
+</head>
+<body>
+
+<div class="app-shell">
+  <div id="sidebar-mount"></div>
+
+  <div>
+    <div id="topbar-mount"></div>
+
+    <main class="app-main">
+      <div id="banner-perfil-mount"></div>
+
+      <div class="page-header">
+        <div>
+          <h1>Dashboard</h1>
+          <p>Visão geral da operação.</p>
+        </div>
+      </div>
+
+      <!-- Filtro de período -->
+      <div class="period-bar">
+        <div class="period-tabs" id="period-tabs">
+          <button class="period-tab" data-tipo="hoje">Hoje</button>
+          <button class="period-tab" data-tipo="semana">Semana</button>
+          <button class="period-tab is-active" data-tipo="mes">Mês</button>
+          <button class="period-tab" data-tipo="ano">Ano</button>
+          <button class="period-tab" data-tipo="personalizado">Personalizado</button>
+        </div>
+
+        <div class="period-nav" id="period-nav">
+          <button class="period-nav-btn" id="btn-anterior" aria-label="Período anterior">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <span class="period-label" id="period-label">—</span>
+          <button class="period-nav-btn" id="btn-proximo" aria-label="Próximo período">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+        </div>
+
+        <div class="period-custom" id="period-custom">
+          <input type="date" class="input" id="custom-inicio">
+          <span>até</span>
+          <input type="date" class="input" id="custom-fim">
+          <button class="btn btn-secondary btn-sm" id="btn-aplicar-custom">Aplicar</button>
+        </div>
+      </div>
+
+      <!-- Financeiro -->
+      <h3 style="margin-top:var(--sp-5)">Financeiro</h3>
+      <div class="metrics-grid">
+        <div class="card card-compact metric-card is-success">
+          <span class="metric-value skeleton" id="m-recebido-hoje">&nbsp;</span>
+          <span class="metric-label">Recebido hoje</span>
+          <span class="field-hint">Soma dos pagamentos registrados hoje, independente do período selecionado acima.</span>
+        </div>
+        <div class="card card-compact metric-card is-success">
+          <span class="metric-value skeleton" id="m-recebido-periodo">&nbsp;</span>
+          <span class="metric-label">Recebido · eventos deste período</span>
+          <span class="field-hint">De festas que acontecem no período selecionado acima, não importa em que mês o pagamento entrou.</span>
+        </div>
+        <div class="card card-compact metric-card is-danger">
+          <span class="metric-value skeleton" id="m-a-receber-futuro">&nbsp;</span>
+          <span class="metric-label">A receber · eventos confirmados</span>
+          <span class="field-hint">Total ainda pendente de todas as festas já confirmadas, de qualquer mês futuro (não é filtrado pelo período).</span>
+        </div>
+        <div class="card card-compact metric-card">
+          <span class="metric-value skeleton" id="m-recebido-futuro">&nbsp;</span>
+          <span class="metric-label">Recebido adiantado · eventos futuros</span>
+          <span class="field-hint">Total já recebido de festas confirmadas que ainda vão acontecer, somando todos os meses futuros.</span>
+        </div>
+      </div>
+
+      <!-- Gráficos + próximos eventos -->
+      <div class="dashboard-grid">
+        <div class="card">
+          <h3 class="card-title">Eventos por status no período</h3>
+          <div class="chart-wrap"><canvas id="chart-status"></canvas></div>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">Próximos eventos</h3>
+          <div class="upcoming-list" id="upcoming-list">
+            <div class="empty-state"><p>Carregando...</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Listas de ação financeira -->
+      <div class="dashboard-grid" style="margin-top:var(--sp-5)">
+        <div class="card">
+          <h3 class="card-title">Orçados aguardando pagamento</h3>
+          <p class="field-hint">Ainda não receberam nenhum valor, confirme para mudar o status.</p>
+          <div class="upcoming-list" id="lista-orcados-sem-pagamento">
+            <div class="empty-state"><p>Carregando...</p></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">Concluídos aguardando pagamento</h3>
+          <p class="field-hint">Já aconteceram, mas ainda não têm 100% do pagamento registrado.</p>
+          <div class="upcoming-list" id="lista-concluidos-pendentes">
+            <div class="empty-state"><p>Carregando...</p></div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script type="module">
+  import { protegerRota } from '../js/modules/route-guard.js';
+  import { renderSidebar } from '../components/sidebar.js';
+  import { renderTopbar } from '../components/topbar.js';
+  import { calcularPeriodo, navegarPeriodo, buscarMetricas, buscarFinanceiroFuturo } from '../js/modules/dashboard.js';
+  import { escapeHtml } from '../js/lib/sanitize.js';
+  import { buscarMeuPerfil } from '../js/modules/usuarios.js';
+  import Chart from 'https://esm.sh/chart.js@4.4.4/auto';
+
+  try {
+    await protegerRota();
+    renderSidebar('dashboard');
+    renderTopbar();
+    verificarPerfilCompleto();
+  } catch (err) {
+    console.error('[Encanto Decorações] Erro ao iniciar a página:', err);
+    document.body.insertAdjacentHTML('afterbegin', `
+      <div style="background:#FBEAEA; color:#B23A3A; padding:16px 24px; font-family:sans-serif; font-size:14px;">
+        Ocorreu um erro ao carregar a página. Abra o console do navegador (F12 ou Cmd+Option+C) para ver os detalhes técnicos, e confira se a URL/chave do Supabase em <code>js/lib/supabase-client.js</code> estão corretas.
+        <br><strong>Detalhe técnico:</strong> ${err?.message || err}
+      </div>
+    `);
+  }
+
+  const formatoMoeda = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+  async function verificarPerfilCompleto() {
+    const { data: perfil } = await buscarMeuPerfil();
+    if (perfil && !perfil.nome_completo) {
+      document.getElementById('banner-perfil-mount').innerHTML = `
+        <div class="perfil-incompleto-banner">
+          <span>Complete seu cadastro (nome, telefone, cargo) para identificar melhor suas ações no sistema.</span>
+          <button class="btn btn-secondary btn-sm" onclick="window.location.href='./usuarios.html'">Completar agora</button>
+        </div>`;
+    }
+  }
+  const DIAS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+  let tipoPeriodo = 'mes';
+  let referencia = new Date();
+  let personalizado = null;
+  let chartStatus = null;
+
+  function formatarLabelPeriodo() {
+    const { inicio, fim } = calcularPeriodo(tipoPeriodo, referencia, personalizado);
+    const di = new Date(inicio + 'T00:00:00');
+    const df = new Date(fim + 'T00:00:00');
+
+    if (tipoPeriodo === 'hoje') return `${di.getDate()} de ${MESES[di.getMonth()]}`;
+    if (tipoPeriodo === 'ano') return `${di.getFullYear()}`;
+    if (tipoPeriodo === 'mes') return `${MESES[di.getMonth()]} de ${di.getFullYear()}`;
+    if (tipoPeriodo === 'semana') return `${di.getDate()} ${MESES[di.getMonth()]} a ${df.getDate()} ${MESES[df.getMonth()]}`;
+    return `${di.getDate()}/${di.getMonth()+1} a ${df.getDate()}/${df.getMonth()+1}`;
+  }
+
+  function renderUpcoming(lista) {
+    const el = document.getElementById('upcoming-list');
+    if (!lista.length) {
+      el.innerHTML = `<div class="empty-state"><p>Nenhum evento futuro em aberto.</p></div>`;
+      return;
+    }
+    el.innerHTML = lista.map(ev => {
+      const d = new Date(ev.data + 'T00:00:00');
+      const nomeCliente = ev.clientes?.nome || 'Cliente';
+      return `
+        <div class="upcoming-item">
+          <div class="upcoming-date">
+            <span class="day">${d.getDate()}</span>
+            <span class="month">${MESES[d.getMonth()]}</span>
+          </div>
+          <div class="upcoming-info">
+            <strong>${escapeHtml(nomeCliente)}${ev.tipo_evento ? ' · ' + escapeHtml(ev.tipo_evento) : ''}</strong>
+            <span>${ev.tema ? escapeHtml(ev.tema) + ' · ' : ''}${ev.horario ? ev.horario.slice(0,5) : 'sem horário'}</span>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function renderChart(contagem) {
+    const ctx = document.getElementById('chart-status');
+    const labels = ['Orçamento', 'Confirmado', 'Concluído', 'Finalizado', 'Cancelado'];
+    const chaves = ['orcamento', 'confirmado', 'concluido', 'finalizado', 'cancelado'];
+    const cores = ['#6B6470', '#2E5FA3', '#B8791E', '#2F7A4D', '#B23A3A'];
+    const dados = chaves.map(k => contagem[k] || 0);
+
+    if (chartStatus) chartStatus.destroy();
+    chartStatus = new Chart(ctx, {
+      type: 'doughnut',
+      data: { labels, datasets: [{ data: dados, backgroundColor: cores, borderWidth: 0 }] },
+      options: {
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } } },
+      },
+    });
+  }
+
+  function renderListaAcao(elId, lista, textoVazio) {
+    const el = document.getElementById(elId);
+    if (!lista.length) {
+      el.innerHTML = `<div class="empty-state"><p>${textoVazio}</p></div>`;
+      return;
+    }
+    el.innerHTML = lista.map(ev => {
+      const d = new Date(ev.data + 'T00:00:00');
+      const nomeCliente = ev.clientes?.nome || 'Cliente';
+      return `
+        <div class="upcoming-item" style="cursor:pointer" onclick="window.location.href='./evento-detalhe.html?id=${ev.id}'">
+          <div class="upcoming-date">
+            <span class="day">${d.getDate()}</span>
+            <span class="month">${MESES[d.getMonth()]}</span>
+          </div>
+          <div class="upcoming-info">
+            <strong>${escapeHtml(nomeCliente)}${ev.tipo_evento ? ' · ' + escapeHtml(ev.tipo_evento) : ''}</strong>
+            <span>${ev.tema ? escapeHtml(ev.tema) + ' · ' : ''}${formatoMoeda(Number(ev.valor_orcamento || 0))}</span>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  async function carregarFinanceiroFuturo() {
+    try {
+      const { aReceberConfirmado, recebidoEventosFuturos, recebidoHoje } = await buscarFinanceiroFuturo();
+      document.getElementById('m-recebido-hoje').textContent = formatoMoeda(recebidoHoje);
+      document.getElementById('m-a-receber-futuro').textContent = formatoMoeda(aReceberConfirmado);
+      document.getElementById('m-recebido-futuro').textContent = formatoMoeda(recebidoEventosFuturos);
+    } catch (err) {
+      console.error('[Encanto Decorações] Erro ao carregar financeiro futuro:', err);
+      document.getElementById('m-recebido-hoje').textContent = '—';
+      document.getElementById('m-a-receber-futuro').textContent = '—';
+      document.getElementById('m-recebido-futuro').textContent = '—';
+    } finally {
+      document.getElementById('m-recebido-hoje').classList.remove('skeleton');
+      document.getElementById('m-a-receber-futuro').classList.remove('skeleton');
+      document.getElementById('m-recebido-futuro').classList.remove('skeleton');
+    }
+  }
+
+  async function carregar() {
+    document.getElementById('period-label').textContent = formatarLabelPeriodo();
+
+    try {
+      const range = calcularPeriodo(tipoPeriodo, referencia, personalizado);
+      const m = await buscarMetricas(range);
+
+      document.getElementById('m-recebido-periodo').textContent = formatoMoeda(m.recebidoEventosPeriodo);
+
+      document.querySelectorAll('.metric-value').forEach(el => el.classList.remove('skeleton'));
+
+      renderChart(m.contagemStatus);
+      renderUpcoming(m.proximosEventos);
+      renderListaAcao('lista-orcados-sem-pagamento', m.orcadosSemPagamento, 'Nenhum orçamento aguardando pagamento.');
+      renderListaAcao('lista-concluidos-pendentes', m.concluidosPendentes, 'Nenhum evento concluído com pagamento pendente.');
+    } catch (err) {
+      console.error('[Encanto Decorações] Erro ao carregar métricas do dashboard:', err);
+      document.querySelectorAll('.metric-value').forEach(el => { el.classList.remove('skeleton'); el.textContent = '—'; });
+      document.getElementById('upcoming-list').innerHTML =
+        `<div class="empty-state"><p>Não foi possível carregar os dados. Veja o console do navegador para detalhes.</p></div>`;
+    }
+  }
+
+  // ---------- Eventos de UI ----------
+  document.getElementById('period-tabs').addEventListener('click', (e) => {
+    const btn = e.target.closest('.period-tab');
+    if (!btn) return;
+    document.querySelectorAll('.period-tab').forEach(b => b.classList.remove('is-active'));
+    btn.classList.add('is-active');
+    tipoPeriodo = btn.dataset.tipo;
+    referencia = new Date();
+
+    const nav = document.getElementById('period-nav');
+    const custom = document.getElementById('period-custom');
+    if (tipoPeriodo === 'personalizado') {
+      nav.style.display = 'none';
+      custom.classList.add('is-visible');
+    } else {
+      nav.style.display = 'inline-flex';
+      custom.classList.remove('is-visible');
+      carregar();
+    }
+  });
+
+  document.getElementById('btn-anterior').addEventListener('click', () => {
+    referencia = navegarPeriodo(tipoPeriodo, referencia, 'anterior');
+    carregar();
+  });
+  document.getElementById('btn-proximo').addEventListener('click', () => {
+    referencia = navegarPeriodo(tipoPeriodo, referencia, 'proximo');
+    carregar();
+  });
+  document.getElementById('btn-aplicar-custom').addEventListener('click', () => {
+    const inicio = document.getElementById('custom-inicio').value;
+    const fim = document.getElementById('custom-fim').value;
+    if (!inicio || !fim) return;
+    personalizado = { inicio, fim };
+    carregar();
+  });
+
+  carregar();
+  carregarFinanceiroFuturo();
+</script>
+
+</body>
+</html>

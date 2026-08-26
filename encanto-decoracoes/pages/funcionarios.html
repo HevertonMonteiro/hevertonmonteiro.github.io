@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#1AA894">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Encanto Decorações">
+<meta property="og:title" content="Encanto Decorações">
+<meta property="og:description" content="Sistema de gestão de eventos e decoração.">
+<meta property="og:image" content="https://encanto-decoracoes.vercel.app/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://encanto-decoracoes.vercel.app/assets/og-image.png">
+<title>Funcionários · Encanto Decorações</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/app-shell.css">
+<link rel="stylesheet" href="../css/clientes.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+<link rel="stylesheet" href="../css/funcionarios.css">
+<link rel="stylesheet" href="../css/demo.css">
+</head>
+<body>
+
+<div class="app-shell">
+  <div id="sidebar-mount"></div>
+
+  <div>
+    <div id="topbar-mount"></div>
+
+    <main class="app-main">
+      <div class="page-header">
+        <div>
+          <h1>Funcionários</h1>
+          <p>Controle interno de quanto pagar a cada pessoa da equipe. Não aparece no Dashboard da empresa.</p>
+        </div>
+        <div style="display:flex; gap: var(--sp-2); align-items:center">
+          <input type="month" class="input" id="filtro-mes" style="max-width:160px">
+          <button class="btn btn-primary" id="btn-novo-funcionario">+ Funcionário</button>
+        </div>
+      </div>
+
+      <div class="funcionarios-layout">
+
+        <!-- Lista de funcionários -->
+        <div class="card" style="padding:0">
+          <div id="lista-funcionarios"><div class="skeleton" style="height:60px"></div></div>
+        </div>
+
+        <!-- Detalhe do funcionário selecionado -->
+        <div id="detalhe-funcionario" style="display:none">
+          <div class="cliente-header" style="margin-bottom: var(--sp-4)">
+            <div class="avatar-circle" id="f-avatar">?</div>
+            <div style="flex:1">
+              <h2 id="f-nome" style="margin-bottom:2px">—</h2>
+              <span id="f-cargo" style="color:var(--color-text-muted); font-size: var(--fs-sm)"></span>
+            </div>
+            <button class="btn btn-ghost btn-sm" id="btn-editar-funcionario">Editar cadastro</button>
+          </div>
+
+          <div class="resumo-mes-grid">
+            <div class="card card-compact metric-card is-success"><span class="metric-value" id="f-total-pago">R$ 0</span><span class="metric-label">Total no mês</span></div>
+            <div class="card card-compact metric-card"><span class="metric-value" id="f-total-adiantamento">R$ 0</span><span class="metric-label">Adiantamentos</span></div>
+            <div class="card card-compact metric-card is-danger"><span class="metric-value" id="f-total-desconto">R$ 0</span><span class="metric-label">Descontos</span></div>
+            <div class="card card-compact metric-card"><span class="metric-value" id="f-total-bonus">R$ 0</span><span class="metric-label">Bônus</span></div>
+          </div>
+
+          <div class="card" style="padding:0">
+            <div class="pagamentos-header" style="padding: var(--sp-4) var(--sp-4) 0">
+              <h3 class="card-title" style="margin-bottom:0">Histórico de lançamentos</h3>
+              <button class="btn btn-primary btn-sm" id="btn-novo-lancamento">+ Novo lançamento</button>
+            </div>
+            <div id="lista-lancamentos"></div>
+          </div>
+        </div>
+
+        <div class="empty-state" id="empty-funcionario">
+          <h3>Selecione um funcionário</h3>
+          <p>O histórico e o resumo do mês aparecem aqui.</p>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Modal: novo/editar funcionário -->
+<div class="modal-backdrop" id="modal-funcionario" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-funcionario-title">Novo funcionário</h3>
+      <button class="btn btn-ghost btn-icon" id="btn-fechar-modal-func" aria-label="Fechar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 6-12 12M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form id="form-funcionario" novalidate>
+      <input type="hidden" id="func-id">
+      <div class="field">
+        <label for="func-nome">Nome *</label>
+        <input class="input" id="func-nome" required>
+      </div>
+      <div class="field">
+        <label for="func-cargo">Cargo</label>
+        <input class="input" id="func-cargo" placeholder="Ex: Montador, Auxiliar...">
+      </div>
+      <div class="field-row field-row-2">
+        <div class="field">
+          <label for="func-tipo-pagamento">Tipo de pagamento</label>
+          <select class="select" id="func-tipo-pagamento">
+            <option value="mensalista">Mensalista</option>
+            <option value="diarista">Diarista</option>
+            <option value="por_evento">Por evento</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="func-valor-combinado">Valor combinado (R$)</label>
+          <input class="input" type="number" step="0.01" min="0" id="func-valor-combinado">
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" id="btn-salvar-funcionario">Salvar funcionário</button>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: novo lançamento -->
+<div class="modal-backdrop" id="modal-lancamento" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Novo lançamento</h3>
+      <button class="btn btn-ghost btn-icon" id="btn-fechar-modal-lanc" aria-label="Fechar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 6-12 12M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form id="form-lancamento" novalidate>
+      <div class="field">
+        <label for="l-tipo">Tipo *</label>
+        <select class="select" id="l-tipo" required>
+          <option value="pagamento">Pagamento</option>
+          <option value="adiantamento">Adiantamento</option>
+          <option value="desconto">Desconto</option>
+          <option value="bonus">Bônus</option>
+        </select>
+      </div>
+      <div class="field-row field-row-2">
+        <div class="field">
+          <label for="l-valor">Valor (R$) *</label>
+          <input class="input" type="number" step="0.01" min="0.01" id="l-valor" required>
+        </div>
+        <div class="field">
+          <label for="l-data">Data *</label>
+          <input class="input" type="date" id="l-data" required>
+        </div>
+      </div>
+      <div class="field">
+        <label for="l-obs">Observação</label>
+        <input class="input" id="l-obs">
+      </div>
+      <div class="field">
+        <label for="l-comprovante">Comprovante (opcional)</label>
+        <input class="input" type="file" id="l-comprovante" accept="image/*,.pdf">
+      </div>
+      <p class="field-hint" style="margin-bottom:var(--sp-3)">Depois de salvo, este lançamento não pode ser editado nem excluído. Faz parte do histórico permanente. Se precisar corrigir, registre um novo lançamento de ajuste.</p>
+      <button type="submit" class="btn btn-primary btn-block" id="btn-salvar-lancamento">Salvar lançamento</button>
+    </form>
+  </div>
+</div>
+
+<script type="module">
+  import { protegerRota } from '../js/modules/route-guard.js';
+  import { renderSidebar } from '../components/sidebar.js';
+  import { renderTopbar } from '../components/topbar.js';
+  import { showToast } from '../js/lib/toast.js';
+  import { escapeHtml } from '../js/lib/sanitize.js';
+  import { dataLocalISO } from '../js/lib/datas.js';
+  import {
+    listarFuncionarios, criarFuncionario, atualizarFuncionario,
+    listarLancamentos, criarLancamento, uploadComprovanteFuncionario, urlComprovanteFuncionario, resumoMensal,
+  } from '../js/modules/funcionarios.js';
+
+  await protegerRota();
+  renderSidebar('funcionarios');
+  renderTopbar();
+
+  const formatoMoeda = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const LABEL_TIPO = { pagamento: 'Pagamento', adiantamento: 'Adiantamento', desconto: 'Desconto', bonus: 'Bônus' };
+
+  let funcionarioSelecionadoId = null;
+  let resumoAtual = {};
+
+  function mesAtualISO() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  }
+  document.getElementById('filtro-mes').value = mesAtualISO();
+
+  async function carregarLista() {
+    const { data: funcionarios } = await listarFuncionarios();
+    resumoAtual = await resumoMensal(document.getElementById('filtro-mes').value);
+
+    const lista = document.getElementById('lista-funcionarios');
+    if (!funcionarios || !funcionarios.length) {
+      lista.innerHTML = `<div class="empty-state"><h3>Nenhum funcionário</h3><p>Cadastre o primeiro membro da equipe.</p></div>`;
+      return;
+    }
+
+    lista.innerHTML = funcionarios.map(f => {
+      const total = resumoAtual[f.id]?.total || 0;
+      return `
+        <div class="funcionario-card ${f.id === funcionarioSelecionadoId ? 'is-active' : ''}" data-id="${f.id}" data-nome="${escapeHtml(f.nome)}" data-cargo="${escapeHtml(f.cargo || '')}">
+          <div class="avatar-circle" style="width:36px;height:36px">${f.nome.charAt(0).toUpperCase()}</div>
+          <div class="funcionario-card-info">
+            <strong>${escapeHtml(f.nome)}</strong>
+            <span>${escapeHtml(f.cargo) || 'Sem cargo definido'}</span>
+          </div>
+          <span class="funcionario-card-total">${formatoMoeda(total)}</span>
+        </div>`;
+    }).join('');
+
+    lista.querySelectorAll('.funcionario-card').forEach(card => {
+      card.addEventListener('click', () => selecionarFuncionario(card.dataset.id, card.dataset.nome, card.dataset.cargo));
+    });
+  }
+
+  async function selecionarFuncionario(id, nome, cargo) {
+    funcionarioSelecionadoId = id;
+    document.getElementById('empty-funcionario').style.display = 'none';
+    document.getElementById('detalhe-funcionario').style.display = 'block';
+    document.getElementById('f-avatar').textContent = nome.charAt(0).toUpperCase();
+    document.getElementById('f-nome').textContent = nome;
+    document.getElementById('f-cargo').textContent = cargo || 'Sem cargo definido';
+
+    document.querySelectorAll('.funcionario-card').forEach(c => c.classList.toggle('is-active', c.dataset.id === id));
+
+    const r = resumoAtual[id] || { pagamento: 0, adiantamento: 0, desconto: 0, bonus: 0, total: 0 };
+    document.getElementById('f-total-pago').textContent = formatoMoeda(r.total);
+    document.getElementById('f-total-adiantamento').textContent = formatoMoeda(r.adiantamento);
+    document.getElementById('f-total-desconto').textContent = formatoMoeda(r.desconto);
+    document.getElementById('f-total-bonus').textContent = formatoMoeda(r.bonus);
+
+    await carregarLancamentos(id);
+  }
+
+  async function carregarLancamentos(funcionarioId) {
+    const { data } = await listarLancamentos(funcionarioId);
+    const lista = document.getElementById('lista-lancamentos');
+
+    if (!data || !data.length) {
+      lista.innerHTML = `<div class="empty-state"><h3>Nenhum lançamento ainda</h3><p>Registre o primeiro pagamento, adiantamento, desconto ou bônus.</p></div>`;
+      return;
+    }
+
+    lista.innerHTML = (await Promise.all(data.map(async l => {
+      const link = l.comprovante_url ? await urlComprovanteFuncionario(l.comprovante_url) : null;
+      return `
+        <div class="lancamento-row">
+          <span class="lancamento-tipo-tag ${l.tipo}">${LABEL_TIPO[l.tipo]}</span>
+          <div class="lancamento-row-main">
+            <span>${new Date(l.data + 'T00:00:00').toLocaleDateString('pt-BR')}${l.observacao ? ' · ' + escapeHtml(l.observacao) : ''}${l.registrado_por ? ' · por ' + escapeHtml(l.registrado_por) : ''}</span>
+          </div>
+          ${link ? `<a class="btn btn-ghost btn-sm" href="${link}" target="_blank">Comprovante</a>` : ''}
+          <span class="lancamento-valor">${formatoMoeda(l.valor)}</span>
+        </div>`;
+    }))).join('');
+  }
+
+  document.getElementById('filtro-mes').addEventListener('change', async () => {
+    await carregarLista();
+    if (funcionarioSelecionadoId) {
+      const card = document.querySelector(`.funcionario-card[data-id="${funcionarioSelecionadoId}"]`);
+      if (card) selecionarFuncionario(funcionarioSelecionadoId, card.dataset.nome, card.dataset.cargo);
+    }
+  });
+
+  // ---------- Modal: novo/editar funcionário ----------
+  const modalFunc = document.getElementById('modal-funcionario');
+  document.getElementById('btn-novo-funcionario').addEventListener('click', () => {
+    document.getElementById('form-funcionario').reset();
+    document.getElementById('func-id').value = '';
+    document.getElementById('modal-funcionario-title').textContent = 'Novo funcionário';
+    modalFunc.style.display = 'flex';
+  });
+  document.getElementById('btn-editar-funcionario').addEventListener('click', () => {
+    if (!funcionarioSelecionadoId) return;
+    document.getElementById('func-id').value = funcionarioSelecionadoId;
+    document.getElementById('func-nome').value = document.getElementById('f-nome').textContent;
+    document.getElementById('modal-funcionario-title').textContent = 'Editar funcionário';
+    modalFunc.style.display = 'flex';
+  });
+  document.getElementById('btn-fechar-modal-func').addEventListener('click', () => modalFunc.style.display = 'none');
+  modalFunc.addEventListener('click', (e) => { if (e.target === modalFunc) modalFunc.style.display = 'none'; });
+
+  document.getElementById('form-funcionario').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('func-id').value;
+    const payload = {
+      nome: document.getElementById('func-nome').value.trim(),
+      cargo: document.getElementById('func-cargo').value.trim() || null,
+      tipo_pagamento: document.getElementById('func-tipo-pagamento').value,
+      valor_combinado: Number(document.getElementById('func-valor-combinado').value) || null,
+    };
+    if (!payload.nome) { showToast('Informe o nome.', 'danger'); return; }
+
+    const { error } = id ? await atualizarFuncionario(id, payload) : await criarFuncionario(payload);
+    if (error) { showToast('Não foi possível salvar.', 'danger'); return; }
+
+    showToast('Funcionário salvo.', 'success');
+    modalFunc.style.display = 'none';
+    carregarLista();
+  });
+
+  // ---------- Modal: novo lançamento ----------
+  const modalLanc = document.getElementById('modal-lancamento');
+  document.getElementById('btn-novo-lancamento').addEventListener('click', () => {
+    document.getElementById('form-lancamento').reset();
+    document.getElementById('l-data').value = dataLocalISO();
+    modalLanc.style.display = 'flex';
+  });
+  document.getElementById('btn-fechar-modal-lanc').addEventListener('click', () => modalLanc.style.display = 'none');
+  modalLanc.addEventListener('click', (e) => { if (e.target === modalLanc) modalLanc.style.display = 'none'; });
+
+  document.getElementById('form-lancamento').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!funcionarioSelecionadoId) return;
+
+    const valor = Number(document.getElementById('l-valor').value);
+    const data = document.getElementById('l-data').value;
+    if (!valor || valor <= 0) { showToast('Informe um valor válido.', 'danger'); return; }
+    if (!data) { showToast('Informe a data.', 'danger'); return; }
+
+    const btn = document.getElementById('btn-salvar-lancamento');
+    btn.disabled = true; btn.textContent = 'Salvando...';
+
+    try {
+      let comprovanteCaminho = null;
+      const arquivo = document.getElementById('l-comprovante').files[0];
+      if (arquivo) comprovanteCaminho = await uploadComprovanteFuncionario(arquivo, funcionarioSelecionadoId);
+
+      const { error } = await criarLancamento({
+        funcionario_id: funcionarioSelecionadoId,
+        tipo: document.getElementById('l-tipo').value,
+        valor,
+        data,
+        observacao: document.getElementById('l-obs').value.trim() || null,
+        comprovante_url: comprovanteCaminho,
+      });
+      if (error) throw error;
+
+      showToast('Lançamento registrado.', 'success');
+      modalLanc.style.display = 'none';
+      await carregarLista();
+      const card = document.querySelector(`.funcionario-card[data-id="${funcionarioSelecionadoId}"]`);
+      if (card) selecionarFuncionario(funcionarioSelecionadoId, card.dataset.nome, card.dataset.cargo);
+    } catch (err) {
+      showToast('Não foi possível salvar o lançamento.', 'danger');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Salvar lançamento';
+    }
+  });
+
+  carregarLista();
+</script>
+
+</body>
+</html>

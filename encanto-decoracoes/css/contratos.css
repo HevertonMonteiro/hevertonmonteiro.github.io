@@ -1,0 +1,40 @@
+/* ==========================================================================
+   ENCANTO DECORAÇÕES — Contratos
+   ========================================================================== */
+
+.modelo-editor textarea {
+  min-height: 420px;
+  font-family: ui-monospace, 'SF Mono', monospace;
+  font-size: var(--fs-sm);
+  line-height: var(--lh-relaxed);
+}
+
+.placeholders-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-4);
+}
+.placeholder-chip {
+  font-size: var(--fs-xs);
+  font-family: ui-monospace, monospace;
+  background: var(--color-accent-100);
+  color: var(--color-accent-700);
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.contrato-gerado-card {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  background: var(--color-success-bg);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--sp-4);
+}
+.contrato-gerado-card svg { width: 28px; height: 28px; color: var(--color-success); flex-shrink: 0; }
+.contrato-gerado-card strong { display: block; color: var(--color-success); }
+.contrato-gerado-card span { font-size: var(--fs-sm); color: var(--color-text-muted); }
+
+.contrato-actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-4); }

@@ -1,0 +1,145 @@
+/* ==========================================================================
+   ENCANTO DECORAÇÕES — Eventos (listagem + detalhe/formulário)
+   ========================================================================== */
+
+/* ---------- Listagem ---------- */
+.eventos-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--sp-5);
+}
+.eventos-toolbar .input-group { width: 100%; max-width: 320px; }
+
+/* Status, Pagamento e Orçamento viraram uma única coluna "Status", com
+   os três selos/valor empilhados (ver .evento-status-cell abaixo) — bem
+   mais fácil de caber do que 3 colunas separadas numa tela de celular. */
+.evento-status-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+.evento-status-valor {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+  color: var(--color-text);
+}
+
+/* Larguras da tabela de eventos no formato compacto (ver clientes.css) —
+   agora só 5 colunas. A coluna "Status" recebe mais espaço por juntar
+   os dois selos + o valor; texto (Cliente, Tipo/Tema) recebe menos,
+   porque quebra linha sem problema. */
+@media (max-width: 640px) {
+  #tabela-eventos th:nth-child(1), #tabela-eventos td:nth-child(1) { width: 15%; }
+  #tabela-eventos th:nth-child(2), #tabela-eventos td:nth-child(2) { width: 19%; }
+  #tabela-eventos th:nth-child(3), #tabela-eventos td:nth-child(3) { width: 20%; }
+  #tabela-eventos th:nth-child(4), #tabela-eventos td:nth-child(4) { width: 35%; }
+  #tabela-eventos th:nth-child(5), #tabela-eventos td:nth-child(5) { width: 11%; }
+  .evento-status-valor { font-size: clamp(9px, 2.6vw, var(--fs-sm)); }
+}
+
+.status-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-md);
+  padding: 3px;
+  max-width: 100%;
+}
+.status-filter button {
+  border: none;
+  background: transparent;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+.status-filter button.is-active { background: var(--color-surface); color: var(--color-accent-700); box-shadow: var(--shadow-sm); }
+
+.evento-data-cell { display: flex; flex-direction: column; }
+.evento-data-cell strong { font-size: var(--fs-sm); }
+.evento-data-cell span { font-size: var(--fs-xs); color: var(--color-text-muted); }
+
+/* ---------- Formulário de evento (página própria) ---------- */
+.evento-form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-5);
+}
+@media (min-width: 960px) {
+  .evento-form-grid { grid-template-columns: 2fr 1fr; align-items: start; }
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-4);
+}
+@media (min-width: 620px) {
+  .field-row-2 { grid-template-columns: 1fr 1fr; }
+  .field-row-3 { grid-template-columns: 1fr 1fr 1fr; }
+}
+
+/* Autocomplete de cliente */
+.autocomplete { position: relative; }
+.autocomplete-results {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0; right: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 20;
+  display: none;
+}
+.autocomplete-results.is-open { display: block; }
+.autocomplete-item {
+  padding: var(--sp-2) var(--sp-3);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+.autocomplete-item:hover { background: var(--color-surface-alt); }
+.autocomplete-empty { padding: var(--sp-3); font-size: var(--fs-sm); color: var(--color-text-faint); }
+
+/* Aviso de conflito de horário */
+.conflito-alert {
+  display: none;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+  border-radius: var(--radius-md);
+  font-size: var(--fs-sm);
+  margin-bottom: var(--sp-4);
+}
+.conflito-alert.is-visible { display: flex; }
+.conflito-alert svg { width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; }
+
+/* Barra de status no topo do formulário */
+.status-select-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--sp-5);
+}
+
+/* Card lateral: resumo do cliente selecionado */
+.cliente-mini-card {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.cliente-mini-card .avatar-circle { width: 40px; height: 40px; }
+.cliente-mini-card strong { display: block; font-size: var(--fs-sm); }
+.cliente-mini-card span { font-size: var(--fs-xs); color: var(--color-text-muted); }

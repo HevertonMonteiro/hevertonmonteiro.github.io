@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#1AA894">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Encanto Decorações">
+<meta property="og:title" content="Encanto Decorações">
+<meta property="og:description" content="Sistema de gestão de eventos e decoração.">
+<meta property="og:image" content="https://encanto-decoracoes.vercel.app/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://encanto-decoracoes.vercel.app/assets/og-image.png">
+<title>Centro de Auditoria · Encanto Decorações</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/app-shell.css">
+<link rel="stylesheet" href="../css/usuarios.css">
+<link rel="stylesheet" href="../css/demo.css">
+</head>
+<body>
+
+<div class="app-shell">
+  <div id="sidebar-mount"></div>
+
+  <div>
+    <div id="topbar-mount"></div>
+
+    <main class="app-main">
+      <div class="page-header">
+        <div>
+          <h1>Centro de Auditoria</h1>
+          <p>Histórico permanente de ações do sistema. Não pode ser editado ou excluído por ninguém.</p>
+        </div>
+      </div>
+
+      <div class="auditoria-filtros">
+        <select class="select" id="f-modulo">
+          <option value="">Todos os módulos</option>
+          <option value="clientes">Clientes</option>
+          <option value="eventos">Eventos</option>
+          <option value="financeiro">Financeiro</option>
+          <option value="contratos">Contratos</option>
+        </select>
+        <input class="input" id="f-usuario" placeholder="Filtrar por e-mail do usuário...">
+        <input class="input" id="f-busca" placeholder="Buscar por cliente ou evento...">
+        <input class="input" type="date" id="f-inicio">
+        <input class="input" type="date" id="f-fim">
+        <select class="select" id="f-limite" style="max-width:160px">
+          <option value="10">Últimos 10</option>
+          <option value="50">Últimos 50</option>
+          <option value="100">Últimos 100</option>
+          <option value="">Todos</option>
+        </select>
+        <button class="btn btn-secondary btn-sm" id="btn-filtrar">Filtrar</button>
+      </div>
+
+      <div class="card" style="padding:0">
+        <div id="lista-auditoria"><div class="skeleton" style="height:20px;width:100%"></div></div>
+      </div>
+      <p class="field-hint" style="margin-top: var(--sp-3)" id="auditoria-hint"></p>
+    </main>
+  </div>
+</div>
+
+<script type="module">
+  import { protegerRota } from '../js/modules/route-guard.js';
+  import { renderSidebar } from '../components/sidebar.js';
+  import { renderTopbar } from '../components/topbar.js';
+  import { escapeHtml } from '../js/lib/sanitize.js';
+  import { listarAuditoria } from '../js/modules/auditoria.js';
+  import { listarPerfis } from '../js/modules/usuarios.js';
+
+  await protegerRota();
+  renderSidebar('auditoria');
+  renderTopbar();
+
+  const LABEL_ACAO = {
+    login: 'Login', logout: 'Logout', criar: 'Criação', editar: 'Edição',
+    excluir: 'Exclusão', cancelar: 'Cancelamento', pagamento_manual: 'Pagamento',
+    gerar_contrato: 'Contrato gerado',
+  };
+
+  function resumoDiferenca(antes, depois) {
+    if (!antes && depois) return 'Registro criado.';
+    if (antes && !depois) return 'Registro excluído.';
+    if (!antes || !depois) return '';
+
+    const campos = new Set([...Object.keys(antes), ...Object.keys(depois)]);
+    const mudancas = [];
+    campos.forEach(campo => {
+      if (['created_at', 'updated_at'].includes(campo)) return;
+      const v1 = JSON.stringify(antes[campo]);
+      const v2 = JSON.stringify(depois[campo]);
+      if (v1 !== v2) mudancas.push(campo);
+    });
+    return mudancas.length ? `Campos alterados: ${mudancas.join(', ')}` : '';
+  }
+
+  async function carregar() {
+    const lista = document.getElementById('lista-auditoria');
+    lista.innerHTML = `<div class="skeleton" style="height:60px;width:100%"></div>`;
+
+    const limiteValor = document.getElementById('f-limite').value;
+    const [{ data, error }, { data: perfis }] = await Promise.all([
+      listarAuditoria({
+        modulo: document.getElementById('f-modulo').value,
+        usuarioEmail: document.getElementById('f-usuario').value.trim(),
+        busca: document.getElementById('f-busca').value.trim(),
+        inicio: document.getElementById('f-inicio').value,
+        fim: document.getElementById('f-fim').value,
+        limite: limiteValor ? Number(limiteValor) : null,
+      }),
+      listarPerfis(),
+    ]);
+
+    const hint = document.getElementById('auditoria-hint');
+    if (error || !data || !data.length) {
+      lista.innerHTML = `<div class="empty-state"><h3>Nenhum registro</h3><p>Nenhuma ação encontrada com esse filtro.</p></div>`;
+      hint.textContent = '';
+      return;
+    }
+    hint.textContent = limiteValor
+      ? `Mostrando os ${data.length} registros mais recentes que batem com o filtro.`
+      : `Mostrando todos os ${data.length} registros que batem com o filtro.`;
+
+    const nomePorId = Object.fromEntries((perfis || []).map(p => [p.id, p.nome_completo]));
+
+    lista.innerHTML = data.map(a => {
+      const nomeExibido = nomePorId[a.usuario_id] || a.usuario_email || 'sistema';
+      return `
+      <div class="auditoria-row">
+        <span class="data">${new Date(a.created_at).toLocaleString('pt-BR')}</span>
+        <div>
+          <span class="acao-tag">${LABEL_ACAO[a.acao] || a.acao}</span>
+          <div class="detalhe">${a.modulo}${a.registro_id ? ' · registro ' + a.registro_id.slice(0, 8) : ''} · ${escapeHtml(resumoDiferenca(a.valores_antigos, a.valores_novos))}</div>
+        </div>
+        <span style="font-size:var(--fs-xs); color:var(--color-text-muted)">${escapeHtml(nomeExibido)}</span>
+      </div>
+    `;
+    }).join('');
+  }
+
+  document.getElementById('btn-filtrar').addEventListener('click', carregar);
+  carregar();
+</script>
+
+</body>
+</html>

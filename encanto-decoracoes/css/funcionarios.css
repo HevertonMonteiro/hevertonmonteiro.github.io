@@ -1,0 +1,59 @@
+/* ==========================================================================
+   ENCANTO DECORAÇÕES — Funcionários
+   ========================================================================== */
+
+.funcionarios-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-5);
+}
+@media (min-width: 960px) {
+  .funcionarios-layout { grid-template-columns: 340px 1fr; align-items: start; }
+}
+
+.funcionario-card {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+}
+.funcionario-card:last-child { border-bottom: none; }
+.funcionario-card:hover { background: var(--color-surface-alt); }
+.funcionario-card.is-active { background: var(--color-accent-100); }
+.funcionario-card-info { flex: 1; min-width: 0; }
+.funcionario-card-info strong { display: block; font-size: var(--fs-sm); }
+.funcionario-card-info span { font-size: var(--fs-xs); color: var(--color-text-muted); }
+.funcionario-card-total { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-sm); flex-shrink: 0; }
+
+.lancamento-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--color-border);
+}
+.lancamento-row:last-child { border-bottom: none; }
+.lancamento-tipo-tag {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+}
+.lancamento-tipo-tag.pagamento { background: var(--color-success-bg); color: var(--color-success); }
+.lancamento-tipo-tag.adiantamento { background: var(--color-info-bg); color: var(--color-info); }
+.lancamento-tipo-tag.desconto { background: var(--color-danger-bg); color: var(--color-danger); }
+.lancamento-tipo-tag.bonus { background: var(--color-warning-bg); color: var(--color-warning); }
+.lancamento-row-main { flex: 1; min-width: 0; }
+.lancamento-row-main span { font-size: var(--fs-xs); color: var(--color-text-muted); }
+.lancamento-valor { font-family: var(--font-display); font-weight: 700; }
+
+.resumo-mes-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-5);
+}
+@media (max-width: 560px) { .resumo-mes-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

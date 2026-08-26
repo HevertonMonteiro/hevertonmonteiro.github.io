@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#1AA894">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Encanto Decorações">
+<meta property="og:title" content="Encanto Decorações">
+<meta property="og:description" content="Sistema de gestão de eventos e decoração.">
+<meta property="og:image" content="https://encanto-decoracoes.vercel.app/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://encanto-decoracoes.vercel.app/assets/og-image.png">
+<title>Pagamentos · Encanto Decorações</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/app-shell.css">
+<link rel="stylesheet" href="../css/eventos.css">
+<link rel="stylesheet" href="../css/clientes.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+<link rel="stylesheet" href="../css/pagamentos.css">
+<link rel="stylesheet" href="../css/demo.css">
+</head>
+<body>
+
+<div class="app-shell">
+  <div id="sidebar-mount"></div>
+
+  <div>
+    <div id="topbar-mount"></div>
+
+    <main class="app-main">
+      <div class="page-header">
+        <div>
+          <h1>Pagamentos</h1>
+          <p>Selecione um cliente para ver exclusivamente os eventos dele.</p>
+        </div>
+      </div>
+
+      <div class="tabs" id="pagamentos-tabs">
+        <button class="tab-btn is-active" data-tab="cobrancas">Cobranças</button>
+        <button class="tab-btn" data-tab="recebimentos">Recebimentos do dia</button>
+      </div>
+
+      <div class="tab-panel is-active" id="tab-cobrancas">
+
+      <div class="field pagamentos-cliente-busca">
+        <label for="busca-cliente">Cliente</label>
+        <div class="autocomplete">
+          <input class="input" id="busca-cliente" placeholder="Buscar cliente pelo nome..." autocomplete="off">
+          <input type="hidden" id="busca-cliente-id">
+          <div class="autocomplete-results" id="cliente-results"></div>
+        </div>
+      </div>
+
+      <div id="area-eventos" style="display:none">
+
+        <p style="margin-bottom: var(--sp-4)"><a href="#" id="btn-voltar-pendentes">&larr; Voltar para clientes pendentes</a></p>
+
+        <div class="cliente-header" style="margin-bottom: var(--sp-5)">
+          <div class="avatar-circle" id="cliente-avatar">?</div>
+          <div>
+            <h2 id="cliente-nome" style="margin-bottom:2px">—</h2>
+            <span id="cliente-contato" style="color:var(--color-text-muted); font-size: var(--fs-sm)"></span>
+          </div>
+        </div>
+
+        <div class="selecao-toolbar" id="selecao-toolbar">
+          <span id="selecao-texto">0 eventos selecionados</span>
+          <select class="select" id="lote-modalidade" style="max-width:220px">
+            <option value="pix">Pix</option>
+            <option value="credito">Cartão de crédito (parcelado)</option>
+          </select>
+          <button class="btn btn-secondary btn-sm" id="btn-cobranca-lote">
+            Gerar cobrança para selecionados
+          </button>
+        </div>
+
+        <div class="card" style="padding:0">
+          <div id="lista-eventos-cliente"></div>
+        </div>
+      </div>
+
+      <div id="area-pendentes">
+        <h2 style="font-size: var(--fs-lg); margin-bottom: var(--sp-3)">Clientes com pagamento pendente</h2>
+        <div class="card" style="padding:0">
+          <div id="lista-pendentes"><div class="skeleton" style="height:60px;width:100%"></div></div>
+        </div>
+      </div>
+
+      </div>
+
+      <div class="tab-panel" id="tab-recebimentos">
+        <div class="recebimentos-toolbar">
+          <button class="period-nav-btn" id="btn-dia-anterior" aria-label="Dia anterior">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <input class="input" type="date" id="recebimentos-data" style="max-width:180px">
+          <button class="period-nav-btn" id="btn-dia-proximo" aria-label="Próximo dia">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <button class="btn btn-secondary btn-sm" id="btn-dia-hoje">Hoje</button>
+          <select class="select" id="recebimentos-limite" style="max-width:160px; margin-left:auto">
+            <option value="10">Últimos 10</option>
+            <option value="50">Últimos 50</option>
+            <option value="100">Últimos 100</option>
+            <option value="">Todos</option>
+          </select>
+        </div>
+
+        <p class="field-hint" id="recebimentos-total" style="margin-bottom: var(--sp-3)"></p>
+
+        <div class="card" style="padding:0">
+          <div id="lista-recebimentos"><div class="skeleton" style="height:60px;width:100%"></div></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Modal: gerar link de pagamento -->
+<div class="modal-backdrop" id="modal-link" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Gerar link de pagamento</h3>
+      <button class="btn btn-ghost btn-icon" id="btn-fechar-modal-link" aria-label="Fechar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 6-12 12M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="field">
+      <label>Valor rápido</label>
+      <div class="valor-rapido-row">
+        <button type="button" class="btn btn-secondary btn-sm" id="link-total-btn" data-preset-link="total">Total do evento</button>
+        <button type="button" class="btn btn-secondary btn-sm" data-preset-link="entrada">Entrada (30%)</button>
+        <button type="button" class="btn btn-secondary btn-sm" id="link-restante-btn" data-preset-link="restante">Saldo restante</button>
+      </div>
+    </div>
+
+    <div class="field-row field-row-2">
+      <div class="field">
+        <label for="link-valor">Valor (R$) *</label>
+        <input class="input" type="number" step="0.01" min="0.01" id="link-valor">
+      </div>
+      <div class="field">
+        <label for="link-tipo">Tipo de cobrança</label>
+        <select class="select" id="link-tipo">
+          <option value="total">Valor total</option>
+          <option value="entrada">Entrada</option>
+          <option value="parcela">Parcela</option>
+          <option value="saldo_restante" selected>Saldo restante</option>
+          <option value="personalizado">Personalizado</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="link-modalidade">Modalidade de pagamento</label>
+      <select class="select" id="link-modalidade">
+        <option value="pix">Pix</option>
+        <option value="credito">Cartão de crédito (parcelado)</option>
+      </select>
+      <p class="field-hint">O cliente só verá essa opção ao abrir o link. No cartão, ele escolhe o número de parcelas.</p>
+    </div>
+
+    <button class="btn btn-primary btn-block" id="btn-gerar-link-confirmar">Gerar link de pagamento</button>
+    <div id="link-resultado" style="display:none; margin-top: var(--sp-4)"></div>
+  </div>
+</div>
+
+<script type="module">
+  import { protegerRota } from '../js/modules/route-guard.js';
+  import { renderSidebar } from '../components/sidebar.js';
+  import { renderTopbar } from '../components/topbar.js';
+  import { listarClientes } from '../js/modules/clientes.js';
+  import { listarEventosDoClienteComSaldo, listarClientesComPendencia, listarPagamentosDoDia } from '../js/modules/pagamentos.js';
+  import { escapeHtml } from '../js/lib/sanitize.js';
+  import { cabecalhoAutenticado } from '../js/lib/supabase-client.js';
+
+  await protegerRota();
+  renderSidebar('pagamentos');
+  renderTopbar();
+
+  const formatoMoeda = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const LABEL_STATUS = { orcamento: 'Orçamento', confirmado: 'Confirmado', concluido: 'Concluído', finalizado: 'Finalizado', cancelado: 'Cancelado' };
+
+  const inputCliente = document.getElementById('busca-cliente');
+  const hiddenClienteId = document.getElementById('busca-cliente-id');
+  const resultsBox = document.getElementById('cliente-results');
+  let buscaTimer;
+
+  inputCliente.addEventListener('input', () => {
+    hiddenClienteId.value = '';
+    clearTimeout(buscaTimer);
+    const termo = inputCliente.value.trim();
+    if (!termo) { resultsBox.classList.remove('is-open'); return; }
+    buscaTimer = setTimeout(async () => {
+      const { data } = await listarClientes(termo);
+      resultsBox.innerHTML = (data && data.length)
+        ? data.map(c => `<div class="autocomplete-item" data-id="${c.id}" data-nome="${escapeHtml(c.nome)}" data-tel="${escapeHtml(c.whatsapp || '')}">${escapeHtml(c.nome)}</div>`).join('')
+        : `<div class="autocomplete-empty">Nenhum cliente encontrado.</div>`;
+      resultsBox.classList.add('is-open');
+    }, 250);
+  });
+
+  resultsBox.addEventListener('click', (e) => {
+    const item = e.target.closest('.autocomplete-item');
+    if (!item) return;
+    hiddenClienteId.value = item.dataset.id;
+    inputCliente.value = item.dataset.nome;
+    resultsBox.classList.remove('is-open');
+    document.getElementById('cliente-avatar').textContent = item.dataset.nome.charAt(0).toUpperCase();
+    document.getElementById('cliente-nome').textContent = item.dataset.nome;
+    document.getElementById('cliente-contato').textContent = item.dataset.tel;
+    carregarEventosDoCliente(item.dataset.id);
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.autocomplete')) resultsBox.classList.remove('is-open');
+  });
+
+  function atualizarToolbarSelecao() {
+    const marcados = document.querySelectorAll('.evento-check:checked');
+    const toolbar = document.getElementById('selecao-toolbar');
+    if (marcados.length > 0) {
+      toolbar.classList.add('is-visible');
+      document.getElementById('selecao-texto').textContent = `${marcados.length} evento(s) selecionado(s)`;
+    } else {
+      toolbar.classList.remove('is-visible');
+    }
+  }
+
+  document.getElementById('btn-cobranca-lote').addEventListener('click', async () => {
+    const marcados = [...document.querySelectorAll('.evento-check:checked')];
+    if (!marcados.length) return;
+
+    const btn = document.getElementById('btn-cobranca-lote');
+    btn.disabled = true; btn.textContent = 'Gerando...';
+
+    const linksGerados = [];
+    for (const chk of marcados) {
+      try {
+        const resp = await fetch('/api/criar-cobranca', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...(await cabecalhoAutenticado()) },
+          body: JSON.stringify({
+            eventoId: chk.dataset.id,
+            tipo: 'saldo_restante',
+            valor: Number(chk.dataset.restante),
+            descricao: `Encanto Decorações: ${chk.dataset.nome}`,
+            modalidade: document.getElementById('lote-modalidade').value,
+          }),
+        });
+        const json = await resp.json();
+        if (resp.ok) linksGerados.push({ nome: chk.dataset.nome, link: json.linkPagamento });
+        else { alert(json.erro); break; }
+      } catch {
+        alert('Não foi possível gerar um dos links.');
+        break;
+      }
+    }
+
+    btn.disabled = false; btn.textContent = 'Gerar cobrança para selecionados';
+
+    if (linksGerados.length) {
+      const texto = linksGerados.map(l => `${l.nome}: ${l.link}`).join('\n\n');
+      alert(`Links gerados:\n\n${texto}\n\nCopie e envie manualmente, ou use o botão "Gerar link" individual de cada evento para ter os botões de WhatsApp/e-mail prontos.`);
+    }
+  });
+
+  async function carregarEventosDoCliente(clienteId) {
+    document.getElementById('area-pendentes').style.display = 'none';
+    document.getElementById('area-eventos').style.display = 'block';
+
+    const lista = document.getElementById('lista-eventos-cliente');
+    lista.innerHTML = `<div class="skeleton" style="height:60px;width:100%"></div>`;
+
+    // Exclusivamente os eventos DESTE cliente — nunca de outro.
+    const { data: eventos } = await listarEventosDoClienteComSaldo(clienteId);
+
+    if (!eventos || !eventos.length) {
+      lista.innerHTML = `<div class="empty-state"><h3>Nenhum evento</h3><p>Este cliente ainda não tem eventos cadastrados.</p></div>`;
+      return;
+    }
+
+    lista.innerHTML = eventos.map(ev => {
+      const restante = ev.saldo ? Math.max(Number(ev.saldo.valor_restante), 0) : Number(ev.valor_orcamento || 0);
+      const d = new Date(ev.data + 'T00:00:00');
+      return `
+        <div class="evento-pagamento-row">
+          <input type="checkbox" class="evento-check" data-id="${ev.id}" data-restante="${restante}" data-nome="${escapeHtml(ev.tipo_evento || 'Evento')}" ${restante <= 0 || ev.status === 'cancelado' ? 'disabled' : ''}>
+          <div class="evento-pagamento-info">
+            <strong>${escapeHtml(ev.tipo_evento) || 'Evento'}${ev.tema ? ' · ' + escapeHtml(ev.tema) : ''}</strong>
+            <span>${d.toLocaleDateString('pt-BR')} · <span class="badge badge-${ev.status}">${LABEL_STATUS[ev.status]}</span></span>
+          </div>
+          <div class="evento-pagamento-saldo">
+            <span class="valor">${formatoMoeda(restante)}</span>
+            <span class="label">${restante > 0 ? 'a receber' : 'quitado'}</span>
+          </div>
+          <a class="btn btn-secondary btn-sm" href="./evento-detalhe.html?id=${ev.id}&tab=financeiro">Registrar pagamento</a>
+          ${restante > 0 && ev.status !== 'cancelado' ? `<button class="btn btn-primary btn-sm btn-gerar-link" data-id="${ev.id}" data-restante="${restante}" data-total="${ev.valor_orcamento || 0}">Gerar link</button>` : ''}
+        </div>`;
+    }).join('');
+
+    document.querySelectorAll('.evento-check').forEach(chk => chk.addEventListener('change', atualizarToolbarSelecao));
+    document.querySelectorAll('.btn-gerar-link').forEach(btn => btn.addEventListener('click', () => abrirModalLink(btn.dataset.id, Number(btn.dataset.total), Number(btn.dataset.restante))));
+    atualizarToolbarSelecao();
+  }
+
+  // ---------- Modal: gerar link de pagamento (Mercado Pago) ----------
+  let eventoParaCobranca = null;
+
+  function abrirModalLink(eventoId, total, restante) {
+    eventoParaCobranca = eventoId;
+    document.getElementById('link-resultado').style.display = 'none';
+    document.getElementById('link-valor').value = restante.toFixed(2);
+    document.getElementById('link-total-btn').dataset.valor = total;
+    document.getElementById('link-restante-btn').dataset.valor = restante;
+    document.getElementById('modal-link').style.display = 'flex';
+  }
+  document.getElementById('btn-fechar-modal-link').addEventListener('click', () => document.getElementById('modal-link').style.display = 'none');
+
+  document.querySelectorAll('#modal-link [data-preset-link]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const total = Number(document.getElementById('link-total-btn').dataset.valor);
+      const restante = Number(document.getElementById('link-restante-btn').dataset.valor);
+      let valor = restante;
+      if (btn.dataset.presetLink === 'total') valor = total;
+      if (btn.dataset.presetLink === 'entrada') valor = total * 0.3;
+      document.getElementById('link-valor').value = valor.toFixed(2);
+    });
+  });
+
+  document.getElementById('btn-gerar-link-confirmar').addEventListener('click', async () => {
+    const valor = Number(document.getElementById('link-valor').value);
+    const tipo = document.getElementById('link-tipo').value;
+    const modalidade = document.getElementById('link-modalidade').value;
+    if (!valor || valor <= 0) return;
+
+    const btn = document.getElementById('btn-gerar-link-confirmar');
+    btn.disabled = true; btn.textContent = 'Gerando...';
+
+    try {
+      const resp = await fetch('/api/criar-cobranca', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(await cabecalhoAutenticado()) },
+        body: JSON.stringify({ eventoId: eventoParaCobranca, tipo, valor, descricao: `Encanto Decorações: ${tipo}`, modalidade }),
+      });
+      const json = await resp.json();
+
+      if (!resp.ok) {
+        document.getElementById('link-resultado').style.display = 'block';
+        document.getElementById('link-resultado').innerHTML = `<p style="color:var(--color-danger)">${escapeHtml(json.erro)}</p>`;
+        return;
+      }
+
+      const link = json.linkPagamento;
+      document.getElementById('link-resultado').style.display = 'block';
+      document.getElementById('link-resultado').innerHTML = `
+        <p class="field-hint">Link gerado com sucesso:</p>
+        <input class="input" value="${link}" readonly onclick="this.select()" style="margin-bottom:var(--sp-2)">
+        <div style="display:flex; gap:var(--sp-2); flex-wrap:wrap">
+          <a class="btn btn-secondary btn-sm" href="https://wa.me/?text=${encodeURIComponent('Segue o link para pagamento: ' + link)}" target="_blank">Enviar por WhatsApp</a>
+          <a class="btn btn-secondary btn-sm" href="mailto:?subject=${encodeURIComponent('Link de pagamento · Encanto Decorações')}&body=${encodeURIComponent('Segue o link para pagamento: ' + link)}">Enviar por e-mail</a>
+          <button class="btn btn-secondary btn-sm" id="btn-copiar-link">Copiar link</button>
+        </div>`;
+
+      document.getElementById('btn-copiar-link').addEventListener('click', () => {
+        navigator.clipboard.writeText(link);
+        document.getElementById('btn-copiar-link').textContent = 'Copiado!';
+      });
+    } catch {
+      document.getElementById('link-resultado').style.display = 'block';
+      document.getElementById('link-resultado').innerHTML = `<p style="color:var(--color-danger)">Não foi possível gerar o link agora.</p>`;
+    } finally {
+      btn.disabled = false; btn.textContent = 'Gerar link de pagamento';
+    }
+  });
+  async function carregarPendentes() {
+    const lista = document.getElementById('lista-pendentes');
+    const { data, error } = await listarClientesComPendencia();
+
+    if (error) {
+      lista.innerHTML = `<div class="empty-state"><h3>Não foi possível carregar</h3><p>Tente recarregar a página.</p></div>`;
+      return;
+    }
+    if (!data.length) {
+      lista.innerHTML = `<div class="empty-state"><h3>Nenhuma pendência 🎉</h3><p>Todos os clientes estão em dia.</p></div>`;
+      return;
+    }
+
+    lista.innerHTML = data.map(c => `
+      <div class="evento-pagamento-row" style="cursor:pointer" data-id="${c.id}" data-nome="${escapeHtml(c.nome)}" data-tel="${escapeHtml(c.whatsapp || '')}">
+        <div class="evento-pagamento-info">
+          <strong>${escapeHtml(c.nome)}</strong>
+          <span>${c.qtdEventos} evento(s) com saldo em aberto</span>
+        </div>
+        <div class="evento-pagamento-saldo">
+          <span class="valor">${formatoMoeda(c.totalPendente)}</span>
+          <span class="label">a receber</span>
+        </div>
+      </div>
+    `).join('');
+
+    lista.querySelectorAll('[data-id]').forEach(row => {
+      row.addEventListener('click', () => {
+        inputCliente.value = row.dataset.nome;
+        hiddenClienteId.value = row.dataset.id;
+        document.getElementById('cliente-avatar').textContent = row.dataset.nome.charAt(0).toUpperCase();
+        document.getElementById('cliente-nome').textContent = row.dataset.nome;
+        document.getElementById('cliente-contato').textContent = row.dataset.tel;
+        carregarEventosDoCliente(row.dataset.id);
+      });
+    });
+  }
+
+  carregarPendentes();
+
+  document.getElementById('btn-voltar-pendentes').addEventListener('click', (e) => {
+    e.preventDefault();
+    document.getElementById('area-eventos').style.display = 'none';
+    document.getElementById('area-pendentes').style.display = 'block';
+    inputCliente.value = '';
+    hiddenClienteId.value = '';
+    carregarPendentes();
+  });
+
+  // ---------- Abas: Cobranças / Recebimentos do dia ----------
+  document.getElementById('pagamentos-tabs').addEventListener('click', (e) => {
+    const btn = e.target.closest('.tab-btn');
+    if (!btn) return;
+    document.querySelectorAll('#pagamentos-tabs .tab-btn').forEach(b => b.classList.remove('is-active'));
+    btn.classList.add('is-active');
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('is-active'));
+    document.getElementById(`tab-${btn.dataset.tab}`).classList.add('is-active');
+    if (btn.dataset.tab === 'recebimentos') carregarRecebimentos();
+  });
+
+  // ---------- Recebimentos do dia ----------
+  const LABEL_FORMA_PAGAMENTO = { pix: 'Pix', cartao: 'Cartão', dinheiro: 'Dinheiro', transferencia: 'Transferência', boleto: 'Boleto' };
+  const toISO = (d) => {
+    const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+  const inputRecebimentosData = document.getElementById('recebimentos-data');
+  inputRecebimentosData.value = toISO(new Date());
+
+  async function carregarRecebimentos() {
+    const lista = document.getElementById('lista-recebimentos');
+    lista.innerHTML = `<div class="skeleton" style="height:60px;width:100%"></div>`;
+
+    const limiteValor = document.getElementById('recebimentos-limite').value;
+    const { data, error } = await listarPagamentosDoDia(inputRecebimentosData.value, limiteValor ? Number(limiteValor) : null);
+
+    if (error) {
+      lista.innerHTML = `<div class="empty-state"><h3>Não foi possível carregar</h3><p>Tente recarregar a página.</p></div>`;
+      document.getElementById('recebimentos-total').textContent = '';
+      return;
+    }
+
+    if (!data.length) {
+      lista.innerHTML = `<div class="empty-state"><h3>Nenhum recebimento</h3><p>Nenhum pagamento registrado nesta data.</p></div>`;
+      document.getElementById('recebimentos-total').textContent = '';
+      return;
+    }
+
+    const total = data.reduce((soma, p) => soma + Number(p.valor), 0);
+    document.getElementById('recebimentos-total').textContent =
+      `${data.length} pagamento(s), total recebido: ${formatoMoeda(total)}`;
+
+    lista.innerHTML = data.map(p => `
+      <div class="evento-pagamento-row">
+        <div class="evento-pagamento-info">
+          <strong>${escapeHtml(p.eventos?.clientes?.nome) || 'Cliente'}</strong>
+          <span>${p.horario ? p.horario.slice(0,5) + ' · ' : ''}${escapeHtml(p.eventos?.tipo_evento) || 'Evento'}${p.eventos?.tema ? ' · ' + escapeHtml(p.eventos.tema) : ''} · ${p.origem === 'mercadopago' ? 'Mercado Pago' : (LABEL_FORMA_PAGAMENTO[p.forma_pagamento] || p.forma_pagamento)}</span>
+        </div>
+        <div class="evento-pagamento-saldo">
+          <span class="valor">${formatoMoeda(p.valor)}</span>
+          <span class="label">${p.origem === 'mercadopago' ? 'online' : 'manual'}</span>
+        </div>
+        ${p.eventos?.id ? `<a class="btn btn-secondary btn-sm" href="./evento-detalhe.html?id=${p.eventos.id}&tab=financeiro">Ver evento</a>` : ''}
+      </div>
+    `).join('');
+  }
+
+  document.getElementById('btn-dia-anterior').addEventListener('click', () => {
+    const d = new Date(inputRecebimentosData.value + 'T00:00:00');
+    d.setDate(d.getDate() - 1);
+    inputRecebimentosData.value = toISO(d);
+    carregarRecebimentos();
+  });
+  document.getElementById('btn-dia-proximo').addEventListener('click', () => {
+    const d = new Date(inputRecebimentosData.value + 'T00:00:00');
+    d.setDate(d.getDate() + 1);
+    inputRecebimentosData.value = toISO(d);
+    carregarRecebimentos();
+  });
+  document.getElementById('btn-dia-hoje').addEventListener('click', () => {
+    inputRecebimentosData.value = toISO(new Date());
+    carregarRecebimentos();
+  });
+  inputRecebimentosData.addEventListener('change', carregarRecebimentos);
+  document.getElementById('recebimentos-limite').addEventListener('change', carregarRecebimentos);
+</script>
+
+</body>
+</html>

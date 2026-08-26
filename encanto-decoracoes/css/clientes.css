@@ -1,0 +1,174 @@
+/* ==========================================================================
+   ENCANTO DECORAÇÕES — Clientes (listagem + detalhe)
+   ========================================================================== */
+
+/* ---------- Listagem ---------- */
+.clientes-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-5);
+  flex-wrap: wrap;
+}
+.clientes-toolbar .input-group { width: 100%; max-width: 340px; }
+
+.clientes-table-wrap {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow-x: auto;
+}
+
+table.data-table { min-width: 560px; }
+
+table.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.data-table thead th {
+  text-align: left;
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-faint);
+  font-weight: 600;
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface-alt);
+}
+.data-table tbody td {
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--fs-sm);
+  vertical-align: middle;
+}
+.data-table tbody tr:last-child td { border-bottom: none; }
+.data-table tbody tr:hover { background: var(--color-surface-alt); cursor: pointer; }
+
+/* Em telas estreitas, a tabela continua sendo tabela (mesmo formato) —
+   só encolhe: menos espaçamento, fonte menor (com um piso legível) e o
+   texto pode quebrar linha em vez de cortar, pra caber tudo sem precisar
+   rolar de lado. */
+@media (max-width: 640px) {
+  .clientes-table-wrap { overflow-x: visible; }
+  /* table-layout: fixed é o que realmente garante caber: com o padrão
+     (auto) o navegador ainda pode deixar colunas mais largas que o
+     conteúdo pede, mesmo com fonte pequena e quebra de linha. Com
+     "fixed", a largura de cada coluna vem só do cabeçalho (ver as
+     porcentagens definidas por tabela em eventos.css/usuarios.css pras
+     duas tabelas com mais colunas) e nunca estoura os 100% da tela. */
+  table.data-table { min-width: 0; width: 100%; table-layout: fixed; }
+  /* overflow: hidden é a rede de segurança: mesmo que algum conteúdo
+     ainda não caiba, ele fica contido dentro da própria célula em vez de
+     vazar por cima da célula vizinha (era isso que causava informação
+     "sobreposta"). */
+  .data-table td, .data-table th { overflow: hidden; }
+  .data-table thead th {
+    padding: var(--sp-2) 4px;
+    font-size: 9px;
+  }
+  .data-table tbody td {
+    padding: var(--sp-2) 4px;
+    font-size: clamp(10px, 2.8vw, var(--fs-sm));
+    white-space: normal;
+    overflow-wrap: break-word;
+  }
+  .data-table .badge {
+    max-width: 100%;
+    box-sizing: border-box;
+    height: auto;
+    padding: 2px 4px;
+    font-size: 8px;
+    white-space: normal;
+    line-height: 1.3;
+  }
+  /* O gatilho real da sobreposição: botões (ícone de editar/excluir) são
+     itens flex, e por padrão um item flex NUNCA encolhe além do próprio
+     conteúdo (min-width automático), não importa o quanto o resto da
+     regra mande encolher — precisa de min-width:0 explícito pra valer. */
+  .data-table .row-actions {
+    gap: 2px;
+    min-width: 0;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .data-table .row-actions .btn {
+    min-width: 0;
+    flex-shrink: 1;
+  }
+  .data-table .row-actions .btn-sm {
+    height: 26px;
+    padding: 0 4px;
+    font-size: 11px;
+  }
+  /* Rótulo do botão de ação (ex.: "Editar") some, fica só o ícone —
+     a coluna de ação é a mais apertada da tabela. */
+  .data-table .row-actions .btn-text { display: none; }
+}
+
+.cliente-nome-cell { display: flex; align-items: center; gap: var(--sp-3); }
+.avatar-circle {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: var(--color-accent-100);
+  color: var(--color-accent-700);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700;
+  font-size: var(--fs-sm);
+  flex-shrink: 0;
+}
+
+.row-actions { display: flex; gap: var(--sp-1); justify-content: flex-end; }
+
+/* ---------- Página de detalhe ---------- */
+.cliente-header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-6);
+}
+.cliente-header .avatar-circle { width: 56px; height: 56px; font-size: var(--fs-lg); flex-shrink: 0; }
+.cliente-header-info { min-width: 0; }
+.cliente-header-info span { color: var(--color-text-muted); font-size: var(--fs-sm); }
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1);
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--sp-5);
+}
+.tab-btn {
+  border: none;
+  background: transparent;
+  padding: var(--sp-3) var(--sp-4);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+@media (max-width: 480px) {
+  .tab-btn { padding: var(--sp-2) var(--sp-3); font-size: clamp(11px, 3.2vw, var(--fs-sm)); }
+}
+.tab-btn.is-active { color: var(--color-accent-700); border-bottom-color: var(--color-accent-500); }
+.tab-panel { display: none; }
+.tab-panel.is-active { display: block; }
+
+.history-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  border-bottom: 1px solid var(--color-border);
+  flex-wrap: wrap;
+}
+.history-row:last-child { border-bottom: none; }
+.history-row-main { min-width: 0; flex: 1; }
+.history-row-main strong { display: block; font-size: var(--fs-sm); }
+.history-row-main span { font-size: var(--fs-xs); color: var(--color-text-muted); }
+.history-row-value { flex-shrink: 0; }
+.history-row-value { font-weight: 700; font-family: var(--font-display); }

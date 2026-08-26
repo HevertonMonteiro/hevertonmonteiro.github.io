@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel da corretora · Corretora de Milhões</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<main>
+<section class="container" style="max-width: 440px; padding-top:48px;">
+  <h2>Painel da corretora</h2>
+
+  <div class="demo-banner">
+    <strong>Demo de portfólio:</strong> não existe usuário/senha real aqui. Preencha
+    <strong>qualquer e-mail e senha</strong>. Nesta demonstração, qualquer dado preenchido entra no painel.
+  </div>
+
+  <form id="form-login">
+    <p><label for="email">E-mail</label><input class="input" type="email" id="email" name="email" required></p>
+    <p><label for="senha">Senha</label><input class="input" type="password" id="senha" name="senha" required></p>
+    <button type="submit" class="btn btn-primary">Entrar</button>
+  </form>
+  <p style="margin-top:16px;"><a href="../index.html">← Voltar para o site público</a></p>
+</section>
+</main>
+
+<script src="../js/data.js"></script>
+<script src="../js/store.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+  if (sessaoAtual()) window.location.href = 'dashboard.html';
+
+  document.getElementById('form-login').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email').value.trim();
+    const senha = document.getElementById('senha').value;
+    if (login(email, senha)) window.location.href = 'dashboard.html';
+  });
+</script>
+
+</body>
+</html>

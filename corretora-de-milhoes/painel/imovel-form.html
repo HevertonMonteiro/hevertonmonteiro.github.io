@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="page-title">Novo imóvel · Corretora de Milhões</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div id="navbar-mount"></div>
+
+<main>
+<section class="container" style="max-width: 720px;">
+  <h2 id="titulo-form">Novo imóvel</h2>
+  <form id="form-imovel">
+    <p><label for="titulo">Título</label><input class="input" type="text" id="titulo" required></p>
+    <p><label for="descricao">Descrição</label><textarea class="input" id="descricao" rows="5"></textarea></p>
+
+    <div class="filtros" style="grid-template-columns: repeat(3, 1fr); margin-bottom:14px;">
+      <div><label>Negócio</label>
+        <select class="input" id="tipo_negocio"></select>
+      </div>
+      <div><label>Tipo</label>
+        <select class="input" id="tipo_imovel"></select>
+      </div>
+      <div><label>Status</label>
+        <select class="input" id="status"></select>
+      </div>
+    </div>
+
+    <div class="filtros" style="grid-template-columns: repeat(3, 1fr); margin-bottom:14px;">
+      <div><label for="valor">Valor (R$)</label><input class="input" type="number" step="0.01" id="valor" required></div>
+      <div><label for="valor_condominio">Condomínio (R$)</label><input class="input" type="number" step="0.01" id="valor_condominio"></div>
+      <div><label for="valor_iptu">IPTU (R$)</label><input class="input" type="number" step="0.01" id="valor_iptu"></div>
+    </div>
+
+    <div class="filtros" style="grid-template-columns: repeat(4, 1fr); margin-bottom:14px;">
+      <div><label for="area_construida">Área constr. (m²)</label><input class="input" type="number" step="0.01" id="area_construida"></div>
+      <div><label for="area_terreno">Área terreno (m²)</label><input class="input" type="number" step="0.01" id="area_terreno"></div>
+      <div><label for="quartos">Quartos</label><input class="input" type="number" id="quartos" value="0"></div>
+      <div><label for="suites">Suítes</label><input class="input" type="number" id="suites" value="0"></div>
+    </div>
+    <div class="filtros" style="grid-template-columns: repeat(2, 1fr); margin-bottom:14px;">
+      <div><label for="banheiros">Banheiros</label><input class="input" type="number" id="banheiros" value="0"></div>
+      <div><label for="vagas_garagem">Vagas de garagem</label><input class="input" type="number" id="vagas_garagem" value="0"></div>
+    </div>
+
+    <div class="filtros" style="grid-template-columns: repeat(2, 1fr); margin-bottom:14px;">
+      <div><label for="cidade">Cidade</label><input class="input" type="text" id="cidade" required></div>
+      <div><label for="bairro">Bairro</label><input class="input" type="text" id="bairro" required></div>
+    </div>
+    <p><label for="endereco">Endereço</label><input class="input" type="text" id="endereco"></p>
+    <div class="filtros" style="grid-template-columns: repeat(3, 1fr); margin-bottom:14px;">
+      <div><label for="cep">CEP</label><input class="input" type="text" id="cep"></div>
+      <div><label for="latitude">Latitude</label><input class="input" type="number" step="0.0000001" id="latitude"></div>
+      <div><label for="longitude">Longitude</label><input class="input" type="number" step="0.0000001" id="longitude"></div>
+    </div>
+
+    <p><label><input type="checkbox" id="destaque" style="width:auto; display:inline-block;"> Aparece em posição de destaque na vitrine</label></p>
+    <p><label for="video_url">URL de vídeo (opcional)</label><input class="input" type="url" id="video_url"></p>
+
+    <h3>Fotos</h3>
+    <div id="lista-fotos" style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px;"></div>
+    <p><label for="input-fotos">Adicionar fotos</label><input class="input" type="file" id="input-fotos" accept="image/*" multiple></p>
+    <p style="font-size:0.85rem; color:var(--cor-texto-suave);">Nesta demonstração, imagens maiores que 900KB não são aceitas (o armazenamento é só o do seu navegador).</p>
+
+    <button type="submit" class="btn btn-primary">Salvar imóvel</button>
+  </form>
+</section>
+</main>
+
+<script src="../js/data.js"></script>
+<script src="../js/store.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/layout.js"></script>
+<script>
+  if (!exigirLogin('login.html')) { /* redireciona */ } else {
+    montarLayout({ painel: true, base: '../' });
+
+    const id = new URLSearchParams(location.search).get('id');
+    const imovelExistente = id ? getImovel(id) : null;
+    let fotosAtuais = imovelExistente ? [...imovelExistente.fotos] : [];
+
+    if (imovelExistente) {
+      document.getElementById('page-title').textContent = 'Editar imóvel · Corretora de Milhões';
+      document.getElementById('titulo-form').textContent = 'Editar imóvel';
+    }
+
+    function popularSelect(id, opcoes, valorAtual) {
+      const sel = document.getElementById(id);
+      sel.innerHTML = Object.entries(opcoes).map(([v, r]) => `<option value="${v}" ${v === valorAtual ? 'selected' : ''}>${r}</option>`).join('');
+    }
+    popularSelect('tipo_negocio', TIPOS_NEGOCIO, imovelExistente?.tipo_negocio || 'venda');
+    popularSelect('tipo_imovel', TIPOS_IMOVEL, imovelExistente?.tipo_imovel || 'apartamento');
+    popularSelect('status', STATUS_IMOVEL, imovelExistente?.status || 'disponivel');
+
+    const campos = ['titulo', 'descricao', 'valor', 'valor_condominio', 'valor_iptu', 'area_construida', 'area_terreno',
+      'quartos', 'suites', 'banheiros', 'vagas_garagem', 'cidade', 'bairro', 'endereco', 'cep', 'latitude', 'longitude', 'video_url'];
+    if (imovelExistente) {
+      campos.forEach((c) => { if (imovelExistente[c] != null) document.getElementById(c).value = imovelExistente[c]; });
+      document.getElementById('destaque').checked = !!imovelExistente.destaque;
+    }
+
+    function renderFotos() {
+      document.getElementById('lista-fotos').innerHTML = fotosAtuais.map((f) => `
+        <div style="position:relative;">
+          <img src="${f.url.startsWith('data:') ? f.url : '../' + f.url}" style="width:96px; height:72px; object-fit:cover; border-radius:8px;">
+          <button type="button" class="btn-remover-foto" data-ordem="${f.ordem}"
+            style="position:absolute; top:-8px; right:-8px; width:22px; height:22px; border-radius:50%; border:none; background:var(--cor-grafite); color:#fff; cursor:pointer;">✕</button>
+        </div>
+      `).join('') || '<p style="color:var(--cor-texto-suave); font-size:0.85rem;">Nenhuma foto ainda.</p>';
+
+      document.querySelectorAll('.btn-remover-foto').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          fotosAtuais = fotosAtuais.filter((f) => String(f.ordem) !== btn.dataset.ordem);
+          renderFotos();
+        });
+      });
+    }
+    renderFotos();
+
+    document.getElementById('input-fotos').addEventListener('change', async (e) => {
+      const arquivos = Array.from(e.target.files);
+      let proximaOrdem = fotosAtuais.length ? Math.max(...fotosAtuais.map((f) => f.ordem)) + 1 : 0;
+      for (const arquivo of arquivos) {
+        try {
+          const foto = await processarFotoUpload(arquivo, proximaOrdem++, '');
+          fotosAtuais.push(foto);
+        } catch (err) {
+          alert(err.message);
+        }
+      }
+      e.target.value = '';
+      renderFotos();
+    });
+
+    document.getElementById('form-imovel').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const dados = {
+        titulo: document.getElementById('titulo').value.trim(),
+        descricao: document.getElementById('descricao').value.trim(),
+        tipo_negocio: document.getElementById('tipo_negocio').value,
+        tipo_imovel: document.getElementById('tipo_imovel').value,
+        status: document.getElementById('status').value,
+        valor: Number(document.getElementById('valor').value || 0),
+        valor_condominio: document.getElementById('valor_condominio').value ? Number(document.getElementById('valor_condominio').value) : null,
+        valor_iptu: document.getElementById('valor_iptu').value ? Number(document.getElementById('valor_iptu').value) : null,
+        area_construida: document.getElementById('area_construida').value ? Number(document.getElementById('area_construida').value) : null,
+        area_terreno: document.getElementById('area_terreno').value ? Number(document.getElementById('area_terreno').value) : null,
+        quartos: Number(document.getElementById('quartos').value || 0),
+        suites: Number(document.getElementById('suites').value || 0),
+        banheiros: Number(document.getElementById('banheiros').value || 0),
+        vagas_garagem: Number(document.getElementById('vagas_garagem').value || 0),
+        cidade: document.getElementById('cidade').value.trim(),
+        bairro: document.getElementById('bairro').value.trim(),
+        endereco: document.getElementById('endereco').value.trim(),
+        cep: document.getElementById('cep').value.trim(),
+        latitude: document.getElementById('latitude').value ? Number(document.getElementById('latitude').value) : null,
+        longitude: document.getElementById('longitude').value ? Number(document.getElementById('longitude').value) : null,
+        destaque: document.getElementById('destaque').checked,
+        video_url: document.getElementById('video_url').value.trim(),
+        fotos: fotosAtuais,
+      };
+      if (imovelExistente) atualizarImovel(imovelExistente.id, dados);
+      else criarImovel(dados);
+      window.location.href = 'imoveis.html';
+    });
+  }
+</script>
+
+</body>
+</html>

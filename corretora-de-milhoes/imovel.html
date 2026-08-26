@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" id="meta-description">
+<title id="page-title">Imóvel · Corretora de Milhões</title>
+<meta property="og:type" content="website">
+<meta property="og:image" content="assets/og-image.png">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="navbar-mount"></div>
+
+<main>
+<section class="container" id="conteudo-imovel">
+  <p>Carregando...</p>
+</section>
+</main>
+
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-fechar" id="lightbox-fechar" aria-label="Fechar">✕</button>
+  <button class="lightbox-prev" id="lightbox-prev" aria-label="Foto anterior">‹</button>
+  <img id="lightbox-imagem" src="" alt="">
+  <button class="lightbox-next" id="lightbox-next" aria-label="Próxima foto">›</button>
+</div>
+
+<div id="footer-mount"></div>
+<div id="social-float-mount"></div>
+
+<script src="js/data.js"></script>
+<script src="js/store.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/layout.js"></script>
+<script>
+  montarLayout({ ativo: 'imoveis' });
+
+  const slug = new URLSearchParams(location.search).get('slug');
+  const imovel = slug ? getImovelPorSlug(slug) : null;
+  const container = document.getElementById('conteudo-imovel');
+
+  if (!imovel) {
+    container.innerHTML = `<h2>Imóvel não encontrado</h2><p>Ele pode ter sido removido ou o link está incorreto. <a href="imoveis.html">Voltar para a vitrine</a>.</p>`;
+  } else {
+    document.getElementById('page-title').textContent = `${imovel.titulo} · Corretora de Milhões`;
+    document.getElementById('meta-description').setAttribute('content', `${imovel.titulo} em ${imovel.bairro}, ${imovel.cidade}. ${imovel.quartos} quarto(s), R$ ${formatoMoeda(imovel.valor)}.`);
+
+    const disponivel = imovel.status === 'disponivel';
+    const fotos = imovel.fotos;
+
+    const galeriaHtml = fotos.length ? `
+      <div class="galeria-principal" id="galeria-principal">
+        <img id="galeria-imagem-atual" src="${fotos[0].url}" alt="${escapeHtml(fotos[0].legenda || imovel.titulo)}">
+      </div>
+      ${fotos.length > 1 ? `
+        <div class="galeria-miniaturas" id="galeria-miniaturas">
+          ${fotos.map((f, i) => `<img src="${f.url}" alt="${escapeHtml(f.legenda || imovel.titulo)}" data-index="${i}" class="${i === 0 ? 'ativa' : ''}">`).join('')}
+        </div>` : ''}
+    ` : `<div class="card-img-placeholder" style="height:320px; border-radius:var(--raio-lg);">Sem fotos cadastradas</div>`;
+
+    const mapaHtml = (imovel.latitude && imovel.longitude) ? `
+      <h3>Localização</h3>
+      <iframe width="100%" height="320" style="border:0; border-radius: var(--raio-lg);" loading="lazy"
+        src="https://www.google.com/maps?q=${imovel.latitude},${imovel.longitude}&output=embed"></iframe>
+    ` : '';
+
+    container.innerHTML = `
+      <span class="badge ${disponivel ? 'badge-disponivel' : 'badge-vendido'}">${STATUS_IMOVEL[imovel.status]}</span>
+      <h1>${escapeHtml(imovel.titulo)}</h1>
+      <p style="color: var(--cor-texto-suave);">${escapeHtml(imovel.bairro)}, ${escapeHtml(imovel.cidade)} · Ref. ${imovel.codigo_referencia}</p>
+
+      ${galeriaHtml}
+
+      <h2 class="preco" style="margin-top: 28px;">R$ ${formatoMoeda(imovel.valor)}</h2>
+      <p>
+        ${imovel.quartos} quarto(s) · ${imovel.suites} suíte(s) · ${imovel.banheiros} banheiro(s) · ${imovel.vagas_garagem} vaga(s)
+        ${imovel.area_construida ? ` · ${imovel.area_construida} m²` : ''}
+      </p>
+      <p>${escapeHtml(imovel.descricao).replace(/\n/g, '<br>')}</p>
+
+      ${mapaHtml}
+
+      <p style="margin-top: 24px;">
+        <a class="btn btn-whatsapp" href="contato.html?imovel=${imovel.id}">Tenho interesse, falar com a corretora</a>
+      </p>
+    `;
+
+    if (fotos.length) {
+      const principal = document.getElementById('galeria-principal');
+      const imagemAtual = document.getElementById('galeria-imagem-atual');
+      const miniaturas = document.querySelectorAll('#galeria-miniaturas img');
+      const lightbox = document.getElementById('lightbox');
+      const lightboxImagem = document.getElementById('lightbox-imagem');
+      let indiceAtual = 0;
+
+      function mostrarNaPrincipal(i) {
+        indiceAtual = i;
+        imagemAtual.src = fotos[i].url;
+        imagemAtual.alt = fotos[i].legenda || imovel.titulo;
+        miniaturas.forEach((img, idx) => img.classList.toggle('ativa', idx === i));
+      }
+      function abrirLightbox(i) {
+        indiceAtual = i;
+        lightboxImagem.src = fotos[i].url;
+        lightboxImagem.alt = fotos[i].legenda || imovel.titulo;
+        lightbox.classList.add('aberto');
+        document.body.style.overflow = 'hidden';
+      }
+      function fecharLightbox() {
+        lightbox.classList.remove('aberto');
+        document.body.style.overflow = '';
+      }
+      function navegar(delta) {
+        indiceAtual = (indiceAtual + delta + fotos.length) % fotos.length;
+        lightboxImagem.src = fotos[indiceAtual].url;
+        lightboxImagem.alt = fotos[indiceAtual].legenda || imovel.titulo;
+        mostrarNaPrincipal(indiceAtual);
+      }
+
+      principal.addEventListener('click', () => abrirLightbox(indiceAtual));
+      miniaturas.forEach((img, i) => img.addEventListener('click', () => mostrarNaPrincipal(i)));
+      document.getElementById('lightbox-fechar').addEventListener('click', fecharLightbox);
+      document.getElementById('lightbox-prev').addEventListener('click', () => navegar(-1));
+      document.getElementById('lightbox-next').addEventListener('click', () => navegar(1));
+      lightbox.addEventListener('click', (e) => { if (e.target === lightbox) fecharLightbox(); });
+      document.addEventListener('keydown', (e) => {
+        if (!lightbox.classList.contains('aberto')) return;
+        if (e.key === 'Escape') fecharLightbox();
+        if (e.key === 'ArrowLeft') navegar(-1);
+        if (e.key === 'ArrowRight') navegar(1);
+      });
+    }
+  }
+</script>
+
+</body>
+</html>

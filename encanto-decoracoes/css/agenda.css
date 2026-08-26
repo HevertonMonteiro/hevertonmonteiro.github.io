@@ -1,0 +1,194 @@
+/* ==========================================================================
+   ENCANTO DECORAÇÕES — Agenda
+   ========================================================================== */
+
+.agenda-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-5);
+}
+@media (min-width: 900px) {
+  .agenda-layout { grid-template-columns: 1fr 300px; align-items: start; }
+}
+
+/* ---------- Visão mensal ---------- */
+.month-grid {
+  display: grid;
+  /* minmax(0, 1fr) em QUALQUER largura de tela: a grade sempre cabe
+     exatamente na largura disponível, sem empurrar a página nem exigir
+     rolagem lateral — quem se adapta é o tamanho da fonte/espaçamento
+     (clamp() abaixo), não o layout. */
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  border-top: 1px solid var(--color-border);
+  border-left: 1px solid var(--color-border);
+  width: 100%;
+}
+.month-weekday {
+  padding: var(--sp-1) 2px;
+  text-align: center;
+  font-size: clamp(9px, 2.3vw, var(--fs-xs));
+  font-weight: 700;
+  color: var(--color-text-faint);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--color-border);
+  border-right: 1px solid var(--color-border);
+  background: var(--color-surface-alt);
+}
+.month-cell {
+  min-height: 76px;
+  min-width: 0;
+  padding: 4px;
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+@media (min-width: 640px) { .month-cell { min-height: 92px; padding: var(--sp-2); gap: 4px; } }
+.month-cell:hover { background: var(--color-surface-alt); }
+.month-cell.is-outside { background: var(--color-surface-alt); opacity: 0.5; }
+.month-cell.is-today .month-cell-number {
+  background: var(--color-accent-500);
+  color: #fff;
+  border-radius: var(--radius-full);
+  width: 22px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+}
+.month-cell-number { font-size: clamp(11px, 2.6vw, var(--fs-sm)); font-weight: 600; }
+.month-event-pill {
+  /* Fonte responsiva (clamp) em vez de tamanho fixo, pra caber mais
+     texto em telas estreitas sem precisar rolar. */
+  font-size: clamp(7px, 2vw, 10px);
+  padding: 1px 4px;
+  border-radius: var(--radius-sm);
+  background: var(--color-accent-100);
+  color: var(--color-accent-700);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  max-width: 100%;
+}
+.month-event-pill.st-cancelado { background: var(--color-danger-bg); color: var(--color-danger); text-decoration: line-through; }
+.month-more { font-size: clamp(7px, 2vw, 10px); color: var(--color-text-faint); }
+
+/* ---------- Bloqueio manual de dia ---------- */
+.month-cell.is-bloqueado {
+  background: repeating-linear-gradient(
+    135deg, var(--color-surface-alt), var(--color-surface-alt) 8px,
+    var(--color-border) 8px, var(--color-border) 9px
+  );
+}
+.month-event-pill.is-bloqueio {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+  font-weight: 600;
+}
+.day-column.is-bloqueado { opacity: 0.85; }
+.event-card-mini.is-bloqueio {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  padding: var(--sp-2);
+  margin-bottom: var(--sp-2);
+}
+
+/* ---------- Visão semanal / diária ---------- */
+.week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr)); /* mesmo motivo do .month-grid acima (revertido <900px, ver media query) */
+  gap: var(--sp-3);
+  width: 100%;
+}
+.day-column-title {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  margin-bottom: var(--sp-2);
+  text-align: center;
+}
+.day-column-title.is-today { color: var(--color-accent-700); }
+.day-column {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  min-height: 140px;
+  min-width: 0;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+@media (min-width: 640px) { .day-column { min-height: 160px; padding: var(--sp-2); gap: 6px; } }
+
+/* Hora e nome do cliente cada um na sua linha (não trunca) — a fonte
+   encolhe em telas estreitas (clamp) pra caber sem cortar nem exigir
+   rolagem lateral. */
+.event-card-mini {
+  padding: 3px 4px;
+  border-radius: var(--radius-sm);
+  background: var(--color-accent-100);
+  cursor: pointer;
+  font-size: clamp(8px, 2.2vw, var(--fs-xs));
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+}
+@media (min-width: 640px) { .event-card-mini { padding: var(--sp-2); } }
+.event-card-mini strong { display: block; font-size: clamp(8px, 2.4vw, 11px); }
+.event-card-mini:hover { filter: brightness(0.96); }
+
+.day-list { display: flex; flex-direction: column; gap: var(--sp-2); }
+.day-list-item {
+  display: flex;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  align-items: center;
+}
+.day-list-item:hover { background: var(--color-surface-alt); }
+.day-list-hora { font-family: var(--font-display); font-weight: 700; width: 56px; flex-shrink: 0; }
+/* A visão diária tem bastante espaço (um evento por linha, largura toda
+   do cartão) — não precisa truncar, só evita que um nome muito comprido
+   empurre o badge de status pra fora da tela. */
+.day-list-info {
+  min-width: 0;
+  flex: 1;
+}
+.day-list-info strong,
+.day-list-info div {
+  overflow-wrap: break-word;
+}
+
+/* ---------- Pesquisa de disponibilidade ---------- */
+.disponibilidade-result {
+  margin-top: var(--sp-4);
+  padding: var(--sp-3);
+  border-radius: var(--radius-md);
+  font-size: var(--fs-sm);
+  display: none;
+}
+.disponibilidade-result.is-livre { display: block; background: var(--color-success-bg); color: var(--color-success); }
+.disponibilidade-result.is-ocupado { display: block; background: var(--color-warning-bg); color: var(--color-warning); }
+
+/* ---------- Sincronização Google Agenda ---------- */
+.google-sync-status {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+}
+.google-sync-status .dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--color-text-faint);
+}
+.google-sync-status .dot.is-conectado {
+  background: var(--color-success);
+}

@@ -1,0 +1,1811 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>GERBOOT – Consulta e Pedidos (Demo)</title>
+<meta name="description" content="GERBOOT – Ferramenta inteligente para auxiliar na consulta de preços e na digitação de pedidos. Demonstração de portfólio com dados fictícios.">
+
+<!-- Open Graph / WhatsApp / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="GERBOOT – Consulta e Pedidos">
+<meta property="og:description" content="Ferramenta inteligente para consulta de preços e digitação de pedidos. Demo de portfólio, dados fictícios.">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="GERBOOT – Consulta e Pedidos">
+<meta name="twitter:description" content="Ferramenta inteligente para consulta de preços e digitação de pedidos. Demo de portfólio, dados fictícios.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjAgNDQiPjxyZWN0IHg9IjIiIHk9IjIiIHdpZHRoPSIxMTYiIGhlaWdodD0iNDAiIHJ4PSIyMCIgZmlsbD0iIzBDNjQ3OCIvPjxwYXRoIGQ9Ik0yMiAyIGgzMCB2NDAgaC0zMCBhMjAgMjAgMCAwIDEgMCAtNDAgeiIgZmlsbD0iIzdDQkEyQiIvPjxjaXJjbGUgY3g9IjM3IiBjeT0iMjIiIHI9IjYiIGZpbGw9IiMwQzY0NzgiIG9wYWNpdHk9IjAuMzUiLz48L3N2Zz4=">
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --teal:#004B5C;
+    --teal-dark:#00343F;
+    --teal-light:#0C6478;
+    --green:#7CBA2B;
+    --green-dark:#649922;
+    --red:#D32F2F;
+    --amber:#C97A1F;
+    --paper:#F5F7F6;
+    --card:#FFFFFF;
+    --ink:#0C2226;
+    --ink-soft:#4B6167;
+    --line:#DCE4E3;
+    --radius:14px;
+    --shadow:0 6px 24px rgba(0,32,38,.12);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  /* evita que toques rápidos e repetidos (ex: nos botões -/+) sejam
+     interpretados como duplo-toque e deem zoom na tela no celular */
+  button{touch-action:manipulation;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+  }
+  .topbar{
+    background:var(--teal);
+    color:#fff;
+    padding:14px 18px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    box-shadow:var(--shadow);
+    position:sticky;
+    top:0;
+    z-index:50;
+  }
+  .topbar img{height:30px;display:block;}
+  .topbar .brandname{font-weight:800;font-size:18px;letter-spacing:.5px;}
+  .topbar .ctx{
+    margin-left:auto;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:12.5px;
+    color:#CFEAE9;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+  }
+  .topbar .pill{
+    background:rgba(255,255,255,.12);
+    border:1px solid rgba(255,255,255,.25);
+    padding:4px 10px;
+    border-radius:999px;
+    white-space:nowrap;
+  }
+  .topbar button.reset{
+    background:var(--green);
+    border:none;
+    color:#04310A;
+    font-weight:700;
+    font-size:12.5px;
+    padding:6px 12px;
+    border-radius:999px;
+    cursor:pointer;
+  }
+  .topbar button.reset:hover{background:var(--green-dark);color:#fff;}
+
+  main{
+    flex:1;
+    width:100%;
+    max-width:760px;
+    margin:0 auto;
+    padding:28px 18px 60px;
+  }
+
+  .hero-circles{
+    position:relative;
+    height:0;
+  }
+
+  h1.screen-title{
+    font-size:22px;
+    margin:0 0 4px;
+    color:var(--teal-dark);
+  }
+  p.screen-sub{
+    margin:0 0 26px;
+    color:var(--ink-soft);
+    font-size:14.5px;
+    line-height:1.5;
+  }
+
+  .card-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+  }
+  .card-grid.cols-3{grid-template-columns:1fr 1fr 1fr;}
+  @media (max-width:560px){ .card-grid, .card-grid.cols-3{grid-template-columns:1fr;} }
+
+  .choice-card{
+    background:var(--card);
+    border:2px solid var(--line);
+    border-radius:var(--radius);
+    padding:24px 20px;
+    cursor:pointer;
+    text-align:left;
+    transition:border-color .15s, transform .15s, box-shadow .15s;
+    position:relative;
+    overflow:hidden;
+  }
+  .choice-card:hover{border-color:var(--green); transform:translateY(-2px); box-shadow:var(--shadow);}
+  .choice-card .dot{
+    width:34px;height:34px;border-radius:50%;
+    background:var(--green);
+    margin-bottom:14px;
+    position:relative;
+  }
+  .choice-card .dot::after{
+    content:"";
+    position:absolute;
+    width:10px;height:10px;border-radius:50%;
+    background:var(--teal);
+    top:-3px;right:-3px;
+  }
+  .choice-card h3{margin:0 0 6px;font-size:17px;color:var(--teal-dark);}
+  .choice-card p{margin:0;font-size:13px;color:var(--ink-soft);line-height:1.4;}
+
+  textarea{
+    width:100%;
+    min-height:220px;
+    border:2px solid var(--line);
+    border-radius:var(--radius);
+    padding:14px;
+    font-size:14.5px;
+    font-family:inherit;
+    resize:vertical;
+    background:var(--card);
+    color:var(--ink);
+  }
+  textarea:focus{outline:none;border-color:var(--teal-light);}
+
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    border:none;
+    border-radius:999px;
+    padding:12px 24px;
+    font-size:14.5px;
+    font-weight:700;
+    cursor:pointer;
+    transition:filter .15s, transform .1s;
+  }
+  .btn:active{transform:scale(.98);}
+  .btn-primary{background:var(--green);color:#04310A;}
+  .btn-primary:hover{filter:brightness(1.05);background:var(--green-dark);color:#fff;}
+  .btn-secondary{background:#fff;color:var(--teal);border:2px solid var(--teal);}
+  .btn-secondary:hover{background:var(--teal);color:#fff;}
+  .btn-ghost{background:transparent;color:var(--ink-soft);border:2px solid var(--line);}
+  .btn-ghost:hover{border-color:var(--ink-soft);}
+  .btn[disabled]{opacity:.5;cursor:not-allowed;}
+  .btn-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px;align-items:center;}
+  .order-total{
+    font-size:14.5px;
+    font-weight:700;
+    color:var(--teal-dark);
+  }
+  .order-total-row .order-total{margin-left:auto;}
+
+  .browse-sticky-bar{
+    position:sticky;
+    top:58px;
+    z-index:40;
+    background:var(--card);
+    border:2px solid var(--line);
+    border-radius:var(--radius);
+    padding:12px 16px;
+    margin-bottom:16px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+    box-shadow:var(--shadow);
+  }
+  .browse-sticky-bar .btn{margin-left:auto;}
+  .browse-filters{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:16px;
+  }
+  .browse-filters input[type=text]{
+    flex:1 1 220px;
+    padding:10px 12px;
+    border:2px solid var(--line);
+    border-radius:10px;
+    font-size:14px;
+  }
+  .browse-filters select{
+    flex:0 0 auto;
+    padding:10px 12px;
+    border:2px solid var(--line);
+    border-radius:10px;
+    font-size:14px;
+    background:#fff;
+    color:var(--ink);
+  }
+
+  .example-box{
+    background:#EDF3F1;
+    border:1px dashed var(--line);
+    border-radius:10px;
+    padding:12px 14px;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin-top:14px;
+    line-height:1.5;
+  }
+  .example-box code{
+    background:#fff;
+    padding:1px 5px;
+    border-radius:4px;
+    font-size:12px;
+    color:var(--teal-dark);
+  }
+
+  .result-block{
+    background:var(--card);
+    border:2px solid var(--line);
+    border-radius:var(--radius);
+    padding:18px;
+    margin-bottom:16px;
+  }
+  .result-block h3{margin:0 0 12px;font-size:15px;color:var(--teal-dark);display:flex;align-items:center;gap:8px;}
+  .result-pre{
+    white-space:pre-wrap;
+    word-break:break-word;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:14px;
+    line-height:1.7;
+    background:#F5F7F6;
+    border-radius:10px;
+    padding:14px;
+    margin:0 0 12px;
+    color:var(--ink);
+  }
+  .line-found{color:var(--ink);}
+
+  .order-list{margin:0 0 12px;}
+  .order-item-row{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:8px 10px;
+    padding:9px 0;
+    border-bottom:1px solid var(--line);
+    font-size:13.5px;
+  }
+  .order-item-row:last-child{border-bottom:none;}
+  .order-item-row .name{
+    flex:1 1 160px;
+    min-width:0;
+    overflow-wrap:break-word;
+    word-break:break-word;
+  }
+  .order-item-row .ean{
+    flex:0 0 auto;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:13px;
+    color:var(--ink-soft);
+    white-space:nowrap;
+  }
+  .order-item-row .qty{
+    flex:0 0 auto;
+    font-weight:700;
+    color:var(--teal-dark);
+    white-space:nowrap;
+  }
+  .line-notfound{color:var(--red);font-weight:600;}
+
+  .copy-btn{
+    background:var(--teal);
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    padding:9px 16px;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+  }
+  .copy-btn:hover{background:var(--teal-light);}
+  .copy-btn.copied{background:var(--green-dark);}
+
+  .ambig-item{
+    background:var(--card);
+    border:2px solid var(--amber);
+    border-radius:var(--radius);
+    padding:16px;
+    margin-bottom:14px;
+  }
+  .ambig-item .q{font-weight:700;color:var(--teal-dark);margin-bottom:10px;font-size:14.5px;}
+  .ambig-opt{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:9px 10px;
+    border-radius:8px;
+    border:1.5px solid var(--line);
+    margin-bottom:8px;
+    cursor:pointer;
+    font-size:13.5px;
+  }
+  .ambig-opt:hover{border-color:var(--green);background:#F4FAEF;}
+  .ambig-opt.selected{border-color:var(--green);background:#EAF6DE;}
+  .ambig-opt input{accent-color:var(--green);}
+  .ambig-opt .price{margin-left:auto;font-weight:700;color:var(--teal-dark);white-space:nowrap;}
+
+  .qty-row{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:8px 10px;
+    padding:10px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .qty-row:last-child{border-bottom:none;}
+  .qty-row .name{
+    flex:1 1 160px;
+    min-width:0;
+    font-size:13.5px;
+    overflow-wrap:break-word;
+    word-break:break-word;
+  }
+  .item-meta{
+    display:block;
+    margin-top:4px;
+  }
+  .tag{
+    display:inline-block;
+    font-size:10.5px;
+    font-weight:700;
+    letter-spacing:.02em;
+    padding:2px 7px;
+    border-radius:999px;
+    margin-right:5px;
+    white-space:nowrap;
+    text-transform:uppercase;
+  }
+  .tag-prioritario{background:#FBEBD9;color:var(--amber);}
+  .tag-lancamento{background:#EAF6DE;color:var(--green-dark);}
+  .tag-linha{background:#E3F0F3;color:var(--teal);}
+  .tag-descontinuado{background:#FBE4E4;color:var(--red);}
+  .tag-combate{background:#F1E4F7;color:#7B2CBF;}
+  .tag-outro{background:var(--paper);color:var(--ink-soft);}
+  .tag-caixa{background:var(--paper);color:var(--ink-soft);}
+  .qty-row .price{
+    flex:0 0 auto;
+    font-size:13px;
+    color:var(--ink-soft);
+    white-space:nowrap;
+  }
+  .qty-stepper{
+    display:flex;
+    align-items:center;
+    flex:0 0 auto;
+    gap:6px;
+  }
+  .qty-row input[type=number]{
+    flex:0 0 auto;
+    width:44px;
+    padding:7px 2px;
+    border:2px solid var(--line);
+    border-radius:8px;
+    font-size:14px;
+    text-align:center;
+    -moz-appearance:textfield;
+  }
+  .qty-row input[type=number]::-webkit-inner-spin-button,
+  .qty-row input[type=number]::-webkit-outer-spin-button{
+    -webkit-appearance:none;
+    margin:0;
+  }
+  .qty-step-btn{
+    background:transparent;
+    border:1.5px solid var(--line);
+    color:var(--teal-dark);
+    width:30px;
+    height:30px;
+    border-radius:8px;
+    font-size:16px;
+    font-weight:700;
+    line-height:1;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .qty-step-btn:hover{background:#EAF6DE;border-color:var(--green);}
+  .remove-item-btn{
+    background:transparent;
+    border:1.5px solid var(--line);
+    color:var(--red);
+    width:30px;
+    height:30px;
+    border-radius:8px;
+    font-size:14px;
+    line-height:1;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .remove-item-btn:hover{background:#FCEAEA;border-color:var(--red);}
+  .faltas-item-btn{
+    background:transparent;
+    border:1.5px solid var(--line);
+    color:var(--amber);
+    height:30px;
+    padding:0 10px;
+    border-radius:8px;
+    font-size:12.5px;
+    font-weight:700;
+    cursor:pointer;
+    flex-shrink:0;
+    white-space:nowrap;
+  }
+  .faltas-item-btn:hover{background:#FBEBD9;border-color:var(--amber);}
+
+  .loading-screen{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    min-height:70vh;
+    text-align:center;
+  }
+  .spinner{
+    width:44px;height:44px;
+    border:4px solid #DCE4E3;
+    border-top-color:var(--green);
+    border-radius:50%;
+    animation:spin 0.9s linear infinite;
+    margin-bottom:18px;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .error-box{
+    background:#FCEAEA;
+    border:2px solid var(--red);
+    color:#7A1414;
+    padding:16px;
+    border-radius:var(--radius);
+    font-size:13.5px;
+    line-height:1.6;
+  }
+
+  .footer-note{
+    text-align:center;
+    color:#9AAAA9;
+    font-size:11.5px;
+    margin-top:36px;
+  }
+
+  .ai-disclaimer{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    background:#FFF7E6;
+    border:1.5px solid var(--amber);
+    border-radius:10px;
+    padding:10px 14px;
+    margin-bottom:18px;
+    font-size:12px;
+    line-height:1.5;
+    color:#5C4308;
+  }
+  .ai-disclaimer .icon{
+    font-size:16px;
+    line-height:1.2;
+    flex-shrink:0;
+  }
+  .ai-disclaimer strong{color:#8A5A00;}
+
+  .badge-count{
+    background:var(--green);
+    color:#04310A;
+    font-size:11px;
+    font-weight:800;
+    padding:2px 8px;
+    border-radius:999px;
+  }
+  .badge-count.warn{background:var(--red);color:#fff;}
+
+  .step-hint{
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-top:-16px;
+    margin-bottom:20px;
+  }
+
+  .help-fab{
+    position:fixed;
+    right:18px;
+    bottom:18px;
+    width:46px;
+    height:46px;
+    border-radius:50%;
+    background:var(--teal);
+    color:#fff;
+    border:none;
+    font-size:19px;
+    font-weight:800;
+    cursor:pointer;
+    box-shadow:var(--shadow);
+    z-index:80;
+  }
+  .help-fab:hover{background:var(--teal-light);}
+
+  .tour-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(12,34,38,.55);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:100;
+    padding:20px;
+  }
+  .tour-card{
+    background:var(--card);
+    border-radius:var(--radius);
+    padding:26px 24px;
+    max-width:380px;
+    width:100%;
+    box-shadow:var(--shadow);
+  }
+  .tour-card .tour-badge{
+    display:inline-block;
+    background:var(--paper);
+    color:var(--teal-dark);
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    padding:3px 10px;
+    border-radius:999px;
+    margin-bottom:12px;
+  }
+  .tour-card h3{margin:0 0 8px;font-size:17px;color:var(--teal-dark);}
+  .tour-card p{margin:0 0 18px;font-size:14px;line-height:1.55;color:var(--ink-soft);}
+  .tour-dots{display:flex;gap:6px;margin-bottom:18px;}
+  .tour-dots span{width:7px;height:7px;border-radius:50%;background:var(--line);}
+  .tour-dots span.active{background:var(--green);width:18px;border-radius:4px;}
+  .tour-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .tour-skip{background:none;border:none;color:var(--ink-soft);font-size:13px;cursor:pointer;padding:8px 0;}
+  .tour-skip:hover{color:var(--ink);text-decoration:underline;}
+
+  .demo-banner{
+    background:#FFF7E6;
+    border:1.5px solid var(--amber);
+    color:#5C4308;
+    border-radius:10px;
+    padding:10px 14px;
+    font-size:12.5px;
+    line-height:1.5;
+    margin-bottom:18px;
+  }
+  .demo-banner strong{color:#8A5A00;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <img id="logoImg" src="" alt="FarmaCerta Genéricos">
+  <span class="brandname">GERBOOT</span>
+  <div class="ctx" id="ctxBar"></div>
+</div>
+
+<main id="app">
+  <div class="loading-screen">
+    <div class="spinner"></div>
+    <p>Carregando tabelas...</p>
+  </div>
+</main>
+
+<button class="help-fab" id="helpFab" title="Ver tour de novo" onclick="openTour()" style="display:none;">?</button>
+<div id="tourRoot"></div>
+
+<script>
+/* Logo fictício (SVG), identidade visual do portfólio */
+document.getElementById('logoImg').src = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjAgNDQiPjxyZWN0IHg9IjIiIHk9IjIiIHdpZHRoPSIxMTYiIGhlaWdodD0iNDAiIHJ4PSIyMCIgZmlsbD0iIzBDNjQ3OCIvPjxwYXRoIGQ9Ik0yMiAyIGgzMCB2NDAgaC0zMCBhMjAgMjAgMCAwIDEgMCAtNDAgeiIgZmlsbD0iIzdDQkEyQiIvPjxjaXJjbGUgY3g9IjM3IiBjeT0iMjIiIHI9IjYiIGZpbGw9IiMwQzY0NzgiIG9wYWNpdHk9IjAuMzUiLz48L3N2Zz4=";
+
+/* ==========================================================================
+   ESTADO GLOBAL
+   ========================================================================== */
+const state = {
+  tables: { t1: null, t2: null, t3: null },   // dados carregados das planilhas
+  selectedTableKey: null,           // 't1', 't2' ou 't3'
+  selectedTableName: null,
+  mode: null,                       // 'A' (consultar) ou 'B' (pedido)
+  parsedLines: [],                  // itens digitados nesta rodada
+  results: { found: [], notFound: [], ambiguous: [] },
+  ambiguousChoices: {},             // idx -> item escolhido
+  lastFoundForOrder: [],            // usado ao gerar pedido a partir do modo A
+  copyTargets: {},                  // textos prontos para copiar, por id de botão
+  pickingForBrowse: false,          // true na tela de escolher tabela do fluxo "Fazer pedido"
+  browseQty: {},                    // ean -> quantidade, usado no fluxo "Fazer pedido"
+  browseSearch: '',
+  browseCategory: ''
+};
+
+const TABELAS_FILE = 'TABELAS.xlsx';
+const TABLE_SHEETS = { t1: '01 PE ACRIPEL', t2: '02 PE ACRIPEL', t3: '03 PE ACRIPEL' };
+const TABLE_LABELS = { t1: 'Tabela 1', t2: 'Tabela 2', t3: 'Tabela 3' };
+
+/* ==========================================================================
+   TOUR DE BOAS-VINDAS
+   Aparece uma vez (guardado em localStorage) e pode ser reaberto a qualquer
+   momento pelo botão "?" no canto da tela.
+   ========================================================================== */
+const TOUR_STORAGE_KEY = 'gerboot_tour_seen';
+const TOUR_STEPS = [
+  {
+    title: 'Bem-vindo ao GERBOOT',
+    text: 'Ferramenta para consultar preços e montar pedidos digitando uma lista de itens, ou navegando pelo catálogo. Este tour rápido mostra como usar.'
+  },
+  {
+    title: '1. Escolha a tabela',
+    text: 'Cada tabela representa uma tabela de preços diferente. Escolha uma para começar.'
+  },
+  {
+    title: '2. Consultar ou gerar pedido',
+    text: '"Consultar preços" devolve o valor de cada item, pronto para colar no WhatsApp. "Gerar pedido" devolve código de barras + quantidade, pronto para lançar no sistema.'
+  },
+  {
+    title: '3. Digite do seu jeito',
+    text: 'Escreva os itens como quiser, com abreviação, erro de digitação ou fora de ordem (ex: "dipirona gts 2" ou "2 dipirona gts"). O GERBOOT interpreta e casa com o produto certo.'
+  },
+  {
+    title: '4. Confirme quando houver dúvida',
+    text: 'Se mais de um item pode ser o que você quis dizer, o GERBOOT pergunta antes de decidir por conta própria.'
+  },
+  {
+    title: 'Pronto para testar',
+    text: 'Também dá pra pular a digitação e ir direto em "Fazer pedido" no topo, pra navegar pelo catálogo com busca e filtro por categoria.'
+  }
+];
+let tourStepIdx = 0;
+function maybeShowTour() {
+  let seen = null;
+  try { seen = localStorage.getItem(TOUR_STORAGE_KEY); } catch (e) {}
+  if (!seen) openTour();
+}
+function openTour() {
+  tourStepIdx = 0;
+  renderTourStep();
+}
+function renderTourStep() {
+  const step = TOUR_STEPS[tourStepIdx];
+  const isLast = tourStepIdx === TOUR_STEPS.length - 1;
+  const dots = TOUR_STEPS.map((_, i) => `<span class="${i === tourStepIdx ? 'active' : ''}"></span>`).join('');
+  document.getElementById('tourRoot').innerHTML = `
+    <div class="tour-overlay" onclick="if(event.target===this) closeTour()">
+      <div class="tour-card">
+        <span class="tour-badge">Passo ${tourStepIdx + 1} de ${TOUR_STEPS.length}</span>
+        <h3>${escapeHtml(step.title)}</h3>
+        <p>${escapeHtml(step.text)}</p>
+        <div class="tour-dots">${dots}</div>
+        <div class="tour-footer">
+          <button class="tour-skip" onclick="closeTour()">Pular tour</button>
+          <button class="btn btn-primary" onclick="advanceTour()">${isLast ? 'Concluir' : 'Próximo'}</button>
+        </div>
+      </div>
+    </div>`;
+}
+function advanceTour() {
+  if (tourStepIdx < TOUR_STEPS.length - 1) { tourStepIdx++; renderTourStep(); }
+  else closeTour();
+}
+function closeTour() {
+  document.getElementById('tourRoot').innerHTML = '';
+  try { localStorage.setItem(TOUR_STORAGE_KEY, '1'); } catch (e) {}
+}
+
+/* ==========================================================================
+   NORMALIZAÇÃO E MATCHING (dosagem estrita + nome aproximado)
+   ========================================================================== */
+// mapeia variações/abreviações de substância e erros de digitação comuns
+// para um nome "canônico" único, para que grafias diferentes da mesma
+// substância sejam tratadas como o mesmo item na busca.
+const SUBSTANCE_ALIASES = [
+  [/\bOLME\b/g, 'OLMESARTANA'],
+  [/\bOLMES\s+MEDOXOMILA\b/g, 'OLMESARTANA'],
+  [/\bOLM\.?\s*MED\b/g, 'OLMESARTANA'],
+  [/\bOLMERSARTANA\b/g, 'OLMESARTANA'],
+  [/\bHIDROCLOROTIAZIDA\b/g, 'HCTZ'],
+  [/\bESOMEPRRAZOL\b/g, 'ESOMEPRAZOL'],
+  [/\bESOMEPRASOL\b/g, 'ESOMEPRAZOL'],
+  [/\bESOMEPAZOL\b/g, 'ESOMEPRAZOL'],
+  [/\bATORVASTINA\b/g, 'ATORVASTATINA'],
+  [/\bHIDROXISINA\b/g, 'HIDROXIZINA'],
+  [/\bPANTOPRAZOU\b/g, 'PANTOPRAZOL'],
+  [/\bCLAVULANATO\b/g, 'CLAVU'],
+  [/\bCLAVULANICO\b/g, 'CLAVU'],
+  [/\bCLABULANATO\b/g, 'CLAVU'],
+  [/\bCLAVULATO\b/g, 'CLAVU'],
+  [/\bCALV\b/g, 'CLAVU'],
+  [/\bCLAB\b/g, 'CLAVU'],
+  [/\bCLAVU?LIN\b/g, 'CLAVU'],
+  [/\bAMOXILINA\b/g, 'AMOXICILINA'],
+  [/\bAMOXCILINA\b/g, 'AMOXICILINA'],
+  [/\bAMOCICILINA\b/g, 'AMOXICILINA'],
+  [/\bAMOXILICINA\b/g, 'AMOXICILINA'],
+  [/\bAMORXICILINA\b/g, 'AMOXICILINA'],
+  [/\bAMOXACILINA\b/g, 'AMOXICILINA'],
+  [/\bAMOR\b/g, 'AMOXICILINA']
+];
+// erros de digitação comuns na forma farmacêutica
+const FORM_TYPO_FIX = [
+  [/\bCOMPIMIDO(S)?\b/g, 'COMPRIMIDO$1'],
+  [/\bCOMPRIDO(S)?\b/g, 'COMPRIMIDO$1'],
+  [/\bCONPRIMIDO(S)?\b/g, 'COMPRIMIDO$1']
+];
+// sais/ésteres que só descrevem a mesma substância (ex: "cloridrato de
+// tramadol" = "tramadol") são ignorados na comparação de nome. Não inclui
+// "sódico"/"potássico": esses às vezes diferenciam produtos fisicamente
+// diferentes (ex: diclofenaco sódico comprimido x dietilamônio gel).
+const SALT_WORDS = new Set([
+  'CLORIDRATO','CLOR','MALEATO','OXALATO','HEMIFUMARATO','HEMIFUM','HEMIF',
+  'BISSULFATO','DICLORIDRATO','SUCCINATO','BESILATO','MONOIDRATADO','MONOIDR',
+  'CALCICA','CALCICO','MAGNESICO'
+]);
+function normalize(str) {
+  let s = str.toString().toUpperCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/,/g, '.')
+    .replace(/\\/g, '/'); // "c\6" e "c/6" são a mesma notação de embalagem
+  // separa quantidade de embalagem colada na forma farmacêutica, ex:
+  // "30cp" -> "30 cp", "30cpr" -> "30 cpr", "30comp" -> "30 comp"
+  s = s.replace(/(\d)(CPR|CP|COMP|ENV|CAPS|CAP|AMP)\b/g, '$1 $2');
+  // separa número de dosagem colado direto na notação de embalagem, ex:
+  // "20c/28" -> "20 c/28" (senão o "20" fica preso dentro de um token sem
+  // sentido e nunca é reconhecido como a dosagem 20mg)
+  s = s.replace(/(\d)(C\/?\d)/g, '$1 $2');
+  SUBSTANCE_ALIASES.forEach(([re, repl]) => { s = s.replace(re, repl); });
+  FORM_TYPO_FIX.forEach(([re, repl]) => { s = s.replace(re, repl); });
+  // expande dosagens combinadas "40+25MG" -> "40MG 25MG" antes do "+" virar espaço
+  s = s.replace(
+    /(\d+(?:\.\d+)?(?:\s*\+\s*\d+(?:\.\d+)?)+)(MG|ML|MCG|UI|G|L)|(\d+(?:\.\d+)?(?:\s*\+\s*\d+(?:\.\d+)?)+)\s+(MG|ML|MCG|UI|G|L)(?![A-Z])/g,
+    (match, nums1, unit1, nums2, unit2) => {
+      const nums = nums1 !== undefined ? nums1 : nums2;
+      const unit = unit1 !== undefined ? unit1 : unit2;
+      return nums.split('+').map(n => n.trim() + unit).join(' ');
+    });
+  s = s.replace(/[^A-Z0-9\s\/\.\,]/g, ' ').replace(/\s+/g, ' ').trim();
+  return s;
+}
+
+// abreviações de forma farmacêutica -> tag canônica. Uma forma pedida
+// explicitamente (ex: "gts"=gotas) só bate com itens da mesma forma.
+const FORM_LOOKUP = {
+  CREM:'FORMACREME', CREME:'FORMACREME', CR:'FORMACREME', CREMES:'FORMACREME',
+  POM:'FORMAPOMADA', POMADA:'FORMAPOMADA', PO:'FORMAPOMADA', POMADAS:'FORMAPOMADA',
+  GTS:'FORMAGOTAS', GT:'FORMAGOTAS', GOTAS:'FORMAGOTAS', GOTA:'FORMAGOTAS',
+  XPE:'FORMAXAROPE', XPEAD:'FORMAXAROPE', XPEINF:'FORMAXAROPE', XAROPE:'FORMAXAROPE', XAROPES:'FORMAXAROPE',
+  INJ:'FORMAINJETAVEL', AMP:'FORMAINJETAVEL', AMPOLA:'FORMAINJETAVEL', AMPOLAS:'FORMAINJETAVEL',
+  SHP:'FORMASHAMPOO', SHAMPOO:'FORMASHAMPOO',
+  VAG:'FORMAVAGINAL', VAGINAL:'FORMAVAGINAL', VG:'FORMAVAGINAL',
+  CP:'FORMACOMPRIMIDO', CPR:'FORMACOMPRIMIDO', COMP:'FORMACOMPRIMIDO', COM:'FORMACOMPRIMIDO', COMPRIMIDO:'FORMACOMPRIMIDO', COMPRIMIDOS:'FORMACOMPRIMIDO', REVESTIDO:'FORMACOMPRIMIDO', REVESTIDOS:'FORMACOMPRIMIDO', REV:'FORMACOMPRIMIDO',
+  CAPS:'FORMACAPSULA', CAP:'FORMACAPSULA', CAPSULA:'FORMACAPSULA', CAPSULAS:'FORMACAPSULA',
+  SUSP:'FORMASUSPENSAO', SUSPENSAO:'FORMASUSPENSAO', SUS:'FORMASUSPENSAO',
+  SOL:'FORMASOLUCAO', SOLUCAO:'FORMASOLUCAO', TOP:'FORMATOPICA',
+  GEL:'FORMAGEL',
+  FR:'FORMAFRASCO', FRASCO:'FORMAFRASCO',
+  BG:'FORMABISNAGA', BISN:'FORMABISNAGA', BISNAGA:'FORMABISNAGA', BIS:'FORMABISNAGA',
+  APL:'FORMAAPLICADOR', APLI:'FORMAAPLICADOR', APLICADOR:'FORMAAPLICADOR',
+  COLIRIO:'FORMAOFTALMICO', OFT:'FORMAOFTALMICO', OFTALMICO:'FORMAOFTALMICO',
+  OROBASE:'FORMAPOMADA',
+  ENV:'FORMAENVELOPE', SACHE:'FORMAENVELOPE', ENVELOPE:'FORMAENVELOPE'
+};
+const FORM_TAGS = new Set(Object.values(FORM_LOOKUP));
+
+// nomes comerciais/populares -> termos genéricos, para quando o pedido
+// vem com o nome de marca em vez do genérico.
+const BRAND_ALIASES = {
+  QUADRIDERME: 'betametasona gentamicina tolnaftato clioquinol',
+  AUGMENTIN: 'amoxicilina clavulanato'
+};
+function expandBrandAliases(line) {
+  let out = line;
+  for (const brand in BRAND_ALIASES) {
+    const re = new RegExp('\\b' + brand + '\\b', 'i');
+    if (re.test(out)) out = out.replace(re, BRAND_ALIASES[brand]);
+  }
+  return out;
+}
+function extractDosageTokens(str) {
+  const s = normalize(str);
+  const re = /(\d+(?:\.\d+)?)(MG|ML|MCG|UI|G|L)|(\d+(?:\.\d+)?)\s+(MG|ML|MCG|UI|G|L)(?![A-Z])/g;
+  const tokens = []; let m;
+  while ((m = re.exec(s)) !== null) {
+    const num = m[1] !== undefined ? m[1] : m[3];
+    const unit = m[2] !== undefined ? m[2] : m[4];
+    tokens.push(parseFloat(num) + unit);
+  }
+  return tokens;
+}
+function removeDosageWithUnit(s) {
+  return s.replace(/(\d+(?:\.\d+)?)(MG|ML|MCG|UI|G|L)|(\d+(?:\.\d+)?)\s+(MG|ML|MCG|UI|G|L)(?![A-Z])/g, ' ');
+}
+// embalagem pedida mas indisponível (ex: "c/28" quando só existe "c/30") não
+// descarta o item - ele ainda é sugerido, mas sempre com confirmação
+function extractPackCount(str) {
+  const s = normalize(str);
+  const m = s.match(/\bC\/?\s?(\d+)\b/) || s.match(/\bX\s+(\d+)\b/);
+  return m ? parseInt(m[1], 10) : null;
+}
+function looseNumbers(str) {
+  const s = normalize(str);
+  let withoutUnit = removeDosageWithUnit(s);
+  withoutUnit = withoutUnit.replace(/\bC\/?\s?\d+\b/g, ' '); // notação de embalagem, não é dosagem
+  const re = /\b(\d+(?:\.\d+)?)\b/g;
+  const nums = []; let m;
+  while ((m = re.exec(withoutUnit)) !== null) nums.push(parseFloat(m[1]));
+  return nums;
+}
+function nameTokens(str) {
+  const s = normalize(str);
+  let withoutDosage = removeDosageWithUnit(s);
+  withoutDosage = withoutDosage.replace(/\./g, ' '); // "CLOR.SERTRALINA" -> "CLOR SERTRALINA"
+  withoutDosage = withoutDosage.replace(/\bC\/?\s?\d+\b/g, ' '); // notação de embalagem
+  const rawTokens = withoutDosage.split(/\s+/).filter(Boolean);
+  const mapped = rawTokens.map(t => FORM_LOOKUP[t] || t);
+  return mapped
+    .filter(t => t.length >= 3 && !/^[\d.\/]+$/.test(t))
+    .filter(t => !SALT_WORDS.has(t));
+}
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  const dp = Array.from({length:m+1}, () => new Array(n+1).fill(0));
+  for (let i=0;i<=m;i++) dp[i][0]=i;
+  for (let j=0;j<=n;j++) dp[0][j]=j;
+  for (let i=1;i<=m;i++) for (let j=1;j<=n;j++)
+    dp[i][j] = Math.min(dp[i-1][j]+1, dp[i][j-1]+1, dp[i-1][j-1] + (a[i-1]===b[j-1]?0:1));
+  return dp[m][n];
+}
+function similarity(a, b) {
+  if (!a.length && !b.length) return 1;
+  return 1 - levenshtein(a,b) / Math.max(a.length, b.length);
+}
+function bestTokenScore(qToken, itemTokens) {
+  let best = 0;
+  for (const it of itemTokens) {
+    let s;
+    if (qToken === it) s = 1;
+    else if (it.startsWith(qToken) || qToken.startsWith(it)) {
+      const shorter = Math.min(qToken.length, it.length), longer = Math.max(qToken.length, it.length);
+      s = 0.75 + 0.25 * (shorter/longer);
+    } else {
+      s = similarity(qToken, it);
+      if (s < 0.84) s = 0; // limiar alto: evita trocar princípio ativo por outro parecido
+    }
+    if (s > best) best = s;
+  }
+  return best;
+}
+function tokenSetScore(queryTokens, itemTokens) {
+  if (queryTokens.length === 0) return { score: 0, minScore: 1 };
+  let sum = 0, min = 1;
+  for (const qt of queryTokens) {
+    const s = bestTokenScore(qt, itemTokens);
+    sum += s;
+    if (s < min) min = s;
+  }
+  return { score: sum / queryTokens.length, minScore: min };
+}
+function findCandidates(query, qty, data) {
+  const queryDosage = extractDosageTokens(query);
+  const queryNameTokens = nameTokens(query);
+  const queryLooseNums = looseNumbers(query);
+  const queryNorm = normalize(query);
+  const queryFormTag = queryNameTokens.find(t => FORM_TAGS.has(t));
+  const queryPackCount = extractPackCount(query);
+  // a forma farmacêutica não entra na pontuação de nome (é tratada à parte,
+  // como filtro/penalidade) - várias substâncias existem em "creme", por exemplo
+  const querySubstantiveTokens = queryNameTokens.filter(t => !FORM_TAGS.has(t));
+
+  let pool = data;
+  let dosageFallback = false;
+  if (queryDosage.length > 0) {
+    const strictPool = data.filter(item => {
+      const itemDosage = extractDosageTokens(item.desc);
+      return queryDosage.every(qd => itemDosage.includes(qd));
+    });
+    // só confia no pool estrito se tiver pelo menos um item com semelhança de
+    // NOME real com o pedido - senão, a dosagem/embalagem bateu por
+    // coincidência num produto completamente diferente (ex: "Clotrimazol
+    // 10g" batendo com Aciclovir ou Triancinolona, que também vêm em bisnaga
+    // de 10g) e isso não pode bloquear a busca por nome.
+    const strictPoolHasNameMatch = strictPool.some(item => {
+      const { score } = tokenSetScore(querySubstantiveTokens, nameTokens(item.desc));
+      return score >= 0.5;
+    });
+    if (strictPool.length > 0 && strictPoolHasNameMatch) {
+      pool = strictPool;
+    } else {
+      // dosagem exata não cadastrada - busca pelo nome mesmo assim, mas o
+      // resultado sempre vai para confirmação em vez de decidir sozinho.
+      dosageFallback = true;
+    }
+  }
+  if (pool.length === 0) return { status:'not_found', query, qty, topScore: -1 };
+
+  const scored = pool.map(item => {
+    const itemTokens = nameTokens(item.desc);
+    const { score: tokenScore, minScore } = tokenSetScore(querySubstantiveTokens, itemTokens);
+    const sim = similarity(queryNorm, normalize(item.desc));
+    let score = tokenScore * 0.75 + sim * 0.25;
+    // uma palavra relevante do pedido sem nenhuma correspondência no item é
+    // forte sinal de produto diferente (ex: "diclofenaco RESINATO" x "diclofenaco dietilamônio")
+    if (querySubstantiveTokens.length > 1 && minScore < 0.35) score -= 0.25;
+    // bônus de dosagem só valem com correspondência de nome mínima, senão um
+    // número batendo à toa (ex: "2,5mg" em duas substâncias diferentes) empurraria
+    // um item errado para cima do limiar de "achado"
+    const hasNameSupport = tokenScore >= 0.5;
+    if (queryDosage.length > 0 && !dosageFallback && hasNameSupport) score += 0.20;
+    if (queryLooseNums.length > 0) {
+      const itemNums = extractDosageTokens(item.desc).map(d => parseFloat(d));
+      const allMatch = queryLooseNums.every(n => itemNums.includes(n));
+      if (allMatch && hasNameSupport) score += 0.20;
+      else if (!allMatch) score -= 0.30;
+    }
+    // forma farmacêutica pedida explicitamente: bate -> bônus; outra forma
+    // explícita -> penalidade leve, vira confirmação em vez de descarte
+    let formConflict = false;
+    if (queryFormTag) {
+      const itemFormTags = itemTokens.filter(t => FORM_TAGS.has(t));
+      if (itemFormTags.includes(queryFormTag)) score += 0.15;
+      else if (itemFormTags.length > 0) { score -= 0.15; formConflict = true; }
+    }
+    // embalagem pedida (ex: "c/4") bate exatamente -> bônus para desempatar
+    // itens que só diferem no tamanho da caixa; se não bate, vira confirmação
+    let packConflict = false;
+    if (queryPackCount !== null) {
+      const itemPackCount = extractPackCount(item.desc);
+      if (itemPackCount !== null) {
+        if (itemPackCount === queryPackCount) score += 0.15;
+        else packConflict = true;
+      }
+    }
+    return { item, score, formConflict, packConflict };
+  }).sort((a,b) => b.score - a.score);
+
+  const top = scored[0], second = scored[1];
+  if (top.score < 0.45) return { status:'not_found', query, qty, topScore: top.score };
+  if (!second || second.score < 0.45 || (top.score - second.score) > 0.12) {
+    // vencedor claro, mas com forma/dosagem/embalagem não batendo 100% - confirma em vez de assumir
+    if (top.formConflict || dosageFallback || top.packConflict) {
+      return { status:'ambiguous', query, qty, options:[top.item], topScore: top.score };
+    }
+    return { status:'found', query, qty, item: top.item, score: top.score, topScore: top.score };
+  }
+
+  const options = scored.filter(s => s.score >= 0.45 && (top.score - s.score) <= 0.12).slice(0,5).map(s => s.item);
+  return { status:'ambiguous', query, qty, options, topScore: top.score };
+}
+
+/* ==========================================================================
+   PARSING DE LINHAS DIGITADAS
+   Aceita formatos livres: "nome dosagem qtd", "qtd nome dosagem", "nome qtd",
+   só "nome" (assume qtd=1). Gera candidatos, o melhor é escolhido depois
+   testando contra a tabela (ver processInput).
+   ========================================================================== */
+function parseLineCandidates(line) {
+  line = line.replace(/^[-*•]\s*/, '').replace(/^\d+[\)\.]\s*/, ''); // remove marcadores "- " "1) "
+  line = expandBrandAliases(line);
+  const tokens = line.split(/\s+/).filter(Boolean);
+  // número seguido de unidade (ex: "60 mL") é dosagem/volume, nunca quantidade -
+  // senão "Nitazoxanida 60 mL — 12" leria "60" como quantidade em vez de "12"
+  const UNIT_WORDS = new Set(['MG','ML','MCG','MCL','UI','G','L','KG']);
+  const digitIdx = [];
+  tokens.forEach((t, i) => {
+    if (!/^\d+$/.test(t)) return;
+    const nextWord = (tokens[i + 1] || '').toUpperCase().replace(/[^A-Z]/g, '');
+    if (UNIT_WORDS.has(nextWord)) return; // número é dosagem/volume, não quantidade
+    digitIdx.push(i);
+  });
+
+  if (digitIdx.length === 0) {
+    return [{ name: tokens.join(' '), qty: 1 }];
+  }
+
+  const candidates = [];
+  const seen = new Set();
+  const addCandidate = (qtyIdx, kind) => {
+    const qty = parseInt(tokens[qtyIdx], 10);
+    const rest = tokens.filter((_, i) => i !== qtyIdx).join(' ');
+    const key = qtyIdx + '|' + rest;
+    if (!seen.has(key) && rest.length > 0) { seen.add(key); candidates.push({ name: rest, qty, kind }); }
+  };
+
+  // tenta: quantidade é o ÚLTIMO número da linha (formato "nome dosagem qtd")
+  addCandidate(digitIdx[digitIdx.length - 1], 'last');
+  // tenta: quantidade é o PRIMEIRO número da linha (formato "qtd nome dosagem")
+  addCandidate(digitIdx[0], 'first');
+  // com um único número solto e nenhuma dosagem explícita, ele também pode
+  // ser a dosagem em vez da quantidade (ex: "remedio 40" = versão de 40mg, qty=1)
+  if (digitIdx.length === 1 && extractDosageTokens(tokens.join(' ')).length === 0) {
+    const keyAsIs = 'asis|' + tokens.join(' ');
+    if (!seen.has(keyAsIs)) { seen.add(keyAsIs); candidates.push({ name: tokens.join(' '), qty: 1, kind: 'asis' }); }
+  }
+
+  // posição esperada da quantidade (início ou fim da linha) desempata entre
+  // candidatos com pontuação parecida, evitando trocar a dosagem por engano
+  const preferredKind = digitIdx[0] === 0 ? 'first' : 'last';
+  candidates.forEach(c => { c.expected = (c.kind === preferredKind); });
+
+  return candidates;
+}
+
+/* Escolhe, entre as interpretações possíveis de uma linha, a que melhor bate
+   com a tabela (achado > ambíguo > não encontrado). A posição esperada da
+   quantidade pesa mais que uma pequena diferença de pontuação. */
+function resolveLine(line, data) {
+  const candidates = parseLineCandidates(line);
+  let best = null;
+  for (const cand of candidates) {
+    const r = findCandidates(cand.name, cand.qty, data);
+    const quality = (r.status === 'not_found' ? r.topScore : r.topScore + (r.status === 'found' ? 0.05 : 0))
+      + (cand.expected ? 1.0 : 0);
+    if (!best || quality > best.quality) {
+      best = { cand, result: r, quality };
+    }
+  }
+  return { raw: line, name: best.cand.name, qty: best.cand.qty, result: best.result };
+}
+
+/* ==========================================================================
+   FORMATAÇÃO
+   ========================================================================== */
+function formatBRL(v) {
+  return v.toLocaleString('pt-BR', { minimumFractionDigits:2, maximumFractionDigits:2 });
+}
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+const PORTFOLIO_TAG_CLASS = {
+  'PRIORITÁRIO': 'tag-prioritario',
+  'LANÇAMENTO': 'tag-lancamento',
+  'LINHA': 'tag-linha',
+  'DESCONTINUADO': 'tag-descontinuado',
+  'COMBATE': 'tag-combate'
+};
+function portfolioTagClass(portfolio) {
+  return PORTFOLIO_TAG_CLASS[(portfolio || '').toUpperCase()] || 'tag-outro';
+}
+
+/* ==========================================================================
+   CARREGAMENTO DAS TABELAS (xlsx via SheetJS)
+   ========================================================================== */
+function findProductSheetRows(wb, sheetName) {
+  // confirma que o cabeçalho tem EAN + DESCRIÇÃO antes de aceitar a aba;
+  // se não bater, cai no fallback de procurar entre todas as abas
+  const ws = wb.Sheets[sheetName];
+  if (ws) {
+    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null, raw: true });
+    if (rows.length && rows[0]) {
+      const header = rows[0].map(h => (h || '').toString().toUpperCase());
+      const hasEan = header.some(h => h.includes('EAN'));
+      const hasDesc = header.some(h => h.includes('DESCR'));
+      if (hasEan && hasDesc) return rows;
+    }
+  }
+  for (const otherSheetName of wb.SheetNames) {
+    const otherWs = wb.Sheets[otherSheetName];
+    const rows = XLSX.utils.sheet_to_json(otherWs, { header: 1, defval: null, raw: true });
+    if (!rows.length || !rows[0]) continue;
+    const header = rows[0].map(h => (h || '').toString().toUpperCase());
+    const hasEan = header.some(h => h.includes('EAN'));
+    const hasDesc = header.some(h => h.includes('DESCR'));
+    if (hasEan && hasDesc) return rows;
+  }
+  throw new Error('Não encontrei a aba "' + sheetName + '" com colunas EAN + DESCRIÇÃO em ' + TABELAS_FILE + '.');
+}
+
+function parseProductRows(rows) {
+  const header = rows[0].map(h => (h || '').toString().toUpperCase());
+  let eanIdx = header.findIndex(h => h.includes('EAN'));
+  let descIdx = header.findIndex(h => h.includes('DESCR'));
+  let precoIdx = header.findIndex(h => h.includes('PRE'));
+  let itemIdx = header.findIndex(h => h.includes('ITEM'));
+  let caixaIdx = header.findIndex(h => h.includes('CAIXA'));
+  if (eanIdx < 0) eanIdx = 0;
+  if (descIdx < 0) descIdx = 1;
+  if (precoIdx < 0) precoIdx = 2;
+
+  const data = [];
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r) continue;
+    const ean = r[eanIdx], desc = r[descIdx], preco = r[precoIdx];
+    if (ean === null || ean === undefined || !desc) continue;
+    const precoNum = (preco === null || preco === undefined || preco === '') ? null : parseFloat(preco);
+    const portfolio = itemIdx >= 0 && r[itemIdx] !== null && r[itemIdx] !== undefined ? String(r[itemIdx]).trim() : null;
+    const caixa = caixaIdx >= 0 && r[caixaIdx] !== null && r[caixaIdx] !== undefined && r[caixaIdx] !== '' ? parseInt(r[caixaIdx], 10) : null;
+    data.push({
+      ean: String(ean).trim(),
+      desc: String(desc).trim(),
+      preco: (precoNum!==null && !isNaN(precoNum)) ? precoNum : null,
+      portfolio,
+      caixa: (caixa !== null && !isNaN(caixa)) ? caixa : null
+    });
+  }
+  return data;
+}
+
+async function initApp() {
+  try {
+    const res = await fetch(TABELAS_FILE, { cache: 'no-store' });
+    if (!res.ok) throw new Error('Arquivo ' + TABELAS_FILE + ' não encontrado (HTTP ' + res.status + ')');
+    const buf = await res.arrayBuffer();
+    const wb = XLSX.read(buf, { type: 'array' });
+    for (const key of Object.keys(TABLE_SHEETS)) {
+      const rows = findProductSheetRows(wb, TABLE_SHEETS[key]);
+      if (!rows.length) throw new Error('Aba "' + TABLE_SHEETS[key] + '" está vazia em ' + TABELAS_FILE + '.');
+      state.tables[key] = parseProductRows(rows);
+    }
+    renderSelectTable();
+  } catch (err) {
+    renderLoadError(err);
+  }
+}
+
+/* ==========================================================================
+   RENDERIZAÇÃO — BARRA SUPERIOR
+   ========================================================================== */
+function renderCtxBar() {
+  const ctx = document.getElementById('ctxBar');
+  let html = '';
+  const onTableSelectScreen = !state.selectedTableKey && !state.mode && !state.pickingForBrowse && state.tables.t1;
+  if (onTableSelectScreen) html += `<button class="reset" onclick="startBrowseOrder()">Fazer pedido</button>`;
+  if (state.selectedTableName) html += `<span class="pill">${escapeHtml(state.selectedTableName)}</span>`;
+  if (state.mode) html += `<span class="pill">${state.mode === 'A' ? 'Consultar preços' : 'Gerar pedido'}</span>`;
+  if (state.selectedTableKey) html += `<button class="reset" onclick="resetAll()">Novo pedido</button>`;
+  ctx.innerHTML = html;
+}
+
+/* ==========================================================================
+   TELA: ERRO DE CARREGAMENTO
+   ========================================================================== */
+function renderLoadError(err) {
+  document.getElementById('app').innerHTML = `
+    <div class="error-box">
+      <strong>Não foi possível carregar as tabelas.</strong><br><br>
+      ${escapeHtml(err.message)}<br><br>
+      Verifique se o arquivo <code>TABELAS.xlsx</code> está na mesma
+      pasta do <code>index.html</code> no repositório, e se a página está sendo acessada
+      via GitHub Pages (ou um servidor local) — não funciona abrindo o arquivo diretamente
+      pelo navegador (file://).
+      <div class="btn-row"><button class="btn btn-secondary" onclick="initApp()">Tentar novamente</button></div>
+    </div>`;
+  renderCtxBar();
+}
+
+/* ==========================================================================
+   TELA 1 — ESCOLHER TABELA
+   ========================================================================== */
+function renderSelectTable() {
+  state.selectedTableKey = null;
+  state.selectedTableName = null;
+  state.mode = null;
+  state.pickingForBrowse = false;
+  const cards = Object.keys(TABLE_LABELS).map(key => `
+      <div class="choice-card" onclick="selectTable('${key}')">
+        <div class="dot"></div>
+        <h3>${escapeHtml(TABLE_LABELS[key])}</h3>
+        <p>${state.tables[key].length} produtos carregados</p>
+      </div>`).join('');
+  document.getElementById('app').innerHTML = `
+    <div class="demo-banner"><strong>Demo de portfólio:</strong> este projeto foi construído para uso
+      real de uma distribuidora e aqui roda com nome, logo, preços e códigos de barras totalmente
+      fictícios, só para demonstração.</div>
+    <h1 class="screen-title">Qual tabela deseja utilizar?</h1>
+    <p class="screen-sub">GERBOOT – Ferramenta inteligente para auxiliar na consulta de preços e na
+      digitação de pedidos.<br>Escolha a tabela para começar.</p>
+    <div class="card-grid cols-3">${cards}</div>
+    <p class="footer-note">GERBOOT · demonstração de portfólio para a FarmaCerta Genéricos (empresa e dados fictícios)</p>
+  `;
+  renderCtxBar();
+  document.getElementById('helpFab').style.display = 'block';
+  maybeShowTour();
+}
+function selectTable(key) {
+  state.selectedTableKey = key;
+  state.selectedTableName = TABLE_LABELS[key];
+  renderSelectMode();
+}
+
+/* ==========================================================================
+   TELA — "FAZER PEDIDO": escolher tabela, navegar pelo catálogo inteiro e
+   ir inserindo a quantidade de cada item, em vez de digitar a lista
+   ========================================================================== */
+function startBrowseOrder() {
+  renderBrowseTablePicker();
+}
+function renderBrowseTablePicker() {
+  state.selectedTableKey = null;
+  state.selectedTableName = null;
+  state.mode = null;
+  state.pickingForBrowse = true;
+  const cards = Object.keys(TABLE_LABELS).map(key => `
+      <div class="choice-card" onclick="selectTableForBrowse('${key}')">
+        <div class="dot"></div>
+        <h3>${escapeHtml(TABLE_LABELS[key])}</h3>
+        <p>${state.tables[key].length} produtos carregados</p>
+      </div>`).join('');
+  document.getElementById('app').innerHTML = `
+    <h1 class="screen-title">Fazer pedido</h1>
+    <p class="screen-sub">Escolha a tabela para montar o pedido navegando pelos itens.</p>
+    <div class="card-grid cols-3">${cards}</div>
+    <div class="btn-row"><button class="btn btn-ghost" onclick="renderSelectTable()">&larr; Voltar</button></div>
+  `;
+  renderCtxBar();
+}
+function selectTableForBrowse(key) {
+  state.selectedTableKey = key;
+  state.selectedTableName = TABLE_LABELS[key];
+  state.pickingForBrowse = false;
+  state.browseQty = {};
+  state.browseSearch = '';
+  state.browseCategory = '';
+  renderBrowseCatalog();
+}
+function renderBrowseCatalog() {
+  const data = state.tables[state.selectedTableKey];
+  const categories = [...new Set(data.map(p => p.portfolio).filter(Boolean))];
+  document.getElementById('app').innerHTML = `
+    <h1 class="screen-title">Fazer pedido</h1>
+    <p class="screen-sub">Insira a quantidade de cada item que o cliente pediu. Use a busca ou o filtro
+      de categoria pra achar mais rápido.</p>
+    <div class="browse-sticky-bar">
+      <span class="tag tag-lancamento" id="browseLancCount">Lançamento: 0</span>
+      <span class="tag tag-prioritario" id="browsePrioCount">Prioritário: 0</span>
+      <span class="order-total" id="browseTotal">Total: R$ 0,00</span>
+      <button class="btn btn-primary" onclick="finalizeBrowseOrder()">Finalizar pedido</button>
+    </div>
+    <div class="browse-filters">
+      <input type="text" id="browseSearchInput" placeholder="Buscar item..." oninput="onBrowseSearchInput()">
+      <select id="browseCategorySelect" onchange="onBrowseCategoryChange()">
+        <option value="">Todas as categorias</option>
+        ${categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('')}
+      </select>
+    </div>
+    <div class="result-block" id="browseList"></div>
+    <div class="btn-row"><button class="btn btn-ghost" onclick="renderSelectTable()">&larr; Voltar</button></div>
+  `;
+  renderBrowseList();
+  renderCtxBar();
+  syncBrowseStickyOffset();
+}
+function syncBrowseStickyOffset() {
+  // a altura da topbar varia (o pill da tabela pode quebrar linha em telas
+  // estreitas), então mede na hora em vez de fixar um valor no CSS
+  const bar = document.querySelector('.browse-sticky-bar');
+  const topbar = document.querySelector('.topbar');
+  if (bar && topbar) bar.style.top = topbar.offsetHeight + 'px';
+}
+window.addEventListener('resize', () => {
+  if (document.querySelector('.browse-sticky-bar')) syncBrowseStickyOffset();
+});
+function onBrowseSearchInput() {
+  state.browseSearch = document.getElementById('browseSearchInput').value;
+  renderBrowseList();
+}
+function onBrowseCategoryChange() {
+  state.browseCategory = document.getElementById('browseCategorySelect').value;
+  renderBrowseList();
+}
+function renderBrowseList() {
+  const list = document.getElementById('browseList');
+  const data = state.tables[state.selectedTableKey];
+  const searchNorm = normalize(state.browseSearch || '');
+  const filtered = data.filter(p => {
+    if (state.browseCategory && p.portfolio !== state.browseCategory) return false;
+    if (searchNorm && !normalize(p.desc).includes(searchNorm)) return false;
+    return true;
+  });
+  if (filtered.length === 0) {
+    list.innerHTML = '<p style="color:var(--ink-soft);font-size:13.5px;margin:0;">Nenhum item encontrado.</p>';
+    updateBrowseSummary();
+    return;
+  }
+  list.innerHTML = filtered.map(p => {
+    const qty = state.browseQty[p.ean] || 0;
+    const tagsHtml = (p.portfolio || p.caixa !== null) ? `
+        <span class="item-meta">
+          ${p.portfolio ? `<span class="tag ${portfolioTagClass(p.portfolio)}">${escapeHtml(p.portfolio)}</span>` : ''}
+          ${p.caixa !== null ? `<span class="tag tag-caixa">CX ${p.caixa}</span>` : ''}
+        </span>` : '';
+    return `
+      <div class="qty-row">
+        <span class="name">${escapeHtml(p.desc)}${tagsHtml}</span>
+        <span class="price">${p.preco !== null ? 'R$ ' + formatBRL(p.preco) : '—'}</span>
+        <span class="qty-stepper">
+          <button type="button" class="qty-step-btn" title="Diminuir" onclick="stepBrowseQty('${p.ean}',-1)">&minus;</button>
+          <input type="number" min="0" value="${qty}" id="browseQtyInput_${p.ean}" oninput="setBrowseQty('${p.ean}', this.value)">
+          <button type="button" class="qty-step-btn" title="Aumentar" onclick="stepBrowseQty('${p.ean}',1)">+</button>
+        </span>
+      </div>`;
+  }).join('');
+  updateBrowseSummary();
+}
+function stepBrowseQty(ean, delta) {
+  const input = document.getElementById('browseQtyInput_' + ean);
+  if (!input) return;
+  const val = parseInt(input.value, 10);
+  const next = Math.max(0, (isNaN(val) ? 0 : val) + delta);
+  input.value = next;
+  setBrowseQty(ean, next);
+}
+function setBrowseQty(ean, value) {
+  const qty = parseInt(value, 10);
+  if (!isNaN(qty) && qty > 0) state.browseQty[ean] = qty;
+  else delete state.browseQty[ean];
+  updateBrowseSummary();
+}
+function updateBrowseSummary() {
+  const totalEl = document.getElementById('browseTotal');
+  if (!totalEl) return;
+  const lancEl = document.getElementById('browseLancCount');
+  const prioEl = document.getElementById('browsePrioCount');
+  const data = state.tables[state.selectedTableKey];
+  const byEan = new Map(data.map(p => [p.ean, p]));
+  let total = 0, lancCount = 0, prioCount = 0;
+  Object.keys(state.browseQty).forEach(ean => {
+    const qty = state.browseQty[ean];
+    const p = byEan.get(ean);
+    if (!p || qty <= 0) return;
+    if (p.preco !== null) total += qty * p.preco;
+    if (p.portfolio === 'LANÇAMENTO') lancCount++;
+    if (p.portfolio === 'PRIORITÁRIO') prioCount++;
+  });
+  totalEl.textContent = 'Total: R$ ' + formatBRL(total);
+  if (lancEl) lancEl.textContent = 'Lançamento: ' + lancCount;
+  if (prioEl) prioEl.textContent = 'Prioritário: ' + prioCount;
+}
+function finalizeBrowseOrder() {
+  const data = state.tables[state.selectedTableKey];
+  const byEan = new Map(data.map(p => [p.ean, p]));
+  const ordered = Object.keys(state.browseQty)
+    .filter(ean => state.browseQty[ean] > 0 && byEan.has(ean))
+    .map(ean => {
+      const item = byEan.get(ean);
+      return { raw: 'browse:' + ean, name: item.desc, qty: state.browseQty[ean], status: 'found', item, options: null };
+    });
+  state.mode = 'B';
+  state.results = { ordered };
+  renderResultsB();
+}
+
+/* ==========================================================================
+   TELA 2 — ESCOLHER MODO
+   ========================================================================== */
+function renderSelectMode() {
+  document.getElementById('app').innerHTML = `
+    <h1 class="screen-title">O que você precisa fazer?</h1>
+    <p class="screen-sub">Tabela selecionada: <strong>${escapeHtml(state.selectedTableName)}</strong></p>
+    <div class="card-grid">
+      <div class="choice-card" onclick="selectMode('A')">
+        <div class="dot"></div>
+        <h3>Consultar preços</h3>
+        <p>Digite os itens e veja os preços, prontos para colar no WhatsApp.</p>
+      </div>
+      <div class="choice-card" onclick="selectMode('B')">
+        <div class="dot"></div>
+        <h3>Gerar pedido</h3>
+        <p>Digite os itens e receba código de barras + quantidade.</p>
+      </div>
+    </div>
+    <div class="btn-row"><button class="btn btn-ghost" onclick="renderSelectTable()">&larr; Trocar tabela</button></div>
+  `;
+  renderCtxBar();
+}
+function selectMode(mode) {
+  state.mode = mode;
+  renderInputScreen();
+}
+
+/* ==========================================================================
+   TELA 3 — DIGITAR ITENS
+   ========================================================================== */
+function renderInputScreen() {
+  const title = state.mode === 'A' ? 'Consultar preços' : 'Gerar pedido';
+  document.getElementById('app').innerHTML = `
+    <h1 class="screen-title">${title}</h1>
+    <p class="screen-sub">Digite um item por linha. Se quiser, informe a quantidade no final da linha.</p>
+    <textarea id="itemsInput" placeholder="Ex:
+paracetamol 750mg 2
+dipirona gotas 3
+losartana 50mg"></textarea>
+    <div class="example-box">
+      Dica: informe a dosagem sempre que possível (<code>750mg</code>, <code>500mg</code>) para evitar
+      confusão entre apresentações diferentes do mesmo remédio.
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="processInput()">Buscar</button>
+      <button class="btn btn-ghost" onclick="renderSelectMode()">&larr; Voltar</button>
+    </div>
+  `;
+  renderCtxBar();
+  document.getElementById('itemsInput').focus();
+}
+
+function processInput() {
+  const raw = document.getElementById('itemsInput').value;
+  const rawLines = raw.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  if (rawLines.length === 0) return;
+
+  const data = state.tables[state.selectedTableKey];
+
+  // "ordered" é a lista-mestra, sempre na ordem em que o usuário digitou.
+  // Cada item ambíguo é resolvido "no lugar" depois, sem mudar a posição.
+  const ordered = rawLines.map(rawLine => {
+    const resolved = resolveLine(rawLine, data);
+    const r = resolved.result;
+    return {
+      raw: resolved.raw, name: resolved.name, qty: resolved.qty,
+      status: r.status, item: r.item, options: r.options
+    };
+  });
+
+  state.results = { ordered };
+  state.ambiguousChoices = {};
+
+  const hasAmbiguous = ordered.some(e => e.status === 'ambiguous');
+  if (hasAmbiguous) renderAmbiguous();
+  else finalizeResults();
+}
+
+/* ==========================================================================
+   TELA — RESOLVER AMBIGUIDADES
+   ========================================================================== */
+function renderAmbiguous() {
+  const amb = state.results.ordered.filter(e => e.status === 'ambiguous');
+  document.getElementById('app').innerHTML = `
+    <h1 class="screen-title">Alguns itens têm mais de uma opção</h1>
+    <p class="screen-sub">Selecione a apresentação correta para cada item abaixo.</p>
+    <div id="ambigList"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="confirmAmbigBtn" onclick="confirmAmbiguous()" disabled>Confirmar seleções</button>
+      <button class="btn btn-ghost" onclick="renderInputScreen()">&larr; Voltar</button>
+    </div>
+  `;
+  const list = document.getElementById('ambigList');
+  amb.forEach((entry, i) => {
+    const div = document.createElement('div');
+    div.className = 'ambig-item';
+    let optsHtml = entry.options.map((opt, oi) => `
+      <label class="ambig-opt" data-entry="${i}" data-opt="${oi}">
+        <input type="radio" name="amb_${i}" value="${oi}" onchange="onAmbigChoose(${i}, ${oi})">
+        <span>${escapeHtml(opt.desc)}</span>
+        <span class="price">${opt.preco !== null ? 'R$ ' + formatBRL(opt.preco) : '—'}</span>
+      </label>
+    `).join('');
+    optsHtml += `
+      <label class="ambig-opt" data-entry="${i}" data-opt="none">
+        <input type="radio" name="amb_${i}" value="none" onchange="onAmbigChoose(${i}, 'none')">
+        <span>Nenhuma dessas (não tenho)</span>
+      </label>`;
+    div.innerHTML = `<div class="q">"${escapeHtml(entry.raw)}"</div>${optsHtml}`;
+    list.appendChild(div);
+  });
+  renderCtxBar();
+}
+function onAmbigChoose(entryIdx, optIdx) {
+  state.ambiguousChoices[entryIdx] = optIdx;
+  document.querySelectorAll(`.ambig-opt[data-entry="${entryIdx}"]`).forEach(el => el.classList.remove('selected'));
+  document.querySelector(`.ambig-opt[data-entry="${entryIdx}"][data-opt="${optIdx}"]`).classList.add('selected');
+  const total = state.results.ordered.filter(e => e.status === 'ambiguous').length;
+  const answered = Object.keys(state.ambiguousChoices).length;
+  document.getElementById('confirmAmbigBtn').disabled = answered < total;
+}
+function confirmAmbiguous() {
+  let ambPos = 0;
+  state.results.ordered.forEach(entry => {
+    if (entry.status !== 'ambiguous') return;
+    const choice = state.ambiguousChoices[ambPos];
+    if (choice === 'none') {
+      entry.status = 'not_found';
+    } else {
+      entry.status = 'found';
+      entry.item = entry.options[choice];
+    }
+    delete entry.options;
+    ambPos++;
+  });
+  finalizeResults();
+}
+
+/* ==========================================================================
+   FINALIZAÇÃO — direciona para resultado do modo A ou B
+   ========================================================================== */
+function finalizeResults() {
+  if (state.mode === 'A') renderResultsA();
+  else renderResultsB();
+}
+
+/* ==========================================================================
+   NOME "LIMPO" PARA O CLIENTE (só exibição — nunca usado na busca/matching)
+   ========================================================================== */
+const PRETTIFY_SALT_PREFIXES = [
+  /^DICLORIDRATO\s+/i, /^BISSULFATO\s+/i, /^DICLOR\.\s*/i, /^CLOR\.\s*/i,
+  /^BROMID\.\s*/i, /^MESILATO\s+/i, /^PROPIONATO\s+/i, /^VALERATO\s+/i,
+  /^HEMIFUMARATO\s+DE\s+/i, /^HEMIF\.\s*DE\s*/i, /^HEMIF\.\s*/i, /^HEM\.\s*/i,
+  /^MALEATO\s+DE\s+/i, /^MALEATO\s+/i, /^OXALATO\s+/i,
+  /^FUROATO\s+DE\s+/i, /^SUC\s+(?=[A-Z])/i, /^CL\.\s*DE\s*/i, /^CL\.\s*/i,
+  /^TROMETAMOL\s+/i, /^C\.(?=[A-Z])/i
+];
+function prettifyDesc(desc) {
+  let s = desc.replace(/\u00a0/g, ' ');
+  // remove código de classificação entre parênteses: (C1), (B1), (A2)...
+  s = s.replace(/\s*\([A-Z0-9]{1,4}\)\s*/g, ' ');
+  // remove prefixo de sal/éster do início (pode ter mais de um em sequência)
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const re of PRETTIFY_SALT_PREFIXES) {
+      const next = s.replace(re, '');
+      if (next !== s) { s = next; changed = true; }
+    }
+  }
+  // remove sufixo de fornecedor/revestimento no final
+  s = s.replace(/\s*R?[.\s-]*GD\s*$/i, '');
+  s = s.replace(/(?<=[A-Z0-9])REV\s*$/i, '');
+  s = s.replace(/\s+REV\s*$/i, '');
+  s = s.replace(/\.\s*REV\s*$/i, '');
+  s = s.replace(/[.\-]\s*$/, '');
+  s = s.replace(/\s{2,}/g, ' ').trim();
+  return s || desc; // nunca devolve vazio - se sobrar nada, usa o original
+}
+
+/* ==========================================================================
+   AVISO DE RESPONSABILIDADE (IA) — usado nas telas de resultado
+   ========================================================================== */
+const AI_DISCLAIMER_HTML = `
+  <div class="ai-disclaimer">
+    <span class="icon">⚠️</span>
+    <span><strong>Atenção:</strong> o GERBOOT é uma ferramenta inteligente desenvolvida para auxiliar e
+    acelerar processos do dia a dia. As informações geradas podem conter inconsistências.
+    Sempre confira os dados antes de enviar qualquer informação ou pedido ao cliente.</span>
+  </div>`;
+
+/* ==========================================================================
+   TELA — RESULTADOS MODO A (preços), na mesma ordem em que foram digitados
+   ========================================================================== */
+function renderResultsA() {
+  const ordered = state.results.ordered;
+  const foundCount = ordered.filter(e => e.status === 'found').length;
+  const notFoundCount = ordered.filter(e => e.status === 'not_found').length;
+
+  const lines = ordered.map(e => {
+    if (e.status === 'found') {
+      return { text: `${prettifyDesc(e.item.desc)}: ${e.item.preco !== null ? 'R$ ' + formatBRL(e.item.preco) : 'sem preço'}`, ok:true };
+    }
+    return { text: `${e.name}: não tenho`, ok:false };
+  });
+
+  const plainText = lines.map(l => l.text).join('\n');
+  const htmlLines = lines.map(l => `<span class="${l.ok?'line-found':'line-notfound'}">${escapeHtml(l.text)}</span>`).join('\n');
+  state.copyTargets.copyBtnA = plainText;
+
+  document.getElementById('app').innerHTML = `
+    <h1 class="screen-title">Preços encontrados</h1>
+    ${AI_DISCLAIMER_HTML}
+    <p class="screen-sub">
+      <span class="badge-count">${foundCount} encontrado(s)</span>
+      ${notFoundCount ? ` <span class="badge-count warn">${notFoundCount} não encontrado(s)</span>` : ''}
+    </p>
+    <div class="result-block">
+      <h3>Pronto para colar no WhatsApp</h3>
+      <pre class="result-pre" id="resultPreA">${htmlLines}</pre>
+      <button class="copy-btn" id="copyBtnA" onclick="copyText('copyBtnA')">Copiar</button>
+    </div>
+    ${foundCount > 0 ? `
+    <div class="result-block">
+      <h3>Deseja gerar o pedido pronto com os itens encontrados?</h3>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="startOrderFromFound()">Sim, gerar pedido</button>
+        <button class="btn btn-ghost" onclick="renderInputScreen()">Não, nova consulta</button>
+      </div>
+    </div>` : `
+    <div class="btn-row"><button class="btn btn-ghost" onclick="renderInputScreen()">&larr; Nova consulta</button></div>`}
+  `;
+  renderCtxBar();
+}
+
+/* ==========================================================================
+   TELA — CONFIRMAR QUANTIDADES PARA GERAR PEDIDO (a partir do Modo A)
+   ========================================================================== */
+function startOrderFromFound() {
+  state.lastFoundForOrder = state.results.ordered.filter(e => e.status === 'found').map(f => ({ ...f }));
+  document.getElementById('app').innerHTML = `
+    <h1 class="screen-title">Confirme as quantidades</h1>
+    <p class="screen-sub">Ajuste as quantidades ou remova algum item antes de gerar o pedido.</p>
+    <div class="result-block" id="qtyList"></div>
+    <div class="btn-row order-total-row">
+      <button class="btn btn-primary" id="generateOrderBtn" onclick="generateOrderFromQuantities()">Gerar pedido</button>
+      <button class="btn btn-ghost" onclick="renderResultsA()">&larr; Voltar</button>
+      <span class="order-total" id="orderTotal">Total: R$ 0,00</span>
+    </div>
+  `;
+  renderQtyList();
+  renderCtxBar();
+}
+function renderQtyList() {
+  const list = document.getElementById('qtyList');
+  list.innerHTML = '';
+  if (state.lastFoundForOrder.length === 0) {
+    list.innerHTML = '<p style="color:var(--ink-soft);font-size:13.5px;margin:0;">Nenhum item restante nesta lista.</p>';
+    const btn = document.getElementById('generateOrderBtn');
+    if (btn) btn.disabled = true;
+    updateOrderTotal();
+    return;
+  }
+  state.lastFoundForOrder.forEach((f, i) => {
+    const row = document.createElement('div');
+    row.className = 'qty-row';
+    const tagsHtml = (f.item.portfolio || f.item.caixa !== null) ? `
+        <span class="item-meta">
+          ${f.item.portfolio ? `<span class="tag ${portfolioTagClass(f.item.portfolio)}">${escapeHtml(f.item.portfolio)}</span>` : ''}
+          ${f.item.caixa !== null ? `<span class="tag tag-caixa">CX ${f.item.caixa}</span>` : ''}
+        </span>` : '';
+    row.innerHTML = `
+      <span class="name">${escapeHtml(f.item.desc)}${tagsHtml}</span>
+      <span class="price">${f.item.preco !== null ? 'R$ ' + formatBRL(f.item.preco) : '—'}</span>
+      <span class="qty-stepper">
+        <button type="button" class="qty-step-btn" title="Diminuir" onclick="stepQty(${i},-1)">&minus;</button>
+        <input type="number" min="0" value="${f.qty}" id="qtyInput_${i}" oninput="updateOrderTotal()">
+        <button type="button" class="qty-step-btn" title="Aumentar" onclick="stepQty(${i},1)">+</button>
+      </span>
+      <button class="remove-item-btn" title="Remover item" onclick="removeOrderItem(${i})">✕</button>
+    `;
+    list.appendChild(row);
+  });
+  const btn = document.getElementById('generateOrderBtn');
+  if (btn) btn.disabled = false;
+  updateOrderTotal();
+}
+function stepQty(i, delta) {
+  const input = document.getElementById('qtyInput_' + i);
+  if (!input) return;
+  const val = parseInt(input.value, 10);
+  input.value = Math.max(0, (isNaN(val) ? 0 : val) + delta);
+  updateOrderTotal();
+}
+function updateOrderTotal() {
+  const totalEl = document.getElementById('orderTotal');
+  if (!totalEl) return;
+  let total = 0;
+  state.lastFoundForOrder.forEach((f, i) => {
+    const input = document.getElementById('qtyInput_' + i);
+    const qty = input ? parseInt(input.value, 10) : 0;
+    if (!isNaN(qty) && qty > 0 && f.item.preco !== null) total += qty * f.item.preco;
+  });
+  totalEl.textContent = 'Total: R$ ' + formatBRL(total);
+}
+function removeOrderItem(i) {
+  // guarda os valores de quantidade já digitados antes de remover, pra não
+  // perder ajustes que o usuário já tinha feito nos outros itens
+  state.lastFoundForOrder = state.lastFoundForOrder.map((f, idx) => {
+    const input = document.getElementById('qtyInput_' + idx);
+    const val = input ? parseInt(input.value, 10) : NaN;
+    return { ...f, qty: isNaN(val) || val <= 0 ? f.qty : val };
+  });
+  state.lastFoundForOrder.splice(i, 1);
+  renderQtyList();
+}
+function generateOrderFromQuantities() {
+  const updated = state.lastFoundForOrder.map((f, i) => {
+    const val = parseInt(document.getElementById('qtyInput_' + i).value, 10);
+    return { ...f, qty: isNaN(val) || val <= 0 ? f.qty : val };
+  }).filter(f => f.qty > 0);
+  // usa as quantidades confirmadas, mas mantém a ordem original de "ordered".
+  // itens removidos (não estão mais em "updated") saem completamente da lista.
+  const byRaw = new Map(updated.map(f => [f.raw, f]));
+  state.results.ordered = state.results.ordered
+    .filter(e => e.status !== 'found' || byRaw.has(e.raw))
+    .map(e => e.status === 'found' ? byRaw.get(e.raw) : e);
+  renderResultsB();
+}
+
+/* ==========================================================================
+   TELA — RESULTADOS MODO B (EAN + quantidade), na mesma ordem digitada
+   ========================================================================== */
+function renderResultsB() {
+  const ordered = state.results.ordered;
+  const found = ordered.filter(e => e.status === 'found');
+  const notFoundNames = ordered.filter(e => e.status === 'not_found').map(e => e.name);
+
+  const pairs = found.map(f => `${f.item.ean} ${f.qty}`).join('\n');
+  state.copyTargets.copyBtnB = pairs;
+  state.copyTargets.copyBtnFaltas = ['Faltas', ...notFoundNames].join('\n');
+
+  const rowsHtml = found.map((f, i) => `
+    <div class="order-item-row">
+      <span class="name">${escapeHtml(f.item.desc)}</span>
+      <span class="ean">${escapeHtml(f.item.ean)}</span>
+      <span class="qty">x${f.qty}</span>
+      <button class="faltas-item-btn" title="Tirar do pedido e mandar pra Faltas" onclick="sendItemToFaltas(${i})">Falta</button>
+    </div>`).join('');
+
+  document.getElementById('app').innerHTML = `
+    <h1 class="screen-title">Pedido gerado</h1>
+    ${AI_DISCLAIMER_HTML}
+    <p class="screen-sub">
+      <span class="badge-count">${found.length} item(ns)</span>
+      ${notFoundNames.length ? ` <span class="badge-count warn">${notFoundNames.length} falta(s)</span>` : ''}
+    </p>
+    <div class="result-block">
+      <h3>Código de barras + quantidade</h3>
+      <div class="order-list">${rowsHtml || '<p style="color:var(--ink-soft);font-size:13.5px;margin:0;">Nenhum item encontrado.</p>'}</div>
+      <button class="copy-btn" id="copyBtnB" onclick="copyText('copyBtnB')">Copiar</button>
+    </div>
+    ${notFoundNames.length ? `
+    <div class="result-block">
+      <h3>Faltas</h3>
+      <pre class="result-pre">${notFoundNames.map(n => escapeHtml(n)).join('\n')}</pre>
+      <button class="copy-btn" id="copyBtnFaltas" onclick="copyText('copyBtnFaltas')">Copiar</button>
+    </div>` : ''}
+    <div class="btn-row"><button class="btn btn-ghost" onclick="renderInputScreen()">&larr; Novo pedido nesta tabela</button></div>
+  `;
+  renderCtxBar();
+}
+function sendItemToFaltas(i) {
+  const found = state.results.ordered.filter(e => e.status === 'found');
+  const target = found[i];
+  if (!target) return;
+  const idx = state.results.ordered.indexOf(target);
+  if (idx === -1) return;
+  state.results.ordered[idx] = { ...target, status: 'not_found', item: null };
+  renderResultsB();
+}
+
+/* ==========================================================================
+   COPIAR PARA ÁREA DE TRANSFERÊNCIA
+   ========================================================================== */
+function copyText(btnId) {
+  const text = state.copyTargets[btnId] || '';
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    const original = btn.textContent;
+    btn.textContent = 'Copiado!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = original; btn.classList.remove('copied'); }, 1500);
+  }).catch(() => {
+    alert('Não foi possível copiar automaticamente. Selecione o texto manualmente.');
+  });
+}
+
+/* ==========================================================================
+   RESET
+   ========================================================================== */
+function resetAll() {
+  state.mode = null;
+  state.parsedLines = [];
+  state.results = { found: [], notFound: [], ambiguous: [] };
+  state.ambiguousChoices = {};
+  state.lastFoundForOrder = [];
+  state.pickingForBrowse = false;
+  state.browseQty = {};
+  state.browseSearch = '';
+  state.browseCategory = '';
+  renderSelectTable();
+}
+
+/* ==========================================================================
+   INÍCIO
+   ========================================================================== */
+initApp();
+</script>
+</body>
+</html>

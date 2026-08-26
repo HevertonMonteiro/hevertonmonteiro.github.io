@@ -1,0 +1,93 @@
+/* ==========================================================================
+   ENCANTO DECORAÇÕES — BASE / RESET
+   ========================================================================== */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+/* overflow-x: hidden no html/body é a rede de segurança contra qualquer
+   elemento (tabela, grade, texto longo) que acabe ficando mais largo que a
+   tela: sem isso, a PÁGINA INTEIRA fica mais larga que o viewport, e é
+   exatamente isso que faz o celular abrir a tela "com zoom" — o navegador
+   ajusta a escala inicial pra caber esse conteúdo extra, obrigando a
+   pessoa a beliscar/afastar os dedos pra ver do tamanho normal. Com isso
+   fixo, nenhuma página consegue mais forçar esse comportamento; qualquer
+   conteúdo que realmente precise rolar na horizontal (tabelas, o
+   calendário da Agenda) tem seu próprio contêiner com scroll — só ele
+   rola, a página em volta não. */
+html { -webkit-text-size-adjust: 100%; overflow-x: hidden; }
+
+body {
+  margin: 0;
+  overflow-x: hidden;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: var(--fs-base);
+  line-height: var(--lh-normal);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: var(--lh-tight);
+  margin: 0 0 var(--sp-2) 0;
+  color: var(--color-text);
+}
+h1 { font-size: var(--fs-2xl); }
+h2 { font-size: var(--fs-xl); }
+h3 { font-size: var(--fs-lg); }
+h4 { font-size: var(--fs-md); }
+
+p { margin: 0 0 var(--sp-3) 0; color: var(--color-text-muted); }
+
+a { color: var(--color-accent-500); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+ul, ol { margin: 0; padding: 0; list-style: none; }
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+img, svg { display: block; max-width: 100%; }
+
+/* Foco visível — acessibilidade, nunca remover sem substituir */
+:focus-visible {
+  outline: 2px solid var(--color-accent-500);
+  outline-offset: 2px;
+}
+
+/* Respeita preferência de movimento reduzido */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Scrollbar discreta */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: var(--radius-full);
+  border: 2px solid var(--color-bg);
+}
+
+.container {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: 0 var(--sp-6);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap; border: 0;
+}

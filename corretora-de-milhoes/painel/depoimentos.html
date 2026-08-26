@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moderar depoimentos · Corretora de Milhões</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div id="navbar-mount"></div>
+
+<main>
+<section class="container">
+  <h2>Moderar depoimentos</h2>
+  <table>
+    <thead><tr><th>Cliente</th><th>Nota</th><th>Texto</th><th>Status</th><th>Ações</th></tr></thead>
+    <tbody id="tbody-depoimentos"></tbody>
+  </table>
+</section>
+</main>
+
+<script src="../js/data.js"></script>
+<script src="../js/store.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/layout.js"></script>
+<script>
+  if (!exigirLogin('login.html')) { /* redireciona */ } else {
+    montarLayout({ painel: true, base: '../' });
+
+    function truncar(texto, n) {
+      const palavras = texto.split(' ');
+      return palavras.length > n ? palavras.slice(0, n).join(' ') + '…' : texto;
+    }
+
+    function renderLista() {
+      const depoimentos = getDepoimentos();
+      const tbody = document.getElementById('tbody-depoimentos');
+      if (!depoimentos.length) {
+        tbody.innerHTML = '<tr><td colspan="5">Nenhum depoimento recebido ainda.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = depoimentos.map((d) => `
+        <tr>
+          <td>${escapeHtml(d.nome_cliente)}</td>
+          <td>${'★'.repeat(d.nota)}</td>
+          <td>${escapeHtml(truncar(d.texto, 15))}</td>
+          <td>${d.aprovado ? 'Aprovado' : 'Pendente'}</td>
+          <td>
+            ${!d.aprovado ? `<button type="button" class="btn btn-sm btn-primary btn-aprovar" data-id="${d.id}">Aprovar</button>` : ''}
+            <button type="button" class="btn btn-sm btn-danger btn-excluir" data-id="${d.id}">Excluir</button>
+          </td>
+        </tr>
+      `).join('');
+
+      tbody.querySelectorAll('.btn-aprovar').forEach((b) => b.addEventListener('click', () => { aprovarDepoimento(b.dataset.id); renderLista(); }));
+      tbody.querySelectorAll('.btn-excluir').forEach((b) => b.addEventListener('click', () => { excluirDepoimento(b.dataset.id); renderLista(); }));
+    }
+    renderLista();
+  }
+</script>
+
+</body>
+</html>

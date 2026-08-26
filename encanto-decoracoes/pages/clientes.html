@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#1AA894">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Encanto Decorações">
+<meta property="og:title" content="Encanto Decorações">
+<meta property="og:description" content="Sistema de gestão de eventos e decoração.">
+<meta property="og:image" content="https://encanto-decoracoes.vercel.app/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://encanto-decoracoes.vercel.app/assets/og-image.png">
+<title>Clientes · Encanto Decorações</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/app-shell.css">
+<link rel="stylesheet" href="../css/clientes.css">
+<link rel="stylesheet" href="../css/eventos.css">
+<link rel="stylesheet" href="../css/demo.css">
+</head>
+<body>
+
+<div class="app-shell">
+  <div id="sidebar-mount"></div>
+
+  <div>
+    <div id="topbar-mount"></div>
+
+    <main class="app-main">
+      <div class="page-header">
+        <div>
+          <h1>Clientes</h1>
+          <p>Todos os clientes cadastrados, em um só lugar.</p>
+        </div>
+        <button class="btn btn-primary" id="btn-novo">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          Novo cliente
+        </button>
+      </div>
+
+      <div class="clientes-toolbar">
+        <div class="input-group">
+          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <input class="input" type="search" id="busca" placeholder="Buscar por nome ou WhatsApp...">
+        </div>
+        <select class="select" id="filtro-limite" style="max-width:160px">
+          <option value="10">Últimos 10</option>
+          <option value="50">Últimos 50</option>
+          <option value="100">Últimos 100</option>
+          <option value="">Todos</option>
+        </select>
+      </div>
+
+      <div class="clientes-table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Cliente</th>
+              <th>WhatsApp</th>
+              <th>Instagram</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="clientes-tbody">
+            <tr><td colspan="4"><div class="skeleton" style="height:20px;width:100%"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="empty-state" id="empty-state" style="display:none">
+        <h3>Nenhum cliente encontrado</h3>
+        <p>Cadastre o primeiro cliente ou ajuste sua busca.</p>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Modal: novo/editar cliente -->
+<div class="modal-backdrop" id="modal-cliente" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-title">Novo cliente</h3>
+      <button class="btn btn-ghost btn-icon" id="btn-fechar-modal" aria-label="Fechar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 6-12 12M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form id="form-cliente" novalidate>
+      <input type="hidden" id="cliente-id">
+      <div class="field">
+        <label for="c-nome">Nome *</label>
+        <input class="input" id="c-nome" required>
+      </div>
+      <div class="field-row field-row-2">
+        <div class="field">
+          <label for="c-cpf">CPF</label>
+          <input class="input" id="c-cpf" placeholder="000.000.000-00">
+        </div>
+        <div class="field">
+          <label for="c-whatsapp">WhatsApp *</label>
+          <input class="input" id="c-whatsapp" placeholder="(00) 00000-0000" required>
+        </div>
+      </div>
+      <div class="field">
+        <label for="c-endereco">Endereço</label>
+        <input class="input" id="c-endereco" placeholder="Rua, número, bairro, cidade">
+      </div>
+      <div class="field">
+        <label for="c-email">E-mail</label>
+        <input class="input" type="email" id="c-email" placeholder="nome@exemplo.com">
+      </div>
+      <div class="field">
+        <label for="c-instagram">Instagram</label>
+        <input class="input" id="c-instagram" placeholder="@usuario">
+      </div>
+      <div class="field">
+        <label for="c-obs">Observações</label>
+        <textarea class="textarea" id="c-obs" placeholder="Preferências, restrições, detalhes importantes..."></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" id="btn-salvar">Salvar cliente</button>
+    </form>
+  </div>
+</div>
+
+<script type="module">
+  import { protegerRota } from '../js/modules/route-guard.js';
+  import { renderSidebar } from '../components/sidebar.js';
+  import { renderTopbar } from '../components/topbar.js';
+  import { showToast } from '../js/lib/toast.js';
+  import { escapeHtml } from '../js/lib/sanitize.js';
+  import {
+    listarClientes, criarCliente, atualizarCliente, excluirCliente,
+    buscarClientePorId, clientePossuiEventos,
+  } from '../js/modules/clientes.js';
+
+  await protegerRota();
+  renderSidebar('clientes');
+  renderTopbar();
+
+  const tbody = document.getElementById('clientes-tbody');
+  const emptyState = document.getElementById('empty-state');
+  const modal = document.getElementById('modal-cliente');
+  const form = document.getElementById('form-cliente');
+  let debounceTimer;
+
+  function iniciais(nome) {
+    return nome.trim().charAt(0).toUpperCase();
+  }
+
+  async function carregar(termo = '') {
+    tbody.innerHTML = `<tr><td colspan="4"><div class="skeleton" style="height:20px;width:100%"></div></td></tr>`;
+    const limiteValor = document.getElementById('filtro-limite').value;
+    const { data, error } = await listarClientes(termo, limiteValor ? Number(limiteValor) : null);
+
+    if (error) {
+      showToast('Não foi possível carregar os clientes.', 'danger');
+      return;
+    }
+
+    if (!data.length) {
+      tbody.innerHTML = '';
+      emptyState.style.display = 'block';
+      return;
+    }
+    emptyState.style.display = 'none';
+
+    tbody.innerHTML = data.map(c => `
+      <tr data-id="${c.id}">
+        <td>
+          <div class="cliente-nome-cell">
+            <div class="avatar-circle">${iniciais(c.nome)}</div>
+            <span>${escapeHtml(c.nome)}</span>
+          </div>
+        </td>
+        <td>${escapeHtml(c.whatsapp) || '—'}</td>
+        <td>${escapeHtml(c.instagram) || '—'}</td>
+        <td>
+          <div class="row-actions">
+            <button class="btn btn-ghost btn-sm btn-editar" data-id="${c.id}" title="Editar">✏️</button>
+            <button class="btn btn-ghost btn-sm btn-excluir" data-id="${c.id}" title="Excluir">🗑️</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function abrirModal(cliente = null) {
+    form.reset();
+    document.getElementById('cliente-id').value = cliente?.id || '';
+    document.getElementById('modal-title').textContent = cliente ? 'Editar cliente' : 'Novo cliente';
+    document.getElementById('c-nome').value = cliente?.nome || '';
+    document.getElementById('c-cpf').value = cliente?.cpf || '';
+    document.getElementById('c-endereco').value = cliente?.endereco || '';
+    document.getElementById('c-whatsapp').value = cliente?.whatsapp || '';
+    document.getElementById('c-email').value = cliente?.email || '';
+    document.getElementById('c-instagram').value = cliente?.instagram || '';
+    document.getElementById('c-obs').value = cliente?.observacoes || '';
+    modal.style.display = 'flex';
+  }
+  function fecharModal() { modal.style.display = 'none'; }
+
+  document.getElementById('btn-novo').addEventListener('click', () => abrirModal());
+  document.getElementById('btn-fechar-modal').addEventListener('click', fecharModal);
+  modal.addEventListener('click', (e) => { if (e.target === modal) fecharModal(); });
+
+  document.getElementById('busca').addEventListener('input', (e) => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => carregar(e.target.value), 300);
+  });
+
+  document.getElementById('filtro-limite').addEventListener('change', () => carregar(document.getElementById('busca').value));
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('cliente-id').value;
+    const payload = {
+      nome: document.getElementById('c-nome').value.trim(),
+      cpf: document.getElementById('c-cpf').value.trim() || null,
+      endereco: document.getElementById('c-endereco').value.trim() || null,
+      whatsapp: document.getElementById('c-whatsapp').value.trim() || null,
+      email: document.getElementById('c-email').value.trim() || null,
+      instagram: document.getElementById('c-instagram').value.trim() || null,
+      observacoes: document.getElementById('c-obs').value.trim() || null,
+    };
+
+    if (!payload.nome) { showToast('Informe o nome do cliente.', 'danger'); return; }
+    if (!payload.whatsapp) { showToast('Informe o WhatsApp do cliente.', 'danger'); return; }
+
+    const btnSalvar = document.getElementById('btn-salvar');
+    btnSalvar.disabled = true; btnSalvar.textContent = 'Salvando...';
+
+    const { error } = id ? await atualizarCliente(id, payload) : await criarCliente(payload);
+
+    btnSalvar.disabled = false; btnSalvar.textContent = 'Salvar cliente';
+
+    if (error) { showToast('Não foi possível salvar o cliente.', 'danger'); return; }
+
+    showToast(id ? 'Cliente atualizado.' : 'Cliente cadastrado.', 'success');
+    fecharModal();
+    carregar(document.getElementById('busca').value);
+  });
+
+  tbody.addEventListener('click', async (e) => {
+    const editarBtn = e.target.closest('.btn-editar');
+    const excluirBtn = e.target.closest('.btn-excluir');
+    const linha = e.target.closest('tr[data-id]');
+
+    if (editarBtn) {
+      const { data } = await buscarClientePorId(editarBtn.dataset.id);
+      abrirModal(data);
+      return;
+    }
+
+    if (excluirBtn) {
+      const id = excluirBtn.dataset.id;
+      const possuiEventos = await clientePossuiEventos(id);
+      const aviso = possuiEventos
+        ? 'Este cliente possui eventos cadastrados. Excluí-lo também apagará o histórico de eventos e pagamentos ligados a ele. Deseja continuar?'
+        : 'Tem certeza que deseja excluir este cliente?';
+      if (!confirm(aviso)) return;
+
+      const { error } = await excluirCliente(id);
+      if (error) { showToast('Não foi possível excluir o cliente.', 'danger'); return; }
+      showToast('Cliente excluído.', 'success');
+      carregar(document.getElementById('busca').value);
+      return;
+    }
+
+    if (linha) {
+      window.location.href = `./cliente-detalhe.html?id=${linha.dataset.id}`;
+    }
+  });
+
+  carregar();
+</script>
+
+</body>
+</html>

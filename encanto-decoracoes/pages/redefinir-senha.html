@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#1AA894">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Encanto Decorações">
+<meta property="og:title" content="Encanto Decorações">
+<meta property="og:description" content="Sistema de gestão de eventos e decoração.">
+<meta property="og:image" content="https://encanto-decoracoes.vercel.app/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://encanto-decoracoes.vercel.app/assets/og-image.png">
+<title>Redefinir senha · Encanto Decorações</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/auth.css">
+<link rel="stylesheet" href="../css/demo.css">
+</head>
+<body>
+
+<div class="auth-screen">
+
+  <aside class="auth-brand">
+    <div class="auth-brand-logo">Encanto Decorações</div>
+    <div class="auth-brand-quote">
+      <p>Escolha uma senha nova e volte para a sua agenda.</p>
+      <span>Sistema Operacional para Decoração de Festas</span>
+    </div>
+  </aside>
+
+  <main class="auth-form-side">
+    <div class="auth-form-box">
+      <div class="logo-mark">Encanto Decorações</div>
+      <h1>Nova senha</h1>
+      <p class="auth-subtitle">Defina uma nova senha de acesso.</p>
+
+      <div class="auth-alert" id="auth-alert" role="alert"></div>
+
+      <form id="update-form" novalidate>
+        <div class="field">
+          <label for="password">Nova senha</label>
+          <input class="input" type="password" id="password" name="password" autocomplete="new-password" required minlength="6">
+          <p class="field-hint">Mínimo de 6 caracteres.</p>
+        </div>
+
+        <div class="field">
+          <label for="password2">Confirmar nova senha</label>
+          <input class="input" type="password" id="password2" name="password2" autocomplete="new-password" required minlength="6">
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" id="submit-btn">Salvar nova senha</button>
+      </form>
+    </div>
+  </main>
+
+</div>
+
+<script type="module">
+  import { updatePassword } from '../js/modules/auth.js';
+
+  const form = document.getElementById('update-form');
+  const alertBox = document.getElementById('auth-alert');
+  const submitBtn = document.getElementById('submit-btn');
+
+  function mostrarErro(msg) {
+    alertBox.classList.remove('is-success');
+    alertBox.classList.add('is-visible');
+    alertBox.textContent = msg;
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    if (form.password.value !== form.password2.value) {
+      mostrarErro('As senhas não coincidem.');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Salvando...';
+
+    const { error } = await updatePassword(form.password.value);
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Salvar nova senha';
+
+    if (error) {
+      mostrarErro('Não foi possível atualizar a senha. Solicite um novo link.');
+      return;
+    }
+
+    alertBox.classList.add('is-success');
+    alertBox.classList.add('is-visible');
+    alertBox.textContent = 'Senha atualizada! Redirecionando...';
+    setTimeout(() => { window.location.href = './login.html'; }, 1500);
+  });
+</script>
+
+</body>
+</html>

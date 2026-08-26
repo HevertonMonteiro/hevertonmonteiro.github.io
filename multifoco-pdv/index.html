@@ -1,0 +1,1275 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Multifoco PDV · Pedido &amp; Estoque em Loja (Demo)</title>
+<meta name="description" content="Ferramenta de apoio ao vendedor em farmácias: catálogo, estoque e pedido do cliente. Demonstração de portfólio com dados fictícios." />
+<script src="libs/xlsx.full.min.js"></script>
+<script src="libs/jspdf.umd.min.js"></script>
+<script src="libs/jspdf.plugin.autotable.min.js"></script>
+<script src="produtos.js"></script>
+<style>
+  :root{
+    --bg:#eef2f7;
+    --card:#ffffff;
+    --teal:#145374;
+    --teal-dark:#0d3b54;
+    --teal-light:#e3edf3;
+    --border:#dbe3ea;
+    --text:#1f2a33;
+    --muted:#6b7785;
+    --accent:#1c7c74;
+    --danger:#c0392b;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+  }
+  .page{
+    max-width:1400px;
+    margin:0 auto;
+    padding:20px;
+  }
+  .topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:16px;
+    flex-wrap:wrap;
+    gap:10px;
+    position:sticky;
+    top:0;
+    z-index:40;
+    background:var(--bg);
+    padding:12px 0;
+    box-shadow:0 2px 6px rgba(15,30,40,.06);
+  }
+  .brand-group{
+    display:flex;
+    align-items:center;
+    gap:16px;
+  }
+  .brand{
+    font-weight:800;
+    font-size:17px;
+    letter-spacing:.2px;
+    color:var(--teal-dark);
+  }
+  .topbar-stats{
+    display:flex;
+    align-items:stretch;
+    flex-wrap:wrap;
+    gap:6px;
+  }
+  .stat-chip{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:1px;
+    background:var(--teal-light);
+    color:var(--teal-dark);
+    padding:4px 12px;
+    border-radius:10px;
+    white-space:nowrap;
+    line-height:1.25;
+  }
+  .stat-chip .stat-label{
+    font-size:12px;
+    font-weight:700;
+  }
+  .stat-chip .stat-value{
+    font-size:10.5px;
+    font-weight:600;
+    opacity:.8;
+  }
+  .stat-chip.total{
+    background:var(--teal);
+    color:#fff;
+    border:none;
+    font-family:inherit;
+    cursor:pointer;
+  }
+  .stat-chip.total:hover{background:var(--teal-dark);}
+  .session-badge{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:8px 14px;
+    font-size:13px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .session-badge b{color:var(--teal-dark);}
+  .session-badge button{
+    border:none;
+    background:none;
+    color:var(--teal);
+    font-size:12px;
+    cursor:pointer;
+    text-decoration:underline;
+  }
+  .layout{
+    display:grid;
+    grid-template-columns:1fr 340px;
+    gap:20px;
+    align-items:start;
+  }
+  .card{
+    background:var(--card);
+    border-radius:var(--radius);
+    border:1px solid var(--border);
+    padding:16px;
+  }
+  .filters{
+    display:flex;
+    gap:10px;
+    margin-bottom:14px;
+    flex-wrap:wrap;
+    position:sticky;
+    top:var(--topbar-h, 60px);
+    z-index:30;
+    background:var(--card);
+    padding-top:8px;
+    padding-bottom:8px;
+  }
+  .filters input[type=text], .filters select{
+    padding:10px 12px;
+    border-radius:8px;
+    border:1px solid var(--border);
+    font-size:14px;
+  }
+  .filters input[type=text]{flex:1;min-width:220px;}
+  .filters select{min-width:200px;}
+  .table-wrap{
+    overflow-x:auto;
+    overflow-y:auto;
+    max-height:var(--table-max-h, 70vh);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    position:sticky;
+    top:calc(var(--topbar-h, 60px) + var(--filters-h, 56px));
+    z-index:10;
+  }
+  table{
+    border-collapse:collapse;
+    width:100%;
+    min-width:820px;
+    font-size:13.5px;
+  }
+  thead th{
+    background:var(--teal-light);
+    color:var(--teal-dark);
+    text-align:left;
+    padding:10px 12px;
+    font-weight:700;
+    white-space:nowrap;
+    position:sticky;
+    top:0;
+    z-index:5;
+  }
+  tbody td{
+    padding:10px 12px;
+    border-top:1px solid var(--border);
+    vertical-align:middle;
+  }
+  tbody tr:hover{background:#fafcfe;}
+  .ean-name{font-weight:600;}
+  .ean-code{color:var(--muted);font-size:12px;}
+  .lab-tag{
+    display:inline-block;
+    margin-top:2px;
+    font-size:11px;
+    color:var(--accent);
+    background:#e7f3f1;
+    padding:1px 6px;
+    border-radius:6px;
+  }
+  .stepper{
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .stepper button{
+    width:26px;height:26px;
+    border-radius:6px;
+    border:1px solid var(--border);
+    background:var(--teal-light);
+    color:var(--teal-dark);
+    font-weight:700;
+    cursor:pointer;
+    line-height:1;
+  }
+  .stepper button:hover{background:var(--teal);color:#fff;}
+  .stepper input{
+    width:52px;
+    text-align:center;
+    padding:5px 2px;
+    border-radius:6px;
+    border:1px solid var(--border);
+    font-size:13px;
+  }
+  .clear-btn{
+    width:22px;height:22px;
+    border-radius:50%;
+    border:1px solid var(--border);
+    background:#fff;
+    color:var(--muted);
+    font-size:13px;
+    line-height:1;
+    cursor:pointer;
+    padding:0;
+  }
+  .clear-btn:hover{background:#fdecea;border-color:#e6a29a;color:var(--danger);}
+  .add-btn{
+    width:30px;height:30px;
+    border-radius:8px;
+    border:none;
+    background:var(--teal);
+    color:#fff;
+    font-size:16px;
+    cursor:pointer;
+  }
+  .add-btn:hover{background:var(--teal-dark);}
+  .empty-dash{color:var(--muted);}
+  .obs-btn{
+    border:1px solid var(--border);
+    background:#fff;
+    border-radius:8px;
+    padding:6px 10px;
+    font-size:12.5px;
+    cursor:pointer;
+    color:var(--teal-dark);
+    white-space:nowrap;
+  }
+  .obs-btn.has-obs{
+    background:#fff4e5;
+    border-color:#f0c078;
+    color:#8a5a00;
+    font-weight:600;
+  }
+  .price{font-weight:600;}
+  tfoot td{
+    padding:10px 12px;
+    font-weight:700;
+    border-top:2px solid var(--border);
+    color:var(--teal-dark);
+  }
+  /* Cart panel */
+  .cart-title{font-size:18px;font-weight:700;margin:0 0 4px;}
+  .cart-sub{color:var(--muted);font-size:13px;margin:0 0 14px;}
+  .cart-empty{
+    display:flex;flex-direction:column;align-items:center;
+    color:var(--muted);
+    padding:30px 10px;
+    text-align:center;
+    font-size:13.5px;
+  }
+  .cart-list{list-style:none;margin:0;padding:0;max-height:340px;overflow-y:auto;}
+  .cart-list li{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:8px 0;border-bottom:1px solid var(--border);
+    font-size:13px;
+  }
+  .cart-list li .qty{color:var(--teal-dark);font-weight:700;}
+  .cart-total{
+    display:flex;justify-content:space-between;
+    margin:14px 0;padding-top:10px;border-top:1px solid var(--border);
+    font-size:14px;
+  }
+  .btn-primary{
+    width:100%;
+    background:var(--teal);
+    color:#fff;
+    border:none;
+    padding:12px;
+    border-radius:8px;
+    font-size:14.5px;
+    font-weight:700;
+    cursor:pointer;
+    margin-bottom:8px;
+  }
+  .btn-primary:hover{background:var(--teal-dark);}
+  .btn-secondary{
+    width:100%;
+    background:#fff;
+    color:var(--teal-dark);
+    border:1px solid var(--teal);
+    padding:11px;
+    border-radius:8px;
+    font-size:13.5px;
+    font-weight:600;
+    cursor:pointer;
+    margin-bottom:8px;
+  }
+  .btn-secondary:hover{background:var(--teal-light);}
+  .btn-link{
+    width:100%;
+    background:none;
+    border:none;
+    color:var(--muted);
+    text-align:center;
+    font-size:12.5px;
+    cursor:pointer;
+    text-decoration:underline;
+  }
+  .note{
+    font-size:12px;color:var(--muted);
+    background:var(--teal-light);
+    border-radius:8px;
+    padding:10px;
+    margin-top:12px;
+  }
+  /* Modal */
+  .overlay{
+    position:fixed;inset:0;background:rgba(15,30,40,.45);
+    display:flex;align-items:center;justify-content:center;
+    z-index:50;padding:16px;
+  }
+  .hidden{display:none;}
+  .modal{
+    background:#fff;border-radius:var(--radius);
+    width:100%;max-width:420px;
+    padding:22px;
+  }
+  .modal.wide{max-width:720px;}
+  .modal h3{margin:0 0 4px;font-size:18px;color:var(--teal-dark);}
+  .modal p.hint{margin:0 0 16px;color:var(--muted);font-size:13px;}
+  .field{margin-bottom:12px;}
+  .field label{display:block;font-size:12.5px;font-weight:600;margin-bottom:5px;color:var(--text);}
+  .field input, .field textarea{
+    width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--border);font-size:14px;
+  }
+  .modal-actions{display:flex;gap:10px;margin-top:16px;}
+  .modal-actions button{flex:1;}
+  .btn-ghost{
+    background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px;cursor:pointer;color:var(--muted);
+  }
+  .sheet-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  .sheet-table th, .sheet-table td{border:1px solid var(--border);padding:6px 8px;text-align:left;white-space:nowrap;}
+  .sheet-table th{background:var(--teal-light);color:var(--teal-dark);}
+  .sheet-wrap{overflow-x:auto;max-height:320px;}
+  .pill{
+    display:inline-block;font-size:11px;background:#e7f3f1;color:var(--accent);
+    padding:2px 7px;border-radius:6px;margin-left:6px;
+  }
+
+  /* ---------- Responsivo: tablet ---------- */
+  @media (max-width:1024px){
+    .layout{grid-template-columns:1fr;}
+    .page{padding:16px;}
+  }
+
+  /* ---------- Responsivo: celular ---------- */
+  @media (max-width:640px){
+    .page{padding:12px;}
+    .brand{font-size:15px;}
+    .topbar{gap:8px;padding:10px 0;}
+    .brand-group{flex-wrap:wrap;gap:6px 10px;}
+    .stat-chip{padding:4px 9px;}
+    .stat-chip .stat-label{font-size:10.5px;}
+    .stat-chip .stat-value{font-size:9.5px;}
+    .session-badge{font-size:12px;padding:7px 10px;width:100%;}
+    .card{padding:12px;}
+
+    .filters{flex-direction:column;}
+    .filters input[type=text], .filters select{min-width:0;width:100%;}
+
+    /* Tabela vira lista de cartões */
+    .table-wrap{border:none;overflow-x:visible;}
+    table{min-width:0;width:100%;}
+    thead{display:none;}
+    tbody{display:block;}
+    tbody tr{
+      display:block;
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:10px 12px;
+      margin-bottom:10px;
+    }
+    tbody tr:hover{background:var(--card);}
+    tbody td{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      padding:8px 0;
+      border-top:1px solid var(--border);
+    }
+    tbody td:first-child{border-top:none;padding-top:0;display:block;}
+    tbody td:first-child::before{content:none;}
+    tbody td::before{
+      content:attr(data-label);
+      font-weight:600;
+      color:var(--muted);
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.3px;
+      flex-shrink:0;
+    }
+    tfoot{display:block;}
+    tfoot tr{display:flex;flex-direction:column;gap:4px;padding:10px 2px 0;border-top:2px solid var(--border);}
+    tfoot td{display:block;border-top:none;padding:2px 0;}
+    tfoot td:first-child, tfoot td:nth-child(3), tfoot td:nth-child(5){display:none;}
+    tfoot td:nth-child(2)::before{content:"Total estoque anotado: ";font-weight:600;}
+    tfoot td:nth-child(4)::before{content:"Total pedido: ";font-weight:600;}
+
+    /* Alvos de toque maiores */
+    .stepper button, .add-btn, .clear-btn{width:34px;height:34px;font-size:16px;}
+    .stepper input{width:60px;font-size:15px;padding:8px 4px;}
+    .obs-btn{padding:8px 10px;}
+
+    .modal{padding:16px;max-width:100%;}
+    .modal-actions{flex-direction:column;}
+  }
+
+  .demo-banner{
+    background:#fff7e6;
+    border:1.5px solid #c98a1f;
+    color:#5c4308;
+    border-radius:8px;
+    padding:10px 12px;
+    font-size:12.5px;
+    line-height:1.5;
+    margin-bottom:14px;
+  }
+  .demo-banner strong{color:#8a5a00;}
+  .demo-fill-btn{
+    background:none;
+    border:none;
+    color:var(--accent);
+    font-size:12.5px;
+    font-weight:600;
+    cursor:pointer;
+    padding:0;
+    margin:-6px 0 14px;
+    text-decoration:underline;
+  }
+
+  .help-fab{
+    position:fixed;
+    right:18px;
+    bottom:18px;
+    width:46px;
+    height:46px;
+    border-radius:50%;
+    background:var(--teal);
+    color:#fff;
+    border:none;
+    font-size:19px;
+    font-weight:800;
+    cursor:pointer;
+    box-shadow:0 6px 20px rgba(20,83,116,.35);
+    z-index:80;
+  }
+  .help-fab:hover{background:var(--accent);}
+
+  .tour-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(15,30,40,.55);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:200;
+    padding:20px;
+  }
+  .tour-card{
+    background:var(--card);
+    border-radius:var(--radius);
+    padding:24px 22px;
+    max-width:380px;
+    width:100%;
+    box-shadow:0 12px 40px rgba(0,0,0,.25);
+  }
+  .tour-card .tour-badge{
+    display:inline-block;
+    background:var(--teal-light);
+    color:var(--teal-dark);
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    padding:3px 10px;
+    border-radius:999px;
+    margin-bottom:10px;
+  }
+  .tour-card h3{margin:0 0 8px;font-size:16.5px;color:var(--teal-dark);}
+  .tour-card p{margin:0 0 16px;font-size:13.5px;line-height:1.55;color:var(--muted);}
+  .tour-dots{display:flex;gap:6px;margin-bottom:16px;}
+  .tour-dots span{width:7px;height:7px;border-radius:50%;background:var(--border);}
+  .tour-dots span.active{background:var(--accent);width:18px;border-radius:4px;}
+  .tour-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .tour-skip{background:none;border:none;color:var(--muted);font-size:12.5px;cursor:pointer;padding:8px 0;}
+  .tour-skip:hover{color:var(--text);text-decoration:underline;}
+  .tour-next{
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    padding:9px 18px;
+    font-size:13.5px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .tour-next:hover{filter:brightness(1.08);}
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <div class="topbar">
+    <div class="brand-group">
+      <span class="brand">Multifoco PDV</span>
+      <div class="topbar-stats" id="topbarStats"></div>
+    </div>
+    <div class="session-badge" id="sessionBadge">
+      Nenhum atendimento iniciado
+    </div>
+  </div>
+
+  <div class="layout">
+    <!-- LEFT: product list -->
+    <div class="card">
+      <div class="filters">
+        <input type="text" id="searchInput" placeholder="Buscar por descrição, EAN ou código do produto" oninput="renderTable()" />
+        <select id="labFilter" onchange="renderTable()">
+          <option value="Todos">Todos os laboratórios</option>
+        </select>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Descrição</th>
+              <th>Estoque na Loja</th>
+              <th>Preço</th>
+              <th>Pedido do Cliente</th>
+              <th>Observação</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+          <tfoot>
+            <tr>
+              <td>Total</td>
+              <td id="footEstoque">0</td>
+              <td></td>
+              <td id="footPedido">0</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- RIGHT: cart + actions -->
+    <div class="card">
+      <p class="cart-title">Seleção de Produtos</p>
+      <p class="cart-sub">Baseado apenas no que o cliente pediu.</p>
+
+      <div id="cartArea"></div>
+
+      <div class="cart-total">
+        <span>Total do pedido</span>
+        <b id="cartTotalText">0 unidades · 0 itens</b>
+      </div>
+
+      <button class="btn-primary" onclick="exportPedido()">Exportar pedido (.xlsx pronto para importar)</button>
+      <button class="btn-secondary" onclick="exportEstoqueCsv()">Exportar estoque na loja (CSV)</button>
+      <button class="btn-secondary" onclick="exportEstoquePdf()">Exportar estoque na loja (PDF)</button>
+      <button class="btn-secondary" onclick="finalizeAttendance()">Finalizar pedido (começar um novo)</button>
+      <button class="btn-link" onclick="openSheetPreview()">Ver observações desta sessão</button>
+      <button class="btn-link" onclick="retrySyncPending()" id="retryBtn" style="display:none;">🔄 Reenviar observações pendentes</button>
+
+      <div class="note">
+        Catálogo de produtos (EAN, Descrição, Indústria, Preço Final + ST). Nesta demo, dados fictícios. O pedido é exportado no modelo pronto para importação (CNPJ, EAN, Quantidade). Em uso real, observações de preço da concorrência são enviadas automaticamente para a planilha do gestor.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Session modal -->
+<div class="overlay" id="sessionOverlay">
+  <div class="modal">
+    <h3>Dados do atendimento</h3>
+    <div class="demo-banner"><strong>Demo de portfólio:</strong> este app foi construído para uso real de
+      vendedores em farmácias. Aqui ele roda com catálogo, preços e códigos de barras fictícios, só para
+      demonstração, pode preencher qualquer coisa nos campos abaixo.</div>
+    <p class="hint">Preencha antes de começar.</p>
+    <button type="button" class="demo-fill-btn" onclick="fillExampleSession()">Preencher com dados de exemplo</button>
+    <div class="field">
+      <label>Nome da Loja</label>
+      <input type="text" id="inLoja" placeholder="Ex: Farmácia Central" />
+    </div>
+    <div class="field">
+      <label>CNPJ da loja</label>
+      <input type="text" id="inCnpj" placeholder="Ex: 12.345.678/0001-99" />
+    </div>
+    <div class="field">
+      <label>Vendedor</label>
+      <input type="text" id="inVendedor" placeholder="Seu nome" />
+    </div>
+    <div class="field">
+      <label>Data</label>
+      <input type="date" id="inData" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn-primary" onclick="startSession()">Começar atendimento</button>
+    </div>
+  </div>
+</div>
+
+<button class="help-fab" id="helpFab" title="Ver tour de novo" onclick="openTour()" style="display:none;">?</button>
+<div id="tourRoot"></div>
+
+<!-- Observation modal -->
+<div class="overlay hidden" id="obsOverlay">
+  <div class="modal">
+    <h3>Registrar preço da concorrência</h3>
+    <p class="hint" id="obsProdName">Produto</p>
+    <div class="field">
+      <label>Nome do laboratório concorrente</label>
+      <input type="text" id="obsLab" placeholder="Ex: Laboratório" />
+    </div>
+    <div class="field">
+      <label>Preço informado pelo cliente (R$)</label>
+      <input type="number" id="obsPrice" step="0.01" min="0" placeholder="Ex: 12.50" />
+    </div>
+    <div class="field">
+      <label>Observação (opcional)</label>
+      <textarea id="obsNote" rows="2" placeholder="Ex: cliente mostrou nota fiscal"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeObsModal()">Cancelar</button>
+      <button class="btn-primary" onclick="saveObservation()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Manager sheet preview modal -->
+<div class="overlay hidden" id="sheetOverlay">
+  <div class="modal wide">
+    <h3>Observações desta sessão</h3>
+    <p class="hint">Prévia local do que foi registrado. Cada observação já foi (ou será, quando reenviada) enviada para a planilha real do gestor.</p>
+    <div class="sheet-wrap">
+      <table class="sheet-table" id="sheetTable"></table>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeSheetPreview()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Export menu modal -->
+<div class="overlay hidden" id="exportMenuOverlay">
+  <div class="modal">
+    <h3>Exportar pedido</h3>
+    <p class="hint">Escolha o que deseja exportar. No celular, você poderá compartilhar direto pelo WhatsApp, pelo sistema de vendas ou salvar o arquivo; no computador, o arquivo é baixado.</p>
+    <button class="btn-secondary" onclick="chooseExport('pedido')">📦 Pedido (.xlsx pronto para importar)</button>
+    <button class="btn-secondary" onclick="chooseExport('estoqueCsv')">📋 Estoque na loja (CSV)</button>
+    <button class="btn-secondary" onclick="chooseExport('estoquePdf')">📄 Estoque na loja (PDF)</button>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeExportMenu()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- Product data: carregada de produtos.js (gerada a partir de TABELA DE PRODUTOS.xlsx) ---------- */
+
+/* ---------- App state (in-memory only) ---------- */
+const state = {
+  session: null, // {loja, vendedor, data}
+  estoque: {},   // ean -> {touched:bool, value:number}
+  pedido: {},    // ean -> {touched:bool, value:number}
+  obs: {},       // ean -> [{lab, price, note, ts}]
+};
+PRODUCTS.forEach(p=>{
+  state.estoque[p.ean] = {touched:false, value:0};
+  state.pedido[p.ean]  = {touched:false, value:0};
+  state.obs[p.ean] = [];
+});
+
+/* ---------- Tour de boas-vindas: aparece uma vez (localStorage), reaberto pelo botão "?" ---------- */
+const TOUR_STORAGE_KEY = 'multifoco_tour_seen';
+const TOUR_STEPS = [
+  {
+    title: 'Bem-vindo ao Multifoco PDV',
+    text: 'Ferramenta de apoio ao atendimento em loja: consulta o catálogo, anota o estoque e monta o pedido do cliente. Este tour rápido mostra o essencial.'
+  },
+  {
+    title: '1. Busque e filtre',
+    text: 'Use a busca por descrição, EAN ou código, e o filtro de laboratório, para encontrar produtos na tabela à esquerda.'
+  },
+  {
+    title: '2. Anote estoque e pedido',
+    text: 'Cada linha tem dois campos numéricos: quanto tem em estoque na loja e quanto o cliente está pedindo. O resumo à direita mostra só o pedido.'
+  },
+  {
+    title: '3. Registre preço da concorrência',
+    text: 'O botão de observação em cada linha registra o preço que o cliente informou de outro fornecedor, para acompanhamento do gestor.'
+  },
+  {
+    title: '4. Exporte quando terminar',
+    text: 'No painel direito: pedido em .xlsx pronto para importar, estoque em CSV ou PDF. "Finalizar pedido" limpa a tela para o próximo atendimento.'
+  }
+];
+let tourStepIdx = 0;
+function maybeShowTour(){
+  let seen = null;
+  try { seen = localStorage.getItem(TOUR_STORAGE_KEY); } catch(e){}
+  if(!seen) openTour();
+}
+function openTour(){
+  tourStepIdx = 0;
+  renderTourStep();
+}
+function renderTourStep(){
+  const step = TOUR_STEPS[tourStepIdx];
+  const isLast = tourStepIdx === TOUR_STEPS.length - 1;
+  const dots = TOUR_STEPS.map((_, i) => `<span class="${i === tourStepIdx ? 'active' : ''}"></span>`).join('');
+  document.getElementById('tourRoot').innerHTML = `
+    <div class="tour-overlay" onclick="if(event.target===this) closeTour()">
+      <div class="tour-card">
+        <span class="tour-badge">Passo ${tourStepIdx + 1} de ${TOUR_STEPS.length}</span>
+        <h3>${escapeHtml(step.title)}</h3>
+        <p>${escapeHtml(step.text)}</p>
+        <div class="tour-dots">${dots}</div>
+        <div class="tour-footer">
+          <button class="tour-skip" onclick="closeTour()">Pular tour</button>
+          <button class="tour-next" onclick="advanceTour()">${isLast ? 'Concluir' : 'Próximo'}</button>
+        </div>
+      </div>
+    </div>`;
+}
+function advanceTour(){
+  if(tourStepIdx < TOUR_STEPS.length - 1){ tourStepIdx++; renderTourStep(); }
+  else closeTour();
+}
+function closeTour(){
+  document.getElementById('tourRoot').innerHTML = '';
+  try { localStorage.setItem(TOUR_STORAGE_KEY, '1'); } catch(e){}
+}
+
+/* ---------- Init ---------- */
+function init(){
+  const labs = [...new Set(PRODUCTS.map(p=>p.lab))];
+  const sel = document.getElementById('labFilter');
+  labs.forEach(l=>{
+    const o = document.createElement('option');
+    o.value = l; o.textContent = l;
+    sel.appendChild(o);
+  });
+  document.getElementById('inData').valueAsDate = new Date();
+  renderTable();
+  renderCart();
+  updateRetryButtonVisibility();
+}
+
+function fillExampleSession(){
+  document.getElementById('inLoja').value = 'Farmácia Exemplo';
+  document.getElementById('inCnpj').value = '12.345.678/0001-99';
+  document.getElementById('inVendedor').value = 'Visitante';
+}
+
+function startSession(){
+  const loja = document.getElementById('inLoja').value.trim();
+  const cnpj = document.getElementById('inCnpj').value.trim();
+  const vendedor = document.getElementById('inVendedor').value.trim();
+  const data = document.getElementById('inData').value;
+  if(!loja || !vendedor || !cnpj){
+    alert('Preencha a loja, o CNPJ e o vendedor. O CNPJ é obrigatório: ele vai em toda linha do arquivo de pedido.');
+    return;
+  }
+  if(cnpj.replace(/\D/g,'').length !== 14){
+    alert('CNPJ inválido. Digite os 14 números do CNPJ, com ou sem pontuação (ex: 12.345.678/0001-99 ou 12345678000199).');
+    return;
+  }
+  state.session = {loja, cnpj, vendedor, data};
+  document.getElementById('sessionBadge').innerHTML =
+    `<b>${escapeHtml(loja)}</b> · CNPJ ${escapeHtml(cnpj)} <button onclick="reopenSession()">trocar</button>`;
+  document.getElementById('sessionOverlay').classList.add('hidden');
+  resetProductState();
+  document.getElementById('helpFab').style.display = 'block';
+  maybeShowTour();
+}
+function reopenSession(){
+  document.getElementById('sessionOverlay').classList.remove('hidden');
+}
+
+/* Limpa estoque/pedido/observações da tela (fica pronta para um novo atendimento) */
+function resetProductState(){
+  PRODUCTS.forEach(p=>{
+    state.estoque[p.ean] = {touched:false, value:0};
+    state.pedido[p.ean]  = {touched:false, value:0};
+    state.obs[p.ean] = [];
+  });
+  renderTable();
+  renderCart();
+  updateRetryButtonVisibility();
+}
+
+/* Botão "Finalizar pedido": encerra o atendimento atual do cliente e limpa a tela
+   para o próximo, mantendo a mesma loja/vendedor/data. */
+function finalizeAttendance(){
+  const pending = pendingObservations().length;
+  const pendingMsg = pending>0 ? `\n\nAtenção: ${pending} observação(ões) ainda não foram sincronizadas com a planilha do gestor e serão perdidas.` : '';
+  const ok = confirm(`Finalizar este pedido vai limpar o estoque anotado, o pedido e as observações desta tela. Já exportou os relatórios necessários?${pendingMsg}\n\nClique OK para finalizar e começar um novo pedido.`);
+  if(!ok) return;
+  resetProductState();
+}
+
+/* ---------- Table rendering ---------- */
+function renderTable(){
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const lab = document.getElementById('labFilter').value;
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+
+  let list = PRODUCTS.filter(p=>{
+    const matchesLab = (lab==='Todos') || p.lab===lab;
+    const matchesQ = !q || p.ean.toLowerCase().includes(q) || p.name.toLowerCase().includes(q) || p.codigo.toLowerCase().includes(q);
+    return matchesLab && matchesQ;
+  });
+
+  list.forEach(p=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td data-label="Descrição">
+        <div class="ean-name">${escapeHtml(p.name)}</div>
+        <span class="lab-tag">${escapeHtml(p.lab)}</span>
+      </td>
+      <td data-label="Estoque na Loja">${stepperHtml(p.ean,'estoque')}</td>
+      <td data-label="Preço" class="price">R$ ${p.price.toFixed(2).replace('.',',')}</td>
+      <td data-label="Pedido do Cliente">${stepperHtml(p.ean,'pedido')}</td>
+      <td data-label="Observação">${obsButtonHtml(p.ean)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  updateFooterTotals();
+}
+
+function stepperHtml(ean, kind){
+  const cell = state[kind][ean];
+  if(!cell.touched){
+    return `<button class="add-btn" onclick="touchCell('${ean}','${kind}')" title="Adicionar">+</button>`;
+  }
+  return `
+    <div class="stepper">
+      <button onclick="stepCell('${ean}','${kind}',-1)">−</button>
+      <input type="number" min="0" value="${cell.value}"
+        onchange="setCell('${ean}','${kind}', this.value)" />
+      <button onclick="stepCell('${ean}','${kind}',1)">+</button>
+      <button class="clear-btn" title="Remover anotação" onclick="clearCell('${ean}','${kind}')">×</button>
+    </div>
+  `;
+}
+
+function obsButtonHtml(ean){
+  const count = state.obs[ean].length;
+  if(count===0){
+    return `<button class="obs-btn" onclick="openObsModal('${ean}')">+ observação</button>`;
+  }
+  return `<button class="obs-btn has-obs" onclick="openObsModal('${ean}')">💬 ${count} registrada${count>1?'s':''}</button>`;
+}
+
+function touchCell(ean, kind){
+  state[kind][ean] = {touched:true, value: kind==='pedido' ? 1 : 0};
+  renderTable();
+  if(kind==='pedido') renderCart();
+}
+function stepCell(ean, kind, delta){
+  const cell = state[kind][ean];
+  cell.value = Math.max(0, cell.value + delta);
+  renderTable();
+  if(kind==='pedido') renderCart();
+}
+function setCell(ean, kind, rawVal){
+  let v = parseInt(rawVal,10);
+  if(isNaN(v) || v<0) v = 0;
+  state[kind][ean] = {touched:true, value:v};
+  renderTable();
+  if(kind==='pedido') renderCart();
+}
+function clearCell(ean, kind){
+  state[kind][ean] = {touched:false, value:0};
+  renderTable();
+  if(kind==='pedido') renderCart();
+}
+
+function updateFooterTotals(){
+  const totalEstoque = Object.values(state.estoque).filter(c=>c.touched).reduce((s,c)=>s+c.value,0);
+  const totalPedido = Object.values(state.pedido).filter(c=>c.touched).reduce((s,c)=>s+c.value,0);
+  document.getElementById('footEstoque').textContent = totalEstoque;
+  document.getElementById('footPedido').textContent = totalPedido;
+}
+
+/* ---------- Cart (right panel) — driven ONLY by "pedido do cliente" ---------- */
+function renderCart(){
+  const area = document.getElementById('cartArea');
+  const items = PRODUCTS
+    .map(p=>({p, qty: state.pedido[p.ean].touched ? state.pedido[p.ean].value : 0}))
+    .filter(x=>x.qty>0);
+
+  if(items.length===0){
+    area.innerHTML = `<div class="cart-empty">🛒<br/>Nenhum produto adicionado</div>`;
+  } else {
+    const lis = items.map(x=>`
+      <li>
+        <span>${x.p.ean} · ${escapeHtml(x.p.name).slice(0,34)}${x.p.name.length>34?'…':''}</span>
+        <span class="qty">${x.qty} un.</span>
+      </li>`).join('');
+    area.innerHTML = `<ul class="cart-list">${lis}</ul>`;
+  }
+
+  const totalUnits = items.reduce((s,x)=>s+x.qty,0);
+  const totalValue = items.reduce((s,x)=>s+x.qty*x.p.price,0);
+  document.getElementById('cartTotalText').textContent = `${totalUnits} unidades · ${items.length} itens`;
+
+  const LAB_ORDER = ['VITALIS','DERMIX','BABYCARE'];
+  const labCounts = {};
+  const labValues = {};
+  LAB_ORDER.forEach(l=>{ labCounts[l]=0; labValues[l]=0; });
+  items.forEach(x=>{
+    if(labCounts.hasOwnProperty(x.p.lab)){
+      labCounts[x.p.lab]++;
+      labValues[x.p.lab] += x.qty*x.p.price;
+    }
+  });
+  const fmtMoney = v => `R$ ${v.toFixed(2).replace('.',',')}`;
+  const chipsHtml = LAB_ORDER.map(l=>`
+      <span class="stat-chip">
+        <span class="stat-label">${l} · ${labCounts[l]}</span>
+        <span class="stat-value">${fmtMoney(labValues[l])}</span>
+      </span>`).join('')
+    + `<button type="button" class="stat-chip total" onclick="openExportMenu()" title="Exportar pedido">
+        <span class="stat-label">Total</span>
+        <span class="stat-value">${fmtMoney(totalValue)}</span>
+      </button>`;
+  document.getElementById('topbarStats').innerHTML = chipsHtml;
+
+  updateStickyOffsets();
+}
+
+/* Mede a altura real da topbar e da barra de busca (podem quebrar linha em telas
+   pequenas) e guarda em variáveis CSS, pra tabela e barra de busca ficarem
+   empilhadas certinho abaixo delas ao rolar a página. */
+function updateStickyOffsets(){
+  const topbar = document.querySelector('.topbar');
+  const filters = document.querySelector('.filters');
+  if(!topbar || !filters) return;
+  const topbarH = topbar.offsetHeight;
+  const filtersH = filters.offsetHeight;
+  document.documentElement.style.setProperty('--topbar-h', topbarH + 'px');
+  document.documentElement.style.setProperty('--filters-h', filtersH + 'px');
+  /* área da lista de produtos preenche o resto da tela, com cabeçalho fixo dentro dela */
+  const bottomBreathingRoom = 20;
+  const available = window.innerHeight - topbarH - filtersH - bottomBreathingRoom;
+  document.documentElement.style.setProperty('--table-max-h', Math.max(240, available) + 'px');
+}
+
+/* ---------- Observation modal ---------- */
+let currentObsEan = null;
+function openObsModal(ean){
+  currentObsEan = ean;
+  const p = PRODUCTS.find(x=>x.ean===ean);
+  document.getElementById('obsProdName').textContent = `${p.ean} · ${p.name}`;
+  document.getElementById('obsLab').value = '';
+  document.getElementById('obsPrice').value = '';
+  document.getElementById('obsNote').value = '';
+  document.getElementById('obsOverlay').classList.remove('hidden');
+}
+function closeObsModal(){
+  document.getElementById('obsOverlay').classList.add('hidden');
+  currentObsEan = null;
+}
+function saveObservation(){
+  const lab = document.getElementById('obsLab').value.trim();
+  const price = parseFloat(document.getElementById('obsPrice').value);
+  const note = document.getElementById('obsNote').value.trim();
+  if(!lab || isNaN(price)){
+    alert('Informe o laboratório concorrente e o preço.');
+    return;
+  }
+  const entry = {lab, price, note, ts:new Date().toISOString(), synced:false};
+  state.obs[currentObsEan].push(entry);
+  closeObsModal();
+  renderTable();
+  syncObservationToSheet(currentObsEan, entry);
+}
+
+/* ---------- Integração com a Planilha do Gestor (Google Sheets via Apps Script) ---------- */
+/* URL do Apps Script publicado na Planilha Google do gestor (ver planilha-gestor-apps-script.gs).
+   Vazia de propósito nesta demo: sem backend/API configurados, a observação fica só
+   local e o botão de reenvio nunca aparece. Em uso real, o vendedor não precisa
+   configurar nada, só abrir e usar. */
+const GESTOR_SHEET_URL = '';
+
+function getGestorSheetUrl(){
+  return GESTOR_SHEET_URL;
+}
+
+/* Envia uma observação para a planilha do gestor. Falha em silêncio (fica pendente pra reenvio) se não houver rede/URL. */
+function syncObservationToSheet(ean, entry){
+  const url = getGestorSheetUrl();
+  if(!url) { updateRetryButtonVisibility(); return; }
+
+  const p = PRODUCTS.find(x=>x.ean===ean);
+  const s = state.session || {};
+  const payload = {
+    loja: s.loja || '',
+    cnpj: s.cnpj || '',
+    vendedor: s.vendedor || '',
+    dataAtendimento: s.data || '',
+    ean: p.ean,
+    produto: p.name,
+    precoTabela: p.price,
+    labConcorrente: entry.lab,
+    precoConcorrente: entry.price,
+    observacao: entry.note
+  };
+
+  fetch(url, {
+    method: 'POST',
+    headers: {'Content-Type': 'text/plain;charset=utf-8'},
+    body: JSON.stringify(payload)
+  }).then(()=>{
+    entry.synced = true;
+    updateRetryButtonVisibility();
+  }).catch(()=>{
+    entry.synced = false;
+    updateRetryButtonVisibility();
+  });
+}
+
+function pendingObservations(){
+  const list = [];
+  Object.entries(state.obs).forEach(([ean, entries])=>{
+    entries.forEach(entry=>{ if(!entry.synced) list.push({ean, entry}); });
+  });
+  return list;
+}
+function updateRetryButtonVisibility(){
+  const btn = document.getElementById('retryBtn');
+  if(!btn) return;
+  const hasUrl = !!getGestorSheetUrl();
+  const pending = pendingObservations().length;
+  btn.style.display = (hasUrl && pending>0) ? '' : 'none';
+  if(hasUrl && pending>0) btn.textContent = `🔄 Reenviar observações pendentes (${pending})`;
+}
+function retrySyncPending(){
+  pendingObservations().forEach(({ean, entry})=>syncObservationToSheet(ean, entry));
+}
+
+/* ---------- Manager sheet preview (dynamic competitor columns) ---------- */
+function openSheetPreview(){
+  const competitorLabs = [...new Set(
+    Object.values(state.obs).flat().map(o=>o.lab)
+  )];
+
+  const productsWithObs = PRODUCTS.filter(p=>state.obs[p.ean].length>0);
+
+  const table = document.getElementById('sheetTable');
+  if(productsWithObs.length===0){
+    table.innerHTML = `<tr><td style="padding:14px;color:#6b7785;">Nenhuma observação de concorrência registrada ainda. Registre uma pelo botão "+ observação" na tabela de produtos.</td></tr>`;
+  } else {
+    let head = `<tr><th>EAN</th><th>Nome do Produto</th><th>Preço de Tabela</th>` +
+      competitorLabs.map(l=>`<th>${escapeHtml(l)} <span class="pill">novo</span></th>`).join('') + `</tr>`;
+    let rows = productsWithObs.map(p=>{
+      let cells = competitorLabs.map(l=>{
+        const entries = state.obs[p.ean].filter(o=>o.lab===l);
+        if(entries.length===0) return `<td>–</td>`;
+        const latest = entries[entries.length-1];
+        return `<td>R$ ${latest.price.toFixed(2).replace('.',',')}</td>`;
+      }).join('');
+      return `<tr><td>${p.ean}</td><td>${escapeHtml(p.name)}</td><td>R$ ${p.price.toFixed(2).replace('.',',')}</td>${cells}</tr>`;
+    }).join('');
+    table.innerHTML = head + rows;
+  }
+  document.getElementById('sheetOverlay').classList.remove('hidden');
+}
+function closeSheetPreview(){
+  document.getElementById('sheetOverlay').classList.add('hidden');
+}
+
+/* ---------- Menu de exportação (acionado pelo chip "Total" da barra de cima) ---------- */
+function openExportMenu(){
+  document.getElementById('exportMenuOverlay').classList.remove('hidden');
+}
+function closeExportMenu(){
+  document.getElementById('exportMenuOverlay').classList.add('hidden');
+}
+function chooseExport(type){
+  closeExportMenu();
+  if(type==='pedido') exportPedido();
+  else if(type==='estoqueCsv') exportEstoqueCsv();
+  else if(type==='estoquePdf') exportEstoquePdf();
+}
+
+/* ---------- Exports (compartilhamento nativo com fallback para download) ---------- */
+function csvToBlob(rows){
+  const csv = rows.map(r=>r.map(csvEscape).join(';')).join('\n');
+  return new Blob(["﻿"+csv], {type:'text/csv;charset=utf-8;'});
+}
+function downloadBlob(filename, blob){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* Tenta abrir o menu nativo de compartilhamento do aparelho (WhatsApp, sistema de
+   vendas, salvar em arquivos etc.). Se o navegador/dispositivo não suportar
+   compartilhar arquivos (a maioria dos computadores), cai para o download comum. */
+async function shareFileOrDownload(file, blob, filename){
+  try{
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file], title: filename});
+      return;
+    }
+  } catch(err){
+    if(err && err.name === 'AbortError') return; // usuário cancelou o compartilhamento
+  }
+  downloadBlob(filename, blob);
+}
+function csvEscape(v){
+  v = String(v);
+  if(v.includes(';') || v.includes('"') || v.includes('\n')){
+    v = '"' + v.replace(/"/g,'""') + '"';
+  }
+  return v;
+}
+function sessionHeaderRows(){
+  const s = state.session || {loja:'-',cnpj:'',vendedor:'-',data:'-'};
+  return [
+    ['Loja', s.loja], ['CNPJ', s.cnpj || '-'], ['Vendedor', s.vendedor], ['Data', s.data], []
+  ];
+}
+
+/* Turns "Farmácia Central" + "12.345.678/0001-99" into "Farmacia_Central_12345678000199" */
+function slugify(text){
+  return String(text)
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'') // remove acentos
+    .replace(/[^a-zA-Z0-9]+/g,'_')
+    .replace(/^_+|_+$/g,'')
+    .replace(/_{2,}/g,'_');
+}
+function buildFileName(prefix, ext){
+  const s = state.session || {};
+  const lojaPart = s.loja ? slugify(s.loja) : 'sem_loja';
+  const cnpjDigits = (s.cnpj || '').replace(/\D/g,'');
+  const cnpjPart = cnpjDigits ? `_${cnpjDigits}` : '';
+  return `${prefix}_${lojaPart}${cnpjPart}.${ext}`;
+}
+
+function estoqueAnotadoList(){
+  return PRODUCTS
+    .map(p=>({p, c: state.estoque[p.ean]}))
+    .filter(x=>x.c.touched);
+}
+
+function exportEstoqueCsv(){
+  const anotados = estoqueAnotadoList();
+  if(anotados.length===0){
+    alert('Nenhum item de estoque foi anotado ainda.');
+    return;
+  }
+  const rows = [...sessionHeaderRows(), ['EAN','Nome do Produto','Laboratório','Preço','Estoque Anotado (un.)']];
+  anotados.forEach(({p,c})=>{
+    rows.push([p.ean, p.name, p.lab, p.price.toFixed(2).replace('.',','), c.value]);
+  });
+  const filename = buildFileName('estoque_loja', 'csv');
+  const blob = csvToBlob(rows);
+  const file = new File([blob], filename, {type:'text/csv'});
+  shareFileOrDownload(file, blob, filename);
+}
+
+/* Anotação de estoque em PDF: EAN, Descrição, Laboratório, Preço e Quantidade Anotada */
+function exportEstoquePdf(){
+  const anotados = estoqueAnotadoList();
+  if(anotados.length===0){
+    alert('Nenhum item de estoque foi anotado ainda.');
+    return;
+  }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({orientation:'portrait', unit:'pt'});
+  const s = state.session || {loja:'-',cnpj:'',vendedor:'-',data:'-'};
+
+  doc.setFontSize(14);
+  doc.text('Anotação de Estoque na Loja', 40, 40);
+  doc.setFontSize(10);
+  doc.text(`Loja: ${s.loja || '-'}   CNPJ: ${s.cnpj || '-'}`, 40, 58);
+  doc.text(`Vendedor: ${s.vendedor || '-'}   Data: ${s.data || '-'}`, 40, 72);
+
+  doc.autoTable({
+    startY: 88,
+    head: [['EAN', 'Descrição', 'Laboratório', 'Preço', 'Qtd. Anotada']],
+    body: anotados.map(({p,c})=>[
+      p.ean,
+      p.name,
+      p.lab,
+      `R$ ${p.price.toFixed(2).replace('.',',')}`,
+      String(c.value)
+    ]),
+    styles: {fontSize: 9},
+    headStyles: {fillColor: [20,83,116]},
+    columnStyles: { 0:{cellWidth:80}, 3:{cellWidth:60}, 4:{cellWidth:70} }
+  });
+
+  const filename = buildFileName('estoque_loja', 'pdf');
+  const blob = doc.output('blob');
+  const file = new File([blob], filename, {type:'application/pdf'});
+  shareFileOrDownload(file, blob, filename);
+}
+
+/* Pedido do cliente: gera .xlsx no modelo pronto para importação (CNPJ, EAN, Quantidade) */
+function exportPedido(){
+  const itens = PRODUCTS
+    .map(p=>({p, c: state.pedido[p.ean]}))
+    .filter(x=>x.c.touched && x.c.value>0);
+
+  if(itens.length===0){
+    alert('O cliente ainda não pediu nenhum item.');
+    return;
+  }
+  const cnpj = (state.session && state.session.cnpj) || '';
+  if(!cnpj){
+    alert('Informe o CNPJ da loja no atendimento antes de exportar o pedido.');
+    return;
+  }
+
+  const rows = [['CNPJ', 'EAN', 'Quantidade']];
+  itens.forEach(({p,c})=>{
+    rows.push([cnpj, p.ean, c.value]);
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Modelo Pedidos');
+  const filename = buildFileName('pedido_import', 'xlsx');
+  const arrayBuffer = XLSX.write(wb, {type:'array', bookType:'xlsx'});
+  const blob = new Blob([arrayBuffer], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const file = new File([blob], filename, {type: blob.type});
+  shareFileOrDownload(file, blob, filename);
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+window.addEventListener('resize', updateStickyOffsets);
+init();
+</script>
+</body>
+</html>

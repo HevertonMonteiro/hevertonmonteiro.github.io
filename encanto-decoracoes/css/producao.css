@@ -1,0 +1,74 @@
+/* ==========================================================================
+   ENCANTO DECORAÇÕES — Produção (Roteiro do dia)
+   ========================================================================== */
+
+.roteiro-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-5);
+}
+
+.roteiro-card {
+  display: flex;
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-4);
+}
+
+.roteiro-hora {
+  flex-shrink: 0;
+  width: 76px;
+  text-align: center;
+}
+.roteiro-hora .h { font-family: var(--font-display); font-size: var(--fs-lg); font-weight: 700; line-height: 1; }
+.roteiro-hora .badge { margin-top: var(--sp-2); }
+
+.roteiro-body { flex: 1; min-width: 0; }
+.roteiro-body h3 { margin-bottom: 2px; }
+.roteiro-body .subtitulo { color: var(--color-text-muted); font-size: var(--fs-sm); margin-bottom: var(--sp-3); }
+
+.roteiro-info-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-2) var(--sp-5);
+  margin-bottom: var(--sp-4);
+}
+@media (min-width: 640px) { .roteiro-info-grid { grid-template-columns: 1fr 1fr; } }
+
+.roteiro-info-item { font-size: var(--fs-sm); }
+.roteiro-info-item .label { display:block; font-size: var(--fs-xs); color: var(--color-text-faint); font-weight: 600; text-transform: uppercase; letter-spacing: .02em; }
+
+/* Os botões (Mapa, WhatsApp, Ligar, Ver evento) sempre na mesma linha —
+   em telas estreitas eles encolhem (menos espaçamento, ícone menor) e,
+   se ainda assim não couber o texto, o rótulo (.btn-text) some e fica só
+   o ícone, em vez de quebrar pra uma segunda linha desalinhada. */
+.roteiro-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+.roteiro-actions .btn {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0 6px;
+  gap: 4px;
+}
+.roteiro-actions .btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+.roteiro-actions .btn-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 420px) {
+  .roteiro-actions .btn-text { display: none; }
+}
+
+/* ---------- Impressão ---------- */
+@media print {
+  #sidebar-mount, #topbar-mount, .roteiro-nav, .roteiro-actions, .page-header .btn {
+    display: none !important;
+  }
+  .app-shell { display: block; }
+  .app-main { padding: 0; margin: 0; }
+  .roteiro-card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
+}

@@ -1,0 +1,175 @@
+/* ==========================================================================
+   ENCANTO DECORAÇÕES — Dashboard (placeholder do Módulo 1)
+   Os cartões de métricas reais entram no Módulo 3 (Dashboard).
+   ========================================================================== */
+
+.welcome-card {
+  background: linear-gradient(135deg, var(--color-accent-900), var(--color-accent-700));
+  color: var(--color-text-inverse);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-8);
+  margin-bottom: var(--sp-6);
+}
+.welcome-card h1 { color: #fff; }
+.welcome-card p { color: rgba(255,255,255,0.75); margin-bottom: 0; }
+
+.module-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--sp-4);
+}
+
+.module-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+.module-card .module-status {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--color-text-faint);
+}
+.module-card.is-ready .module-status { color: var(--color-success); }
+
+/* ---------- Barra de filtro de período ---------- */
+.period-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--sp-6);
+}
+
+.period-tabs {
+  display: inline-flex;
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-md);
+  padding: 3px;
+  gap: 2px;
+}
+.period-tab {
+  border: none;
+  background: transparent;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+.period-tab.is-active {
+  background: var(--color-surface);
+  color: var(--color-accent-700);
+  box-shadow: var(--shadow-sm);
+}
+
+.period-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.period-nav-btn {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+}
+.period-nav-btn:hover { background: var(--color-surface-alt); }
+.period-nav-btn svg { width: 16px; height: 16px; }
+
+.period-label {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  min-width: 140px;
+  text-align: center;
+}
+
+.period-custom {
+  display: none;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.period-custom.is-visible { display: flex; }
+.period-custom .input { height: 32px; font-size: var(--fs-sm); }
+
+/* ---------- Grid de métricas ---------- */
+.metrics-grid {
+  display: grid;
+  /* minmax(0, 1fr): mesmo motivo do .month-grid da Agenda — sem o "0" as
+     colunas não encolhem além do rótulo mais longo do card (ex.: "— de
+     eventos futuros (reservado)"), e o grid inteiro passa a largura da
+     tela. */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-6);
+}
+@media (min-width: 700px) { .metrics-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { .metrics-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+
+.metric-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-width: 0;
+  /* Container query: o valor do card reage à largura do PRÓPRIO card
+     (cqw abaixo), não à largura da tela toda — é o que faltava. Num
+     desktop com 5 colunas, "4vw" da tela inteira sempre batia no teto
+     da fonte (36px), mesmo quando cada card só tinha ~200px de largura,
+     e "R$ 12.543,21" nesse tamanho não cabia — daí o corte com "...". */
+  container-type: inline-size;
+}
+.metric-value {
+  font-family: var(--font-display);
+  /* Fallback (navegador sem suporte a container queries) — sobrescrito
+     pela linha seguinte em navegadores atuais. */
+  font-size: clamp(1.15rem, 4vw, var(--fs-2xl));
+  font-size: clamp(1.05rem, 15cqw, var(--fs-2xl));
+  font-weight: 600;
+  color: var(--color-text);
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+.metric-label {
+  font-size: var(--fs-xs);
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+.metric-card.is-accent .metric-value { color: var(--color-accent-700); }
+.metric-card.is-danger .metric-value { color: var(--color-danger); }
+.metric-card.is-success .metric-value { color: var(--color-success); }
+
+/* ---------- Área de gráficos + próximos eventos ---------- */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-4);
+}
+@media (min-width: 1000px) {
+  .dashboard-grid { grid-template-columns: 1.3fr 1fr; }
+}
+
+.chart-wrap { position: relative; height: 260px; }
+
+.upcoming-list { display: flex; flex-direction: column; gap: var(--sp-1); }
+.upcoming-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-2);
+  border-bottom: 1px solid var(--color-border);
+}
+.upcoming-item:last-child { border-bottom: none; }
+.upcoming-date {
+  display: flex; flex-direction: column; align-items: center;
+  width: 44px; flex-shrink: 0;
+  font-family: var(--font-display);
+}
+.upcoming-date .day { font-size: var(--fs-md); font-weight: 700; line-height: 1; }
+.upcoming-date .month { font-size: 10px; text-transform: uppercase; color: var(--color-text-faint); }
+.upcoming-info { flex: 1; min-width: 0; }
+.upcoming-info strong { display: block; font-size: var(--fs-sm); }
+.upcoming-info span { font-size: var(--fs-xs); color: var(--color-text-muted); }

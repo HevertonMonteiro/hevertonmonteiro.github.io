@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#1AA894">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Encanto Decorações">
+<meta property="og:title" content="Encanto Decorações">
+<meta property="og:description" content="Sistema de gestão de eventos e decoração.">
+<meta property="og:image" content="https://encanto-decoracoes.vercel.app/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://encanto-decoracoes.vercel.app/assets/og-image.png">
+<title>Acervo · Encanto Decorações</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/app-shell.css">
+<link rel="stylesheet" href="../css/eventos.css">
+<link rel="stylesheet" href="../css/acervo.css">
+<link rel="stylesheet" href="../css/demo.css">
+</head>
+<body>
+
+<div class="app-shell">
+  <div id="sidebar-mount"></div>
+
+  <div>
+    <div id="topbar-mount"></div>
+
+    <main class="app-main">
+      <div class="page-header">
+        <div>
+          <h1>Acervo</h1>
+          <p>Temas, pacotes e ensaios fotográficos, prontos para mostrar ao cliente.</p>
+        </div>
+        <button class="btn btn-primary" id="btn-novo">+ Novo item</button>
+      </div>
+
+      <div class="status-filter" id="categoria-filter" style="margin-bottom: var(--sp-5)">
+        <button class="is-active" data-cat="">Todos</button>
+        <button data-cat="tema">Temas</button>
+        <button data-cat="pacote">Pacotes</button>
+        <button data-cat="ensaio">Ensaios</button>
+      </div>
+
+      <div class="acervo-grid" id="acervo-grid"></div>
+      <div class="empty-state" id="empty-state" style="display:none">
+        <h3>Nenhum item cadastrado</h3>
+        <p>Cadastre o primeiro tema, pacote ou ensaio do seu acervo.</p>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Modal: novo/editar item -->
+<div class="modal-backdrop acervo-modal" id="modal-item" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-title">Novo item</h3>
+      <button class="btn btn-ghost btn-icon" id="btn-fechar-modal" aria-label="Fechar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 6-12 12M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form id="form-item" novalidate>
+      <input type="hidden" id="item-id">
+
+      <div class="field-row field-row-2">
+        <div class="field">
+          <label for="i-nome">Nome *</label>
+          <input class="input" id="i-nome" required>
+        </div>
+        <div class="field">
+          <label for="i-categoria">Categoria *</label>
+          <select class="select" id="i-categoria" required>
+            <option value="tema">Tema</option>
+            <option value="pacote">Pacote</option>
+            <option value="ensaio">Ensaio fotográfico</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="i-descricao">Descrição</label>
+        <textarea class="textarea" id="i-descricao"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="i-inclusos">Itens inclusos</label>
+        <textarea class="textarea" id="i-inclusos" placeholder="Um item por linha"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="i-preco">Preço sugerido (R$)</label>
+        <input class="input" type="number" step="0.01" min="0" id="i-preco">
+      </div>
+
+      <div class="field">
+        <label for="i-obs">Observações</label>
+        <textarea class="textarea" id="i-obs"></textarea>
+      </div>
+
+      <div class="field">
+        <label>Fotos</label>
+        <div class="fotos-preview" id="fotos-preview"></div>
+        <input class="input" type="file" id="i-fotos" accept="image/*" multiple>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block" id="btn-salvar">Salvar item</button>
+      <button type="button" class="btn btn-ghost btn-block" id="btn-excluir-item" style="display:none; margin-top:var(--sp-2)">Excluir item</button>
+    </form>
+  </div>
+</div>
+
+<script type="module">
+  import { protegerRota } from '../js/modules/route-guard.js';
+  import { renderSidebar } from '../components/sidebar.js';
+  import { renderTopbar } from '../components/topbar.js';
+  import { showToast } from '../js/lib/toast.js';
+  import { escapeHtml } from '../js/lib/sanitize.js';
+  import {
+    listarItens, buscarItemPorId, criarItem, atualizarItem, excluirItem, uploadFoto, excluirFoto,
+  } from '../js/modules/acervo.js';
+  import { supabase } from '../js/lib/supabase-client.js';
+
+  await protegerRota();
+  renderSidebar('acervo');
+  renderTopbar();
+
+  const LABEL_CATEGORIA = { tema: 'Tema', pacote: 'Pacote', ensaio: 'Ensaio fotográfico' };
+  const formatoMoeda = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const grid = document.getElementById('acervo-grid');
+  const emptyState = document.getElementById('empty-state');
+  const modal = document.getElementById('modal-item');
+  const form = document.getElementById('form-item');
+  let categoriaAtual = '';
+  let fotosAtuais = []; // caminhos já salvos do item em edição
+
+  function urlPublica(caminho) {
+    return supabase.storage.from('acervo').getPublicUrl(caminho).data.publicUrl;
+  }
+
+  async function carregar() {
+    grid.innerHTML = `<div class="skeleton" style="height:200px;border-radius:16px"></div>`;
+    const { data, error } = await listarItens(categoriaAtual);
+
+    if (error || !data || !data.length) {
+      grid.innerHTML = '';
+      emptyState.style.display = 'block';
+      return;
+    }
+    emptyState.style.display = 'none';
+
+    grid.innerHTML = data.map(item => {
+      const capa = item.fotos?.[0] ? `<img src="${urlPublica(item.fotos[0])}" alt="${escapeHtml(item.nome)}">` : '📷';
+      return `
+        <div class="card acervo-card" data-id="${item.id}">
+          <div class="acervo-card-foto">${capa}</div>
+          <div class="acervo-card-body">
+            <span class="categoria-tag">${LABEL_CATEGORIA[item.categoria]}</span>
+            <strong>${escapeHtml(item.nome)}</strong>
+            ${item.preco_sugerido ? `<span class="preco">${formatoMoeda(item.preco_sugerido)}</span>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  document.getElementById('categoria-filter').addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    document.querySelectorAll('#categoria-filter button').forEach(b => b.classList.remove('is-active'));
+    btn.classList.add('is-active');
+    categoriaAtual = btn.dataset.cat;
+    carregar();
+  });
+
+  function renderFotosPreview() {
+    document.getElementById('fotos-preview').innerHTML = fotosAtuais.map(caminho => `
+      <div class="foto-preview-item">
+        <img src="${urlPublica(caminho)}">
+        <button type="button" data-caminho="${caminho}" class="btn-remover-foto">×</button>
+      </div>
+    `).join('');
+
+    document.querySelectorAll('.btn-remover-foto').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const caminho = btn.dataset.caminho;
+        await excluirFoto(caminho);
+        fotosAtuais = fotosAtuais.filter(f => f !== caminho);
+        const id = document.getElementById('item-id').value;
+        if (id) await atualizarItem(id, { fotos: fotosAtuais });
+        renderFotosPreview();
+      });
+    });
+  }
+
+  function abrirModal(item = null) {
+    form.reset();
+    fotosAtuais = item?.fotos || [];
+    document.getElementById('item-id').value = item?.id || '';
+    document.getElementById('modal-title').textContent = item ? 'Editar item' : 'Novo item';
+    document.getElementById('i-nome').value = item?.nome || '';
+    document.getElementById('i-categoria').value = item?.categoria || 'tema';
+    document.getElementById('i-descricao').value = item?.descricao || '';
+    document.getElementById('i-inclusos').value = item?.itens_inclusos || '';
+    document.getElementById('i-preco').value = item?.preco_sugerido || '';
+    document.getElementById('i-obs').value = item?.observacoes || '';
+    document.getElementById('btn-excluir-item').style.display = item ? 'block' : 'none';
+    renderFotosPreview();
+    modal.style.display = 'flex';
+  }
+  function fecharModal() { modal.style.display = 'none'; }
+
+  document.getElementById('btn-excluir-item').addEventListener('click', async () => {
+    const id = document.getElementById('item-id').value;
+    if (!id) return;
+    if (!confirm('Tem certeza que deseja excluir este item do acervo?')) return;
+    for (const caminho of fotosAtuais) await excluirFoto(caminho);
+    await excluirItem(id);
+    showToast('Item excluído.', 'success');
+    fecharModal();
+    carregar();
+  });
+
+  document.getElementById('btn-novo').addEventListener('click', () => abrirModal());
+  document.getElementById('btn-fechar-modal').addEventListener('click', fecharModal);
+  modal.addEventListener('click', (e) => { if (e.target === modal) fecharModal(); });
+
+  grid.addEventListener('click', async (e) => {
+    const card = e.target.closest('.acervo-card');
+    if (!card) return;
+    const { data } = await buscarItemPorId(card.dataset.id);
+    abrirModal(data);
+  });
+
+  document.getElementById('i-fotos').addEventListener('change', async (e) => {
+    const arquivos = Array.from(e.target.files);
+    if (!arquivos.length) return;
+
+    let id = document.getElementById('item-id').value;
+
+    // Se o item ainda não existe (cadastro novo), cria um rascunho antes
+    // de subir as fotos, já que a foto precisa de um item_id no caminho.
+    if (!id) {
+      const { data: novo, error } = await criarItem({
+        nome: document.getElementById('i-nome').value.trim() || 'Novo item',
+        categoria: document.getElementById('i-categoria').value,
+      });
+      if (error) { showToast('Preencha o nome antes de enviar fotos.', 'danger'); return; }
+      id = novo.id;
+      document.getElementById('item-id').value = id;
+    }
+
+    for (const arquivo of arquivos) {
+      try {
+        const { caminho } = await uploadFoto(arquivo, id);
+        fotosAtuais.push(caminho);
+      } catch {
+        showToast('Não foi possível enviar uma das fotos.', 'danger');
+      }
+    }
+    await atualizarItem(id, { fotos: fotosAtuais });
+    renderFotosPreview();
+    e.target.value = '';
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('item-id').value;
+    const payload = {
+      nome: document.getElementById('i-nome').value.trim(),
+      categoria: document.getElementById('i-categoria').value,
+      descricao: document.getElementById('i-descricao').value.trim() || null,
+      itens_inclusos: document.getElementById('i-inclusos').value.trim() || null,
+      preco_sugerido: Number(document.getElementById('i-preco').value) || null,
+      observacoes: document.getElementById('i-obs').value.trim() || null,
+      fotos: fotosAtuais,
+    };
+
+    if (!payload.nome) { showToast('Informe o nome do item.', 'danger'); return; }
+
+    const btn = document.getElementById('btn-salvar');
+    btn.disabled = true; btn.textContent = 'Salvando...';
+
+    const { error } = id ? await atualizarItem(id, payload) : await criarItem(payload);
+
+    btn.disabled = false; btn.textContent = 'Salvar item';
+
+    if (error) { showToast('Não foi possível salvar o item.', 'danger'); return; }
+
+    showToast('Item salvo com sucesso.', 'success');
+    fecharModal();
+    carregar();
+  });
+
+  carregar();
+</script>
+
+</body>
+</html>

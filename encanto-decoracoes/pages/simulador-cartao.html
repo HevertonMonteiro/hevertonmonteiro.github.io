@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#1AA894">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Encanto Decorações">
+<meta property="og:title" content="Encanto Decorações">
+<meta property="og:description" content="Sistema de gestão de eventos e decoração.">
+<meta property="og:image" content="https://encanto-decoracoes.vercel.app/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://encanto-decoracoes.vercel.app/assets/og-image.png">
+<title>Simulador de Cartão · Encanto Decorações</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/app-shell.css">
+<link rel="stylesheet" href="../css/financeiro.css">
+<link rel="stylesheet" href="../css/demo.css">
+</head>
+<body>
+
+<div class="app-shell">
+  <div id="sidebar-mount"></div>
+
+  <div>
+    <div id="topbar-mount"></div>
+
+    <main class="app-main">
+      <div class="page-header">
+        <div>
+          <h1>Simulador de Cartão</h1>
+          <p>Calcule quanto você recebe de verdade depois das taxas da maquininha.</p>
+        </div>
+      </div>
+
+      <div class="simulador-grid">
+
+        <!-- Calculadora -->
+        <div class="card">
+          <div class="field">
+            <label for="s-valor">Valor da venda (R$)</label>
+            <input class="input" type="number" step="0.01" min="0" id="s-valor" placeholder="0,00">
+          </div>
+          <div class="field">
+            <label for="s-parcelas">Quantidade de parcelas</label>
+            <select class="select" id="s-parcelas"></select>
+          </div>
+          <div class="field">
+            <label for="s-taxa">Taxa da maquininha (%)</label>
+            <input class="input" type="number" step="0.01" min="0" id="s-taxa">
+            <p class="field-hint">Preenchida automaticamente pela quantidade de parcelas. Pode ajustar aqui só para esta simulação.</p>
+          </div>
+
+          <div id="resultado" style="margin-top: var(--sp-5)">
+            <div class="resultado-linha">
+              <span>Valor das taxas</span>
+              <span class="valor" id="r-taxas">R$ 0,00</span>
+            </div>
+            <div class="resultado-linha is-destaque">
+              <span>Valor líquido (recebido)</span>
+              <span class="valor" id="r-liquido">R$ 0,00</span>
+            </div>
+            <div class="resultado-linha">
+              <span>Valor por parcela</span>
+              <span class="valor" id="r-parcela">R$ 0,00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabela de taxas cadastradas -->
+        <div class="card">
+          <h3 class="card-title">Taxas cadastradas por parcela</h3>
+          <p class="field-hint" style="margin-bottom: var(--sp-3)">
+            Valores de exemplo. Edite para refletir a taxa real da sua maquininha.
+            Assim que você me passar os números, eu já deixo tudo certo aqui.
+          </p>
+          <div class="taxas-table-wrap">
+            <table class="taxas-table">
+              <thead><tr><th>Parcelas</th><th>Taxa (%)</th><th></th></tr></thead>
+              <tbody id="taxas-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<script type="module">
+  import { protegerRota } from '../js/modules/route-guard.js';
+  import { renderSidebar } from '../components/sidebar.js';
+  import { renderTopbar } from '../components/topbar.js';
+  import { showToast } from '../js/lib/toast.js';
+  import { buscarTaxas, atualizarTaxa, calcularSimulacao } from '../js/modules/simulador.js';
+
+  await protegerRota();
+  renderSidebar('financeiro');
+  renderTopbar();
+
+  const formatoMoeda = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  let taxas = [];
+
+  async function carregarTaxas() {
+    const { data } = await buscarTaxas();
+    taxas = data || [];
+
+    const select = document.getElementById('s-parcelas');
+    select.innerHTML = taxas.map(t => `<option value="${t.parcela}">${t.parcela}x</option>`).join('');
+
+    document.getElementById('taxas-tbody').innerHTML = taxas.map(t => `
+      <tr>
+        <td>${t.parcela}x</td>
+        <td><input type="number" step="0.01" min="0" value="${t.taxa_percentual}" data-parcela="${t.parcela}" class="taxa-input"></td>
+        <td><button class="btn btn-ghost btn-sm btn-salvar-taxa" data-parcela="${t.parcela}">Salvar</button></td>
+      </tr>
+    `).join('');
+
+    document.querySelectorAll('.btn-salvar-taxa').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const parcela = btn.dataset.parcela;
+        const input = document.querySelector(`.taxa-input[data-parcela="${parcela}"]`);
+        const novaTaxa = Number(input.value);
+        await atualizarTaxa(parcela, novaTaxa);
+        showToast(`Taxa de ${parcela}x atualizada.`, 'success');
+        await carregarTaxas();
+        aoMudarParcelas();
+        calcular();
+      });
+    });
+
+    aoMudarParcelas();
+  }
+
+  function aoMudarParcelas() {
+    const parcela = Number(document.getElementById('s-parcelas').value);
+    const taxa = taxas.find(t => t.parcela === parcela);
+    document.getElementById('s-taxa').value = taxa ? taxa.taxa_percentual : 0;
+    calcular();
+  }
+
+  function calcular() {
+    const valor = Number(document.getElementById('s-valor').value) || 0;
+    const parcelas = Number(document.getElementById('s-parcelas').value) || 1;
+    const taxaPercentual = Number(document.getElementById('s-taxa').value) || 0;
+
+    const r = calcularSimulacao(valor, parcelas, taxaPercentual);
+
+    document.getElementById('r-taxas').textContent = formatoMoeda(r.valorTaxa);
+    document.getElementById('r-liquido').textContent = formatoMoeda(r.valorLiquido);
+    document.getElementById('r-parcela').textContent = formatoMoeda(r.valorPorParcela);
+  }
+
+  document.getElementById('s-valor').addEventListener('input', calcular);
+  document.getElementById('s-taxa').addEventListener('input', calcular);
+  document.getElementById('s-parcelas').addEventListener('change', aoMudarParcelas);
+
+  carregarTaxas();
+</script>
+
+</body>
+</html>

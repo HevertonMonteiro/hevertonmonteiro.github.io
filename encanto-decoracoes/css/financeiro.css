@@ -1,0 +1,63 @@
+/* ==========================================================================
+   ENCANTO DECORAÇÕES — Financeiro (aba do evento) + Simulador de Cartão
+   ========================================================================== */
+
+/* ---------- Saldo do evento ---------- */
+.saldo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-5);
+}
+@media (max-width: 460px) { .saldo-grid { grid-template-columns: 1fr; } }
+.saldo-card { text-align: center; }
+.saldo-card .valor { font-family: var(--font-display); font-size: var(--fs-xl); font-weight: 600; }
+.saldo-card .label { font-size: var(--fs-xs); color: var(--color-text-muted); font-weight: 600; }
+.saldo-card.is-recebido .valor { color: var(--color-success); }
+.saldo-card.is-restante .valor { color: var(--color-danger); }
+
+.pagamentos-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--sp-3);
+}
+
+.pagamento-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--color-border);
+}
+.pagamento-row:last-child { border-bottom: none; }
+.pagamento-row-main { flex: 1; min-width: 0; }
+.pagamento-row-main strong { display: block; font-size: var(--fs-sm); }
+.pagamento-row-main span { font-size: var(--fs-xs); color: var(--color-text-muted); }
+.pagamento-valor { font-family: var(--font-display); font-weight: 700; }
+
+.valor-rapido-row { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
+
+/* ---------- Simulador de cartão ---------- */
+.simulador-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-5);
+}
+@media (min-width: 900px) { .simulador-grid { grid-template-columns: 1fr 1fr; align-items: start; } }
+
+.resultado-linha {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-3) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.resultado-linha:last-child { border-bottom: none; }
+.resultado-linha .valor { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-lg); }
+.resultado-linha.is-destaque .valor { color: var(--color-success); }
+
+.taxas-table-wrap { margin-top: var(--sp-4); }
+.taxas-table { width: 100%; border-collapse: collapse; }
+.taxas-table th, .taxas-table td { padding: var(--sp-2) 6px; font-size: clamp(11px, 2.8vw, var(--fs-sm)); text-align: left; border-bottom: 1px solid var(--color-border); }
+.taxas-table input { width: 100%; max-width: 70px; height: 30px; padding: 0 6px; border: 1px solid var(--color-border-strong); border-radius: var(--radius-sm); font-size: clamp(11px, 2.8vw, var(--fs-sm)); }

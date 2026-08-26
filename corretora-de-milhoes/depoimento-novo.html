@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Deixe seu depoimento sobre o atendimento da corretora.">
+<title>Deixe seu depoimento · Corretora de Milhões</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="navbar-mount"></div>
+
+<main>
+<section class="container" style="max-width: 560px;">
+  <h2>Deixe seu depoimento</h2>
+  <p>Sua avaliação passa por uma revisão rápida antes de ser publicada no site.</p>
+  <ul class="mensagens" id="mensagem-sucesso" style="display:none;">
+    <li>Obrigado pelo seu depoimento! Ele será publicado após revisão.</li>
+  </ul>
+  <form id="form-depoimento">
+    <p><label for="nome_cliente">Nome</label><input class="input" type="text" id="nome_cliente" name="nome_cliente" required></p>
+    <p><label for="email_cliente">E-mail (não é exibido publicamente)</label><input class="input" type="email" id="email_cliente" name="email_cliente"></p>
+    <p><label for="nota">Nota</label>
+      <select class="input" id="nota" name="nota" required>
+        <option value="5">5 estrela(s)</option>
+        <option value="4">4 estrela(s)</option>
+        <option value="3">3 estrela(s)</option>
+        <option value="2">2 estrela(s)</option>
+        <option value="1">1 estrela(s)</option>
+      </select>
+    </p>
+    <p><label for="texto">Depoimento</label><textarea class="input" id="texto" name="texto" rows="4" required></textarea></p>
+    <button type="submit" class="btn btn-primary">Enviar depoimento</button>
+  </form>
+</section>
+</main>
+
+<div id="footer-mount"></div>
+<div id="social-float-mount"></div>
+
+<script src="js/data.js"></script>
+<script src="js/store.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/layout.js"></script>
+<script>
+  montarLayout({ ativo: 'depoimento' });
+
+  document.getElementById('form-depoimento').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const nome_cliente = document.getElementById('nome_cliente').value.trim();
+    const email_cliente = document.getElementById('email_cliente').value.trim();
+    const nota = Number(document.getElementById('nota').value);
+    const texto = document.getElementById('texto').value.trim();
+    if (!nome_cliente || !texto) return;
+
+    criarDepoimento({ nome_cliente, email_cliente, nota, texto, imovel_id: null });
+
+    document.getElementById('form-depoimento').style.display = 'none';
+    document.getElementById('mensagem-sucesso').style.display = 'block';
+  });
+</script>
+
+</body>
+</html>

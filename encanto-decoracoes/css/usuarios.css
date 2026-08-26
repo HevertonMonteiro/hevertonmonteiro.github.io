@@ -1,0 +1,57 @@
+/* ==========================================================================
+   ENCANTO DECORAÇÕES — Usuários e Auditoria
+   ========================================================================== */
+
+.perfil-incompleto-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--sp-5);
+  font-size: var(--fs-sm);
+}
+.perfil-incompleto-banner button { margin-left: auto; flex-shrink: 0; }
+
+/* Larguras da tabela de usuários no formato compacto (ver clientes.css).
+   Não tem mais coluna de ação — a linha inteira é clicável pra editar —
+   então Perfil (selo com palavras longas, ex. "Administrador") pode
+   receber um pouco mais de espaço. */
+@media (max-width: 640px) {
+  #tabela-usuarios th:nth-child(1), #tabela-usuarios td:nth-child(1) { width: 22%; }
+  #tabela-usuarios th:nth-child(2), #tabela-usuarios td:nth-child(2) { width: 26%; }
+  #tabela-usuarios th:nth-child(3), #tabela-usuarios td:nth-child(3) { width: 17%; }
+  #tabela-usuarios th:nth-child(4), #tabela-usuarios td:nth-child(4) { width: 16%; }
+  #tabela-usuarios th:nth-child(5), #tabela-usuarios td:nth-child(5) { width: 19%; }
+}
+
+.auditoria-row {
+  display: grid;
+  grid-template-columns: 140px 1fr 140px;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--fs-sm);
+  align-items: center;
+}
+.auditoria-row:last-child { border-bottom: none; }
+@media (max-width: 560px) {
+  .auditoria-row { grid-template-columns: 1fr; align-items: start; gap: var(--sp-1); }
+}
+.auditoria-row .data { color: var(--color-text-faint); font-size: var(--fs-xs); }
+.auditoria-row .acao-tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  background: var(--color-accent-100);
+  color: var(--color-accent-700);
+  width: fit-content;
+}
+.auditoria-row .detalhe { font-size: var(--fs-xs); color: var(--color-text-muted); }
+.auditoria-filtros { display: flex; gap: var(--sp-2); flex-wrap: wrap; margin-bottom: var(--sp-4); }
+.auditoria-filtros .input, .auditoria-filtros .select { max-width: 200px; }

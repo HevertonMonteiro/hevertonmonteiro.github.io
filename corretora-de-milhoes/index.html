@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Corretora de imóveis independente. Vitrine de imóveis, atendimento próximo e negociação segura do primeiro contato até a entrega das chaves. Demonstração de portfólio.">
+<title>Corretora de Milhões</title>
+<meta property="og:type" content="website">
+<meta property="og:title" content="Corretora de Milhões">
+<meta property="og:description" content="Vitrine de imóveis com atendimento próximo, do primeiro contato até a entrega das chaves.">
+<meta property="og:image" content="assets/og-image.png">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="navbar-mount"></div>
+
+<main>
+<section class="container" style="padding-top:24px;">
+  <div class="demo-banner">
+    <strong>Demo de portfólio:</strong> este site foi construído para uma corretora de imóveis real.
+    Aqui ele roda inteiro no seu navegador, com dados fictícios, sem banco de dados nem servidor de
+    verdade. Quer ver o painel administrativo? Acesse
+    <a href="painel/login.html" style="color:var(--cor-rose-escuro); font-weight:600;">painel/login.html</a>,
+    qualquer e-mail e senha entram.
+  </div>
+</section>
+
+<section class="hero">
+  <div class="container">
+    <span class="kicker" id="hero-creci">Corretora independente</span>
+    <h1>Encontre o imóvel <em>certo</em> com quem conhece a região</h1>
+    <p id="hero-bio">Atendimento próximo, do primeiro contato até a entrega das chaves, com transparência em cada etapa da negociação.</p>
+    <div class="hero-acoes">
+      <a href="imoveis.html" class="btn btn-primary">Ver imóveis disponíveis</a>
+      <a href="#" id="hero-whatsapp" target="_blank" rel="noopener" class="btn btn-whatsapp" style="display:none;">Falar agora no WhatsApp</a>
+    </div>
+
+    <div class="stats">
+      <div class="reveal">
+        <div class="stat-num"><span data-contador="0" id="stat-fechados">0</span>+</div>
+        <div class="stat-label">Negócios fechados</div>
+      </div>
+      <div class="reveal reveal-atraso-1">
+        <div class="stat-num"><span data-contador="0" id="stat-disponiveis">0</span></div>
+        <div class="stat-label">Imóveis disponíveis agora</div>
+      </div>
+      <div class="reveal reveal-atraso-2">
+        <div class="stat-num"><span data-contador="0" id="stat-cidades">0</span></div>
+        <div class="stat-label">Cidades atendidas</div>
+      </div>
+      <div class="reveal reveal-atraso-3">
+        <div class="stat-num"><span data-contador="0" id="stat-depoimentos">0</span></div>
+        <div class="stat-label">Clientes satisfeitos</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="destaques" class="container">
+  <span class="kicker reveal">Seleção da corretora</span>
+  <h2 class="reveal">Imóveis em destaque</h2>
+  <div class="grid" id="grid-destaques"></div>
+</section>
+
+<section id="realizacoes" class="container">
+  <span class="kicker reveal">Histórico recente</span>
+  <h2 class="reveal">Negócios fechados recentemente</h2>
+  <div class="grid" id="grid-realizacoes"></div>
+</section>
+
+<section id="sobre" class="container">
+  <span class="kicker reveal">Sobre a corretora</span>
+  <h2 class="reveal" id="sobre-nome">Corretora de Milhões</h2>
+  <p class="reveal" style="max-width: 680px; color: var(--cor-texto-suave);" id="sobre-texto"></p>
+</section>
+
+<section class="container">
+  <span class="kicker reveal">Depoimentos</span>
+  <h2 class="reveal">O que os clientes dizem</h2>
+  <div class="grid" id="grid-depoimentos"></div>
+</section>
+</main>
+
+<div id="footer-mount"></div>
+<div id="social-float-mount"></div>
+
+<script src="js/data.js"></script>
+<script src="js/store.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/layout.js"></script>
+<script>
+  montarLayout({ ativo: '' });
+
+  const perfil = getPerfil();
+  document.getElementById('hero-creci').textContent = perfil.creci || 'Corretora independente';
+  document.getElementById('hero-bio').textContent = perfil.bio || 'Atendimento próximo, do primeiro contato até a entrega das chaves.';
+  document.getElementById('sobre-nome').textContent = perfil.nome || 'Corretora de Milhões';
+  document.getElementById('sobre-texto').innerHTML = `${escapeHtml(perfil.bio || '')}${perfil.regiao_atuacao ? `<br><br><strong>Região de atuação:</strong> ${escapeHtml(perfil.regiao_atuacao)}` : ''}`;
+  if (perfil.whatsapp) {
+    const btn = document.getElementById('hero-whatsapp');
+    btn.href = `https://wa.me/${perfil.whatsapp}`;
+    btn.style.display = '';
+  }
+
+  const imoveis = getImoveis();
+  const disponiveis = imoveis.filter((i) => i.status === 'disponivel');
+  const destaques = disponiveis.filter((i) => i.destaque).slice(0, 6);
+  const realizacoes = getRealizacoes().filter((r) => r.visivel).slice(0, 6);
+  const depoimentosAprovados = getDepoimentos().filter((d) => d.aprovado).slice(0, 6);
+  const fechados = imoveis.filter((i) => i.status === 'vendido' || i.status === 'alugado').length;
+  const cidades = new Set(imoveis.filter((i) => i.status !== 'inativo').map((i) => i.cidade)).size;
+
+  document.getElementById('stat-fechados').setAttribute('data-contador', fechados);
+  document.getElementById('stat-disponiveis').setAttribute('data-contador', disponiveis.length);
+  document.getElementById('stat-cidades').setAttribute('data-contador', cidades);
+  document.getElementById('stat-depoimentos').setAttribute('data-contador', depoimentosAprovados.length);
+
+  function cardImovel(imovel) {
+    const capa = imovel.fotos[0];
+    return `
+      <a class="card reveal" href="imovel.html?slug=${encodeURIComponent(imovel.slug)}">
+        ${capa ? `<img src="${capa.url}" alt="${escapeHtml(imovel.titulo)}" loading="lazy">` : `<div class="card-img-placeholder">Sem foto</div>`}
+        <div class="card-body">
+          <span class="badge badge-disponivel">${TIPOS_NEGOCIO[imovel.tipo_negocio]}</span>
+          <h3>${escapeHtml(imovel.titulo)}</h3>
+          <p>${escapeHtml(imovel.bairro)}, ${escapeHtml(imovel.cidade)}</p>
+          <p class="preco">R$ ${formatoMoeda(imovel.valor)}</p>
+        </div>
+      </a>`;
+  }
+
+  document.getElementById('grid-destaques').innerHTML = destaques.length
+    ? destaques.map(cardImovel).join('')
+    : `<p>Nenhum imóvel em destaque no momento. Cadastre imóveis no <a href="painel/login.html">painel</a> e marque como "destaque".</p>`;
+
+  document.getElementById('grid-realizacoes').innerHTML = realizacoes.length
+    ? realizacoes.map((r) => `
+      <div class="card reveal">
+        <img src="${r.foto}" alt="${escapeHtml(r.titulo)}" loading="lazy">
+        <div class="card-body"><h3>${escapeHtml(r.titulo)}</h3><p>${escapeHtml(r.texto)}</p></div>
+      </div>`).join('')
+    : `<p>Em breve, os próximos negócios fechados aparecem aqui.</p>`;
+
+  document.getElementById('grid-depoimentos').innerHTML = depoimentosAprovados.length
+    ? depoimentosAprovados.map((d) => `
+      <div class="card reveal">
+        <div class="card-body">
+          <p style="color: var(--cor-dourado); letter-spacing: 2px;">${'★'.repeat(d.nota)}</p>
+          <p>"${escapeHtml(d.texto)}"</p>
+          <p><strong>${escapeHtml(d.nome_cliente)}</strong></p>
+        </div>
+      </div>`).join('')
+    : `<p>Ainda sem depoimentos publicados. <a href="depoimento-novo.html">Seja o primeiro a avaliar</a>.</p>`;
+</script>
+
+</body>
+</html>

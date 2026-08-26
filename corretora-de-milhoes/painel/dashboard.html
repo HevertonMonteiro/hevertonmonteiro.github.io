@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel · visão geral · Corretora de Milhões</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div id="navbar-mount"></div>
+
+<main>
+<section class="container">
+  <h2>Painel · visão geral</h2>
+  <div class="grid" id="grid-contadores"></div>
+
+  <p>
+    <a class="btn btn-primary" href="imovel-form.html">+ Novo imóvel</a>
+    <a class="btn btn-outline" href="imoveis.html">Gerenciar imóveis</a>
+    <a class="btn btn-outline" href="realizacao-nova.html">+ Postar negócio fechado</a>
+    <a class="btn btn-outline" href="depoimentos.html">Moderar depoimentos</a>
+    <a class="btn btn-outline" href="leads.html">Ver contatos</a>
+  </p>
+  <button type="button" class="demo-reset-link" id="btn-reset-demo">Reiniciar dados de demonstração</button>
+</section>
+</main>
+
+<script src="../js/data.js"></script>
+<script src="../js/store.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/layout.js"></script>
+<script>
+  if (!exigirLogin('login.html')) { /* redireciona */ } else {
+    montarLayout({ painel: true, base: '../' });
+
+    const imoveis = getImoveis();
+    const dados = [
+      { n: imoveis.length, r: 'Imóveis cadastrados' },
+      { n: imoveis.filter((i) => i.status === 'disponivel').length, r: 'Disponíveis' },
+      { n: imoveis.filter((i) => i.status === 'vendido' || i.status === 'alugado').length, r: 'Vendidos/Alugados' },
+      { n: getLeads().filter((l) => !l.atendido).length, r: 'Contatos a atender' },
+      { n: getDepoimentos().filter((d) => !d.aprovado).length, r: 'Depoimentos p/ aprovar' },
+    ];
+    document.getElementById('grid-contadores').innerHTML = dados.map((d) => `
+      <div class="card"><div class="card-body"><h3>${d.n}</h3><p>${d.r}</p></div></div>
+    `).join('');
+
+    document.getElementById('btn-reset-demo').addEventListener('click', () => {
+      if (!confirm('Isso apaga todas as alterações feitas nesta demonstração (imóveis, depoimentos, leads etc.) e restaura os dados fictícios originais. Continuar?')) return;
+      resetarDadosDemo();
+      window.location.reload();
+    });
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Postar negócio fechado · Corretora de Milhões</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div id="navbar-mount"></div>
+
+<main>
+<section class="container" style="max-width: 560px;">
+  <h2>Postar negócio fechado</h2>
+  <p>Isso aparece na home do site, como uma versão sua e sob seu controle do que você já posta no Instagram.</p>
+  <form id="form-realizacao">
+    <p><label for="imovel_id">Imóvel relacionado (opcional)</label>
+      <select class="input" id="imovel_id"><option value="">(nenhum)</option></select>
+    </p>
+    <p><label for="titulo">Título</label><input class="input" type="text" id="titulo" placeholder="Ex: Mais uma chave entregue no Boa Viagem!" required></p>
+    <p><label for="texto">Texto</label><textarea class="input" id="texto" rows="4"></textarea></p>
+    <p><label for="foto">Foto</label><input class="input" type="file" id="foto" accept="image/*"></p>
+    <p><label><input type="checkbox" id="visivel" checked style="width:auto; display:inline-block;"> Visível no site</label></p>
+    <button type="submit" class="btn btn-primary">Publicar</button>
+  </form>
+</section>
+</main>
+
+<script src="../js/data.js"></script>
+<script src="../js/store.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/layout.js"></script>
+<script>
+  if (!exigirLogin('login.html')) { /* redireciona */ } else {
+    montarLayout({ painel: true, base: '../' });
+
+    const selectImovel = document.getElementById('imovel_id');
+    getImoveis().forEach((i) => {
+      selectImovel.insertAdjacentHTML('beforeend', `<option value="${i.id}">${i.codigo_referencia} · ${escapeHtml(i.titulo)}</option>`);
+    });
+
+    document.getElementById('form-realizacao').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const titulo = document.getElementById('titulo').value.trim();
+      if (!titulo) return;
+      const arquivo = document.getElementById('foto').files[0];
+      let fotoUrl = 'assets/realizacoes/realizacao-demo.jpg';
+      if (arquivo) {
+        try {
+          const foto = await processarFotoUpload(arquivo, 0, '');
+          fotoUrl = foto.url;
+        } catch (err) {
+          alert(err.message);
+          return;
+        }
+      }
+      criarRealizacao({
+        titulo,
+        texto: document.getElementById('texto').value.trim(),
+        foto: fotoUrl,
+        visivel: document.getElementById('visivel').checked,
+        imovel_id: selectImovel.value || null,
+      });
+      window.location.href = 'dashboard.html';
+    });
+  }
+</script>
+
+</body>
+</html>

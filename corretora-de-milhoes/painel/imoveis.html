@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meus imóveis · Corretora de Milhões</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div id="navbar-mount"></div>
+
+<main>
+<section class="container">
+  <h2>Meus imóveis</h2>
+  <p><a class="btn btn-primary" href="imovel-form.html">+ Novo imóvel</a></p>
+
+  <table>
+    <thead><tr><th>Ref.</th><th>Título</th><th>Status</th><th>Valor</th><th>Ações</th></tr></thead>
+    <tbody id="tbody-imoveis"></tbody>
+  </table>
+</section>
+</main>
+
+<script src="../js/data.js"></script>
+<script src="../js/store.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/layout.js"></script>
+<script>
+  if (!exigirLogin('login.html')) { /* redireciona */ } else {
+    montarLayout({ painel: true, base: '../' });
+
+    function renderLista() {
+      const imoveis = getImoveis();
+      const tbody = document.getElementById('tbody-imoveis');
+      if (!imoveis.length) {
+        tbody.innerHTML = '<tr><td colspan="5">Nenhum imóvel cadastrado ainda.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = imoveis.map((i) => `
+        <tr>
+          <td>${i.codigo_referencia}</td>
+          <td>${escapeHtml(i.titulo)}</td>
+          <td>
+            <select class="input select-status" data-id="${i.id}" style="width:auto;">
+              ${Object.entries(STATUS_IMOVEL).map(([v, r]) => `<option value="${v}" ${i.status === v ? 'selected' : ''}>${r}</option>`).join('')}
+            </select>
+          </td>
+          <td>R$ ${formatoMoeda(i.valor)}</td>
+          <td>
+            <a class="btn btn-sm btn-outline" href="imovel-form.html?id=${i.id}">Editar</a>
+            <button type="button" class="btn btn-sm btn-danger btn-excluir" data-id="${i.id}">Excluir</button>
+          </td>
+        </tr>
+      `).join('');
+
+      tbody.querySelectorAll('.select-status').forEach((sel) => {
+        sel.addEventListener('change', () => {
+          definirStatusImovel(sel.dataset.id, sel.value);
+          renderLista();
+        });
+      });
+      tbody.querySelectorAll('.btn-excluir').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const imovel = getImovel(btn.dataset.id);
+          if (!confirm(`Tem certeza que deseja excluir "${imovel.titulo}"? Essa ação não pode ser desfeita.`)) return;
+          excluirImovel(btn.dataset.id);
+          renderLista();
+        });
+      });
+    }
+    renderLista();
+  }
+</script>
+
+</body>
+</html>

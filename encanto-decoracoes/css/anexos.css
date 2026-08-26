@@ -1,0 +1,42 @@
+/* ==========================================================================
+   ENCANTO DECORAÇÕES — Anexos
+   ========================================================================== */
+
+.anexo-upload {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  border: 1.5px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--sp-4);
+}
+.anexo-upload input[type="file"] { flex: 1; font-size: var(--fs-sm); }
+
+.anexo-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--color-border);
+}
+.anexo-row:last-child { border-bottom: none; }
+.anexo-icone {
+  width: 36px; height: 36px;
+  border-radius: var(--radius-sm);
+  background: var(--color-accent-100);
+  color: var(--color-accent-700);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.anexo-icone svg { width: 18px; height: 18px; }
+.anexo-row-main { flex: 1; min-width: 0; }
+.anexo-row-main strong { display: block; font-size: var(--fs-sm); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.anexo-row-main span { font-size: var(--fs-xs); color: var(--color-text-muted); }
+
+.arquivo-categoria-tag {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+}

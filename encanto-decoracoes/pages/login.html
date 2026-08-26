@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#1AA894">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Encanto Decorações">
+<meta property="og:title" content="Encanto Decorações">
+<meta property="og:description" content="Sistema de gestão de eventos e decoração.">
+<meta property="og:image" content="https://encanto-decoracoes.vercel.app/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://encanto-decoracoes.vercel.app/assets/og-image.png">
+<title>Entrar · Encanto Decorações</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/auth.css">
+<link rel="stylesheet" href="../css/demo.css">
+</head>
+<body>
+
+<div class="auth-screen">
+
+  <!-- Painel de marca -->
+  <aside class="auth-brand">
+    <div class="auth-brand-logo">Encanto Decorações</div>
+    <div class="auth-brand-quote">
+      <p>Cada evento começa com um único cadastro, e termina sem retrabalho.</p>
+      <span>Sistema Operacional para Decoração de Festas</span>
+    </div>
+  </aside>
+
+  <!-- Formulário -->
+  <main class="auth-form-side">
+    <div class="auth-form-box">
+      <div class="logo-mark">Encanto Decorações</div>
+      <h1>Entrar</h1>
+      <p class="auth-subtitle">Acesse o painel da sua operação.</p>
+
+      <div class="demo-banner">
+        <strong>Demo de portfólio:</strong> este sistema foi construído para uma empresa real de
+        decoração de eventos. Aqui ele roda inteiro no seu navegador, com dados fictícios, sem
+        banco de dados nem servidor de verdade. Use um dos acessos rápidos abaixo, ou digite
+        <strong>qualquer e-mail e senha</strong> no formulário: nesta demonstração, qualquer dado
+        preenchido entra no sistema.
+        <div class="demo-login-row">
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-demo-admin">Entrar como administradora</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-demo-equipe">Entrar como equipe</button>
+        </div>
+      </div>
+
+      <div class="auth-alert" id="auth-alert" role="alert"></div>
+
+      <form id="login-form" novalidate>
+        <div class="field">
+          <label for="email">E-mail</label>
+          <input class="input" type="email" id="email" name="email" autocomplete="email" required>
+        </div>
+
+        <div class="field">
+          <label for="password">Senha</label>
+          <input class="input" type="password" id="password" name="password" autocomplete="current-password" required minlength="6">
+        </div>
+
+        <div class="auth-form-footer">
+          <a href="./recuperar-senha.html">Esqueci minha senha</a>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" id="submit-btn">Entrar</button>
+      </form>
+    </div>
+  </main>
+
+</div>
+
+<script type="module">
+  import { login, traduzirErroAuth, getSession } from '../js/modules/auth.js';
+  import { USUARIOS_DEMO } from '../js/lib/supabase-client.js';
+
+  const form = document.getElementById('login-form');
+  const alertBox = document.getElementById('auth-alert');
+  const submitBtn = document.getElementById('submit-btn');
+
+  async function entrarComoDemo(email, senha) {
+    form.email.value = email;
+    form.password.value = senha;
+    form.requestSubmit();
+  }
+  document.getElementById('btn-demo-admin').addEventListener('click', () => {
+    const u = USUARIOS_DEMO.find((x) => x.perfil_acesso === 'administrador');
+    entrarComoDemo(u.email, u.senha);
+  });
+  document.getElementById('btn-demo-equipe').addEventListener('click', () => {
+    const u = USUARIOS_DEMO.find((x) => x.perfil_acesso === 'padrao');
+    entrarComoDemo(u.email, u.senha);
+  });
+
+  function mostrarErro(msg) {
+    alertBox.textContent = msg;
+    alertBox.classList.remove('is-success');
+    alertBox.classList.add('is-visible');
+  }
+
+  function pegarRedirect() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('redirect') || 'dashboard.html';
+  }
+
+  // Se já existe sessão ativa, pula direto pro dashboard.
+  (async () => {
+    const session = await getSession();
+    if (session) window.location.href = pegarRedirect();
+  })();
+
+  // Aviso quando a sessão foi encerrada automaticamente por inatividade.
+  if (new URLSearchParams(window.location.search).get('motivo') === 'inatividade') {
+    alertBox.textContent = 'Sua sessão foi encerrada automaticamente por inatividade, por segurança. Faça login novamente.';
+    alertBox.classList.add('is-visible');
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    alertBox.classList.remove('is-visible');
+
+    const email = form.email.value.trim();
+    const password = form.password.value;
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Entrando...';
+
+    const { error } = await login(email, password);
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Entrar';
+
+    if (error) {
+      mostrarErro(traduzirErroAuth(error));
+      return;
+    }
+
+    window.location.href = pegarRedirect();
+  });
+</script>
+
+</body>
+</html>

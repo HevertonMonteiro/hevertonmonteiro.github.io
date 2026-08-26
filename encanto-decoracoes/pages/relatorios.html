@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#1AA894">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Encanto Decorações">
+<meta property="og:title" content="Encanto Decorações">
+<meta property="og:description" content="Sistema de gestão de eventos e decoração.">
+<meta property="og:image" content="https://encanto-decoracoes.vercel.app/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://encanto-decoracoes.vercel.app/assets/og-image.png">
+<title>Relatórios · Encanto Decorações</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/app-shell.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+<link rel="stylesheet" href="../css/relatorios.css">
+<link rel="stylesheet" href="../css/demo.css">
+</head>
+<body>
+
+<div class="app-shell">
+  <div id="sidebar-mount"></div>
+
+  <div>
+    <div id="topbar-mount"></div>
+
+    <main class="app-main">
+      <div class="page-header">
+        <div>
+          <h1>Relatórios</h1>
+          <p>Painel gerencial e financeiro da operação no período selecionado.</p>
+        </div>
+        <div style="display:flex; gap: var(--sp-2)">
+          <button class="btn btn-secondary" id="btn-exportar-mei">Relatório para o MEI</button>
+          <button class="btn btn-primary" id="btn-exportar-gerencial">Relatório Gerencial (PDF)</button>
+        </div>
+      </div>
+
+      <div class="period-bar">
+        <div class="period-tabs" id="period-tabs">
+          <button class="period-tab" data-tipo="mes">Mês</button>
+          <button class="period-tab is-active" data-tipo="ano">Ano</button>
+          <button class="period-tab" data-tipo="personalizado">Personalizado</button>
+        </div>
+        <div class="period-nav" id="period-nav">
+          <button class="period-nav-btn" id="btn-anterior" aria-label="Anterior">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <span class="period-label" id="period-label">—</span>
+          <button class="period-nav-btn" id="btn-proximo" aria-label="Próximo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+        </div>
+        <div class="period-custom" id="period-custom">
+          <input type="date" class="input" id="custom-inicio">
+          <span>até</span>
+          <input type="date" class="input" id="custom-fim">
+          <button class="btn btn-secondary btn-sm" id="btn-aplicar-custom">Aplicar</button>
+        </div>
+      </div>
+
+      <!-- Comparação com o período anterior -->
+      <div class="card" id="comparacao-card" style="margin-bottom: var(--sp-5)">
+        <h3 class="card-title">Comparado ao período anterior</h3>
+        <div class="comparacao-grid" id="comparacao-grid">Carregando...</div>
+      </div>
+
+      <!-- Financeiro -->
+      <h2 style="font-size: var(--fs-lg); margin-bottom: var(--sp-3)">Financeiro</h2>
+      <div class="metrics-grid" id="financeiro-grid">
+        <div class="card card-compact metric-card is-accent"><span class="metric-value skeleton" id="m-faturamento">&nbsp;</span><span class="metric-label">Faturamento bruto</span></div>
+        <div class="card card-compact metric-card is-success"><span class="metric-value skeleton" id="m-recebido">&nbsp;</span><span class="metric-label">Recebido</span></div>
+        <div class="card card-compact metric-card is-danger"><span class="metric-value skeleton" id="m-pendente">&nbsp;</span><span class="metric-label">A receber</span></div>
+        <div class="card card-compact metric-card"><span class="metric-value skeleton" id="m-ticket">&nbsp;</span><span class="metric-label">Ticket médio por evento</span></div>
+        <div class="card card-compact metric-card"><span class="metric-value skeleton" id="m-total-pagamentos">&nbsp;</span><span class="metric-label">Total de pagamentos</span></div>
+      </div>
+      <div class="metrics-grid" style="margin-top: var(--sp-4)">
+        <div class="card card-compact metric-card"><span class="metric-value skeleton" id="m-media-dia">&nbsp;</span><span class="metric-label">Média diária</span></div>
+        <div class="card card-compact metric-card"><span class="metric-value skeleton" id="m-media-semana">&nbsp;</span><span class="metric-label">Média semanal</span></div>
+        <div class="card card-compact metric-card"><span class="metric-value skeleton" id="m-media-mes">&nbsp;</span><span class="metric-label">Média mensal</span></div>
+      </div>
+
+      <!-- Eventos e clientes -->
+      <h2 style="font-size: var(--fs-lg); margin: var(--sp-6) 0 var(--sp-3)">Eventos e clientes</h2>
+      <div class="relatorio-grid">
+        <div class="card relatorio-card">
+          <h3 class="card-title">Eventos no período</h3>
+          <div class="metric-value" id="m-total-eventos">0</div>
+          <table class="relatorio-table"><thead><tr><th>Status</th><th>Quantidade</th></tr></thead><tbody id="tbody-status"></tbody></table>
+        </div>
+        <div class="card relatorio-card">
+          <h3 class="card-title">Clientes</h3>
+          <div class="metric-value" id="m-clientes-novos">0</div>
+          <p class="field-hint" style="margin-bottom:var(--sp-3)">Novos clientes no período (total geral na base: <span id="m-clientes-total">0</span>)</p>
+          <table class="relatorio-table"><tbody>
+            <tr><td>Novos no período</td><td id="td-clientes-novos">0</td></tr>
+            <tr><td>Recorrentes (já eram clientes)</td><td id="td-clientes-recorrentes">0</td></tr>
+          </tbody></table>
+        </div>
+        <div class="card relatorio-card">
+          <h3 class="card-title">Eventos por tipo</h3>
+          <table class="relatorio-table"><thead><tr><th>Tipo</th><th>Eventos</th></tr></thead><tbody id="tbody-tipo"></tbody></table>
+        </div>
+        <div class="card relatorio-card">
+          <h3 class="card-title">Eventos por tema</h3>
+          <table class="relatorio-table"><thead><tr><th>Tema</th><th>Eventos</th></tr></thead><tbody id="tbody-tema"></tbody></table>
+        </div>
+        <div class="card relatorio-card">
+          <h3 class="card-title">Eventos por pacote</h3>
+          <table class="relatorio-table"><thead><tr><th>Pacote</th><th>Eventos</th></tr></thead><tbody id="tbody-pacote"></tbody></table>
+        </div>
+      </div>
+
+      <!-- Evolução -->
+      <h2 style="font-size: var(--fs-lg); margin: var(--sp-6) 0 var(--sp-3)">Evolução no período</h2>
+      <div class="relatorio-grid">
+        <div class="card relatorio-card relatorio-full">
+          <h3 class="card-title">Faturamento e recebimentos</h3>
+          <div class="chart-wrap"><canvas id="chart-evolucao-financeiro"></canvas></div>
+        </div>
+        <div class="card relatorio-card relatorio-full">
+          <h3 class="card-title">Quantidade de eventos</h3>
+          <div class="chart-wrap"><canvas id="chart-evolucao-eventos"></canvas></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script type="module">
+  import { protegerRota } from '../js/modules/route-guard.js';
+  import { renderSidebar } from '../components/sidebar.js';
+  import { renderTopbar } from '../components/topbar.js';
+  import { showToast } from '../js/lib/toast.js';
+  import { escapeHtml } from '../js/lib/sanitize.js';
+  import { calcularPeriodo, navegarPeriodo } from '../js/modules/dashboard.js';
+  import {
+    buscarEntradas, buscarPendentes, buscarEventosPorPeriodo, agruparPorCampo,
+    buscarClientesCadastrados, calcularFaturamento, buscarClientesRecorrentes,
+    buscarEvolucao, buscarComparacaoPeriodoAnterior,
+  } from '../js/modules/relatorios.js';
+  import Chart from 'https://esm.sh/chart.js@4.4.4/auto';
+
+  await protegerRota();
+  renderSidebar('relatorios');
+  renderTopbar();
+
+  const formatoMoeda = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const formatoPercentual = (v) => `${v >= 0 ? '+' : ''}${v.toFixed(1)}%`;
+  const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const MESES_LONGO = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const LABEL_STATUS = { orcamento: 'Orçamento', confirmado: 'Confirmado', concluido: 'Concluído', finalizado: 'Finalizado', cancelado: 'Cancelado' };
+  const LABEL_FORMA = { pix: 'PIX', cartao: 'Cartão', dinheiro: 'Dinheiro', transferencia: 'Transferência', boleto: 'Boleto' };
+
+  let tipoPeriodo = 'ano';
+  let referencia = new Date();
+  let personalizado = null;
+  let ultimoRelatorio = null;
+  let chartFinanceiro = null;
+  let chartEventos = null;
+
+  function formatarLabelPeriodo() {
+    const { inicio, fim } = calcularPeriodo(tipoPeriodo, referencia, personalizado);
+    const di = new Date(inicio + 'T00:00:00'), df = new Date(fim + 'T00:00:00');
+    if (tipoPeriodo === 'ano') return `${di.getFullYear()}`;
+    if (tipoPeriodo === 'mes') return `${MESES_LONGO[di.getMonth()]} de ${di.getFullYear()}`;
+    return `${di.getDate()}/${di.getMonth()+1}/${di.getFullYear()} a ${df.getDate()}/${df.getMonth()+1}/${df.getFullYear()}`;
+  }
+
+  function labelBalde(chave, granularidade) {
+    if (granularidade === 'mes') {
+      const [ano, mes] = chave.split('-');
+      return `${MESES[Number(mes) - 1]}/${ano.slice(2)}`;
+    }
+    const d = new Date(chave + 'T00:00:00');
+    return `${d.getDate()}/${d.getMonth() + 1}`;
+  }
+
+  async function carregar() {
+    document.getElementById('period-label').textContent = formatarLabelPeriodo();
+    const { inicio, fim } = calcularPeriodo(tipoPeriodo, referencia, personalizado);
+
+    const [entradas, pendentes, eventosPeriodo, clientesInfo, evolucao] = await Promise.all([
+      buscarEntradas(inicio, fim),
+      buscarPendentes(inicio, fim),
+      buscarEventosPorPeriodo(inicio, fim),
+      buscarClientesCadastrados(inicio, fim),
+      buscarEvolucao(inicio, fim),
+    ]);
+
+    const faturamento = calcularFaturamento(eventosPeriodo.eventos, inicio, fim);
+    const clientesRec = eventosPeriodo.eventos.length
+      ? await buscarClientesRecorrentes(eventosPeriodo.eventos)
+      : { novos: 0, recorrentes: 0 };
+
+    const porTema = agruparPorCampo(eventosPeriodo.eventos, 'tema');
+    const porPacote = agruparPorCampo(eventosPeriodo.eventos, 'pacote');
+    const porTipo = agruparPorCampo(eventosPeriodo.eventos, 'tipo_evento');
+
+    const comparacao = await buscarComparacaoPeriodoAnterior(tipoPeriodo, referencia, personalizado, {
+      faturamentoBruto: faturamento.faturamentoBruto,
+      recebido: entradas.total,
+      totalEventos: eventosPeriodo.total,
+    });
+
+    ultimoRelatorio = {
+      inicio, fim, entradas, pendentes, eventosPeriodo, faturamento, clientesRec,
+      porTema, porPacote, porTipo, clientesInfo, evolucao, comparacao,
+    };
+    renderizar(ultimoRelatorio);
+  }
+
+  function renderizar(r) {
+    document.querySelectorAll('.metric-value').forEach(el => el.classList.remove('skeleton'));
+
+    document.getElementById('m-faturamento').textContent = formatoMoeda(r.faturamento.faturamentoBruto);
+    document.getElementById('m-recebido').textContent = formatoMoeda(r.entradas.total);
+    document.getElementById('m-pendente').textContent = formatoMoeda(r.pendentes.total);
+    document.getElementById('m-ticket').textContent = formatoMoeda(r.faturamento.ticketMedio);
+    document.getElementById('m-total-pagamentos').textContent = r.entradas.totalPagamentos;
+    document.getElementById('m-media-dia').textContent = formatoMoeda(r.faturamento.mediaDiaria);
+    document.getElementById('m-media-semana').textContent = formatoMoeda(r.faturamento.mediaSemanal);
+    document.getElementById('m-media-mes').textContent = formatoMoeda(r.faturamento.mediaMensal);
+
+    document.getElementById('m-total-eventos').textContent = r.eventosPeriodo.total;
+    document.getElementById('tbody-status').innerHTML = Object.entries(r.eventosPeriodo.porStatus)
+      .map(([s, q]) => `<tr><td><span class="badge badge-${s}">${LABEL_STATUS[s]}</span></td><td>${q}</td></tr>`).join('');
+
+    document.getElementById('m-clientes-novos').textContent = r.clientesRec.novos;
+    document.getElementById('m-clientes-total').textContent = r.clientesInfo.totalGeral;
+    document.getElementById('td-clientes-novos').textContent = r.clientesRec.novos;
+    document.getElementById('td-clientes-recorrentes').textContent = r.clientesRec.recorrentes;
+
+    document.getElementById('tbody-tipo').innerHTML = r.porTipo.map(([t, q]) => `<tr><td>${escapeHtml(t)}</td><td>${q}</td></tr>`).join('') || '<tr><td colspan="2">Sem dados.</td></tr>';
+    document.getElementById('tbody-tema').innerHTML = r.porTema.map(([t, q]) => `<tr><td>${escapeHtml(t)}</td><td>${q}</td></tr>`).join('') || '<tr><td colspan="2">Sem dados.</td></tr>';
+    document.getElementById('tbody-pacote').innerHTML = r.porPacote.map(([p, q]) => `<tr><td>${escapeHtml(p)}</td><td>${q}</td></tr>`).join('') || '<tr><td colspan="2">Sem dados.</td></tr>';
+
+    const c = r.comparacao;
+    const corVariacao = (v) => v >= 0 ? 'var(--color-success)' : 'var(--color-danger)';
+    document.getElementById('comparacao-grid').innerHTML = `
+      <div class="comparacao-item">
+        <span class="comparacao-label">Faturamento</span>
+        <span class="comparacao-valor" style="color:${corVariacao(c.variacaoFaturamento)}">${formatoPercentual(c.variacaoFaturamento)}</span>
+        <span class="comparacao-anterior">período anterior: ${formatoMoeda(c.faturamentoAnterior)}</span>
+      </div>
+      <div class="comparacao-item">
+        <span class="comparacao-label">Recebido</span>
+        <span class="comparacao-valor" style="color:${corVariacao(c.variacaoRecebido)}">${formatoPercentual(c.variacaoRecebido)}</span>
+        <span class="comparacao-anterior">período anterior: ${formatoMoeda(c.recebidoAnterior)}</span>
+      </div>
+      <div class="comparacao-item">
+        <span class="comparacao-label">Eventos</span>
+        <span class="comparacao-valor" style="color:${corVariacao(c.variacaoEventos)}">${formatoPercentual(c.variacaoEventos)}</span>
+        <span class="comparacao-anterior">período anterior: ${c.eventosAnterior}</span>
+      </div>
+    `;
+
+    const labelsEvolucao = r.evolucao.labels.map(k => labelBalde(k, r.evolucao.granularidade));
+
+    if (chartFinanceiro) chartFinanceiro.destroy();
+    chartFinanceiro = new Chart(document.getElementById('chart-evolucao-financeiro'), {
+      type: 'line',
+      data: {
+        labels: labelsEvolucao,
+        datasets: [
+          { label: 'Faturamento', data: r.evolucao.faturamento, borderColor: '#1AA894', backgroundColor: 'rgba(26,168,148,.12)', tension: .3, fill: true },
+          { label: 'Recebido', data: r.evolucao.recebido, borderColor: '#EC6FA6', backgroundColor: 'rgba(236,111,166,.12)', tension: .3, fill: true },
+        ],
+      },
+      options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
+    });
+
+    if (chartEventos) chartEventos.destroy();
+    chartEventos = new Chart(document.getElementById('chart-evolucao-eventos'), {
+      type: 'bar',
+      data: { labels: labelsEvolucao, datasets: [{ label: 'Eventos', data: r.evolucao.eventos, backgroundColor: '#F5C93B' }] },
+      options: { maintainAspectRatio: false, plugins: { legend: { display: false } } },
+    });
+  }
+
+  // ---------- Filtro de período ----------
+  document.getElementById('period-tabs').addEventListener('click', (e) => {
+    const btn = e.target.closest('.period-tab');
+    if (!btn) return;
+    document.querySelectorAll('.period-tab').forEach(b => b.classList.remove('is-active'));
+    btn.classList.add('is-active');
+    tipoPeriodo = btn.dataset.tipo;
+    referencia = new Date();
+
+    const nav = document.getElementById('period-nav');
+    const custom = document.getElementById('period-custom');
+    if (tipoPeriodo === 'personalizado') {
+      nav.style.display = 'none';
+      custom.classList.add('is-visible');
+    } else {
+      nav.style.display = 'inline-flex';
+      custom.classList.remove('is-visible');
+      carregar();
+    }
+  });
+  document.getElementById('btn-anterior').addEventListener('click', () => { referencia = navegarPeriodo(tipoPeriodo, referencia, 'anterior'); carregar(); });
+  document.getElementById('btn-proximo').addEventListener('click', () => { referencia = navegarPeriodo(tipoPeriodo, referencia, 'proximo'); carregar(); });
+  document.getElementById('btn-aplicar-custom').addEventListener('click', () => {
+    const inicio = document.getElementById('custom-inicio').value;
+    const fim = document.getElementById('custom-fim').value;
+    if (!inicio || !fim) return;
+    personalizado = { inicio, fim };
+    carregar();
+  });
+
+  // ---------- Exportar: Relatório Gerencial (com gráficos) ----------
+  document.getElementById('btn-exportar-gerencial').addEventListener('click', async () => {
+    if (!ultimoRelatorio) return;
+    const btn = document.getElementById('btn-exportar-gerencial');
+    btn.disabled = true; btn.textContent = 'Gerando...';
+
+    try {
+      const { jsPDF } = await import('https://esm.sh/jspdf@2.5.1');
+      const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+      const margem = 48;
+      const largura = doc.internal.pageSize.getWidth() - margem * 2;
+      let y = margem;
+      const r = ultimoRelatorio;
+
+      const linha = (texto, tamanho = 10.5, negrito = false) => {
+        doc.setFontSize(tamanho);
+        doc.setFont('helvetica', negrito ? 'bold' : 'normal');
+        doc.text(texto, margem, y);
+        y += tamanho + 6;
+      };
+
+      linha('Encanto Decorações · Relatório Gerencial', 16, true);
+      linha(`Período: ${r.inicio} a ${r.fim}`, 10.5);
+      y += 6;
+
+      linha('Financeiro', 13, true);
+      linha(`Faturamento bruto: ${formatoMoeda(r.faturamento.faturamentoBruto)}`);
+      linha(`Recebido: ${formatoMoeda(r.entradas.total)}`);
+      linha(`A receber: ${formatoMoeda(r.pendentes.total)}`);
+      linha(`Ticket médio por evento: ${formatoMoeda(r.faturamento.ticketMedio)}`);
+      linha(`Total de pagamentos: ${r.entradas.totalPagamentos}`);
+      linha(`Média diária / semanal / mensal: ${formatoMoeda(r.faturamento.mediaDiaria)} / ${formatoMoeda(r.faturamento.mediaSemanal)} / ${formatoMoeda(r.faturamento.mediaMensal)}`);
+      y += 4;
+
+      linha('Comparado ao período anterior', 13, true);
+      linha(`Faturamento: ${formatoPercentual(r.comparacao.variacaoFaturamento)} (era ${formatoMoeda(r.comparacao.faturamentoAnterior)})`);
+      linha(`Recebido: ${formatoPercentual(r.comparacao.variacaoRecebido)} (era ${formatoMoeda(r.comparacao.recebidoAnterior)})`);
+      linha(`Eventos: ${formatoPercentual(r.comparacao.variacaoEventos)} (era ${r.comparacao.eventosAnterior})`);
+      y += 4;
+
+      linha('Eventos e clientes', 13, true);
+      linha(`Total de eventos: ${r.eventosPeriodo.total}`);
+      Object.entries(r.eventosPeriodo.porStatus).forEach(([s, q]) => linha(`  ${LABEL_STATUS[s]}: ${q}`));
+      linha(`Clientes novos no período: ${r.clientesRec.novos} · Recorrentes: ${r.clientesRec.recorrentes} · Total geral: ${r.clientesInfo.totalGeral}`);
+      y += 4;
+
+      linha('Eventos por tipo', 13, true);
+      (r.porTipo.length ? r.porTipo : [['Sem dados', '']]).forEach(([t, q]) => linha(`  ${t}: ${q}`));
+      y += 4;
+
+      // Gráficos: captura os canvases já renderizados na tela como imagem.
+      doc.addPage();
+      y = margem;
+      linha('Evolução · Faturamento e Recebimentos', 13, true);
+      const imgFinanceiro = document.getElementById('chart-evolucao-financeiro').toDataURL('image/png', 1.0);
+      doc.addImage(imgFinanceiro, 'PNG', margem, y, largura, largura * 0.45);
+      y += largura * 0.45 + 24;
+
+      linha('Evolução · Quantidade de Eventos', 13, true);
+      const imgEventos = document.getElementById('chart-evolucao-eventos').toDataURL('image/png', 1.0);
+      doc.addImage(imgEventos, 'PNG', margem, y, largura, largura * 0.45);
+
+      doc.save(`relatorio-gerencial-${r.inicio}-a-${r.fim}.pdf`);
+    } catch (err) {
+      console.error(err);
+      showToast('Não foi possível gerar o PDF.', 'danger');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Relatório Gerencial (PDF)';
+    }
+  });
+
+  // ---------- Exportar: Relatório para o MEI (simplificado) ----------
+  document.getElementById('btn-exportar-mei').addEventListener('click', async () => {
+    if (!ultimoRelatorio) return;
+    const btn = document.getElementById('btn-exportar-mei');
+    btn.disabled = true; btn.textContent = 'Gerando...';
+
+    try {
+      const { jsPDF } = await import('https://esm.sh/jspdf@2.5.1');
+      const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+      const margem = 56;
+      let y = margem;
+      const r = ultimoRelatorio;
+
+      const linha = (texto, tamanho = 11, negrito = false) => {
+        doc.setFontSize(tamanho);
+        doc.setFont('helvetica', negrito ? 'bold' : 'normal');
+        doc.text(texto, margem, y);
+        y += tamanho + 10;
+      };
+
+      const anoReferencia = r.inicio.slice(0, 4);
+
+      linha('Encanto Decorações', 16, true);
+      linha('Apoio para a DASN-SIMEI (Declaração Anual do MEI)', 12);
+      y += 8;
+
+      if (tipoPeriodo !== 'ano') {
+        linha('Atenção: a DASN-SIMEI é sempre por ANO-CALENDÁRIO completo.', 10, true);
+        linha('Selecione o filtro "Ano" antes de exportar, para o valor bater', 10);
+        linha('exatamente com o que a Receita Federal vai pedir.', 10);
+        y += 10;
+      }
+
+      linha(`Ano-calendário de referência: ${anoReferencia}`, 11, true);
+      y += 10;
+
+      linha('A DASN-SIMEI pede a RECEITA BRUTA RECEBIDA no ano (Pix, cartão,', 10);
+      linha('dinheiro, transferência, boleto já pagos), não é o valor', 10);
+      linha('orçado/contratado, e não se deduz nenhuma despesa.', 10);
+      y += 12;
+
+      linha('Campo 1: Receita bruta de comércio/indústria: R$ 0,00', 11, true);
+      linha('(Encanto Decorações presta serviços de decoração, não vende produtos', 9.5);
+      linha('como atividade principal, então este campo normalmente é zero.)', 9.5);
+      y += 8;
+
+      linha(`Campo 2: Receita bruta de prestação de serviços: ${formatoMoeda(r.entradas.total)}`, 11, true);
+      y += 10;
+
+      linha(`Total geral recebido no ano: ${formatoMoeda(r.entradas.total)}`, 11, true);
+      y += 4;
+      linha(`(Referência: valor ainda a receber, que NÃO entra na declaração: ${formatoMoeda(r.pendentes.total)})`, 9.5);
+      y += 14;
+
+      linha('Teve empregado com carteira assinada em 31/12?', 11, true);
+      linha('( ) Sim     ( ) Não. Confirme manualmente antes de declarar.', 10);
+      linha('(Isso é sobre vínculo CLT formal, não conta a equipe paga por', 9);
+      linha('evento/diária cadastrada no módulo Funcionários deste sistema.)', 9);
+      y += 14;
+
+      linha(`Quantidade de eventos/serviços prestados no período: ${r.eventosPeriodo.total}`, 10);
+      linha(`Quantidade de pagamentos recebidos no período: ${r.entradas.totalPagamentos}`, 10);
+      y += 14;
+
+      linha('Isto é um resumo de apoio gerado automaticamente pelo sistema.', 9);
+      linha('Confira os valores e preencha a declaração oficial em', 9);
+      linha('gov.br/mei. Este documento não substitui o formulário oficial.', 9);
+
+      doc.save(`dasn-simei-apoio-${anoReferencia}.pdf`);
+    } catch (err) {
+      console.error(err);
+      showToast('Não foi possível gerar o PDF.', 'danger');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Relatório para o MEI';
+    }
+  });
+
+  carregar();
+</script>
+
+</body>
+</html>
