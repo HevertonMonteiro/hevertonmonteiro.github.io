@@ -2,7 +2,13 @@
 
 Site de portfólio com sistemas reais que construí, publicados aqui como demonstrações interativas — com dados fictícios, sem precisar de banco de dados nem servidor.
 
-**[Ver site](index.html)** · [LinkedIn](https://www.linkedin.com/in/heverton-monteiro-301203248) · [GitHub](https://github.com/HevertonMonteiro)
+## 🔗 Acesse o portfólio online
+
+**[https://hevertonmonteiro.github.io/](https://hevertonmonteiro.github.io/)**
+
+> Link do Vercel: em breve.
+
+[LinkedIn](https://www.linkedin.com/in/heverton-monteiro-301203248) · [GitHub](https://github.com/HevertonMonteiro)
 
 ## Estrutura
 
