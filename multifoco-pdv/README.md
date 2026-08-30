@@ -1,6 +1,6 @@
 # Multifoco PDV (demo de portfólio)
 
-Ferramenta de apoio ao vendedor durante o atendimento presencial em farmácias: consulta o catálogo de produtos, anota o estoque da loja, monta o pedido do cliente e gera os arquivos prontos para importação — tudo direto do celular, tablet ou computador, sem instalar nada.
+Ferramenta de apoio ao vendedor durante o atendimento presencial em farmácias: consulta o catálogo de produtos, anota o estoque da loja, monta o pedido do cliente e gera os arquivos prontos para importação, tudo direto do celular, tablet ou computador, sem instalar nada.
 
 > **Sobre esta versão:** este projeto nasceu para uso real de vendedores em farmácias. A versão publicada aqui é uma demonstração de portfólio: nomes de indústria/laboratório, preços e códigos de barras foram substituídos por dados fictícios, e a integração com a planilha do gestor está desligada (sem URL configurada). Todas as demais funcionalidades são as mesmas do projeto original.
 
@@ -11,14 +11,14 @@ Ferramenta de apoio ao vendedor durante o atendimento presencial em farmácias: 
 - **Montagem do pedido do cliente**, exportado em `.xlsx` já no formato pronto para importação (CNPJ, EAN, Quantidade).
 - **Compartilhamento nativo**: no celular, os arquivos exportados podem ser enviados direto por qualquer app instalado; no computador, são baixados normalmente.
 - **Indicadores em tempo real** no topo: quantidade de itens e valor do pedido, por laboratório e total geral.
-- **Observações de preço da concorrência** registradas pelo vendedor (nesta demo ficam só no navegador — em uso real são sincronizadas com uma Planilha Google do gestor, com fila de reenvio caso a internet caia).
+- **Observações de preço da concorrência** registradas pelo vendedor (nesta demo ficam só no navegador; em uso real são sincronizadas com uma Planilha Google do gestor, com fila de reenvio caso a internet caia).
 - **Tour de boas-vindas** na primeira visita, reaberto a qualquer momento pelo botão "?" no canto da tela.
 - **Totalmente responsivo**: em celular a lista de produtos vira cartões; em qualquer tela, a busca e o cabeçalho da tabela ficam fixos ao rolar.
 
 ## Como usar
 
 1. Abra `index.html` num navegador.
-2. Preencha loja, CNPJ, vendedor e data para iniciar o atendimento — ou clique em "Preencher com dados de exemplo".
+2. Preencha loja, CNPJ, vendedor e data para iniciar o atendimento, ou clique em "Preencher com dados de exemplo".
 3. Use a busca para encontrar produtos e anote estoque e/ou pedido.
 4. Exporte pelos botões no painel direito.
 5. Use "Finalizar pedido" para limpar a tela e começar o próximo atendimento.
@@ -39,10 +39,10 @@ Ferramenta de apoio ao vendedor durante o atendimento presencial em farmácias: 
 
 ## Tecnologia
 
-Página estática, sem framework e sem etapa de build — só HTML, CSS e JavaScript puro. Bibliotecas de terceiros vendorizadas em `libs/`:
+Página estática, sem framework e sem etapa de build: só HTML, CSS e JavaScript puro. Bibliotecas de terceiros vendorizadas em `libs/`:
 
-- [SheetJS (xlsx)](https://sheetjs.com/) — geração do arquivo de pedido em `.xlsx`.
-- [jsPDF](https://github.com/parallax/jsPDF) + [jsPDF-AutoTable](https://github.com/simonbengtsson/jsPDF-AutoTable) — geração do relatório de estoque em PDF.
+- [SheetJS (xlsx)](https://sheetjs.com/): geração do arquivo de pedido em `.xlsx`.
+- [jsPDF](https://github.com/parallax/jsPDF) + [jsPDF-AutoTable](https://github.com/simonbengtsson/jsPDF-AutoTable): geração do relatório de estoque em PDF.
 
 ## Como rodar localmente
 
