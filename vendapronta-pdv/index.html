@@ -869,7 +869,7 @@ PRODUCTS.forEach(p=>{
 });
 
 /* ---------- Persistência local (sobrevive a F5 / fechar a aba) ---------- */
-const STORAGE_KEY = 'multifoco_pdv_state_v1';
+const STORAGE_KEY = 'vendapronta_pdv_state_v1';
 const SESSION_TIMEOUT_MS = 5 * 60 * 1000; // fechou e voltou depois de 5min+: limpa tudo
 function persistState(){
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify({savedAt: Date.now(), state})); }
@@ -976,7 +976,7 @@ function updateDistribuidorBadge(){
 }
 
 /* ---------- Tour de boas-vindas: aparece uma vez (localStorage), reaberto pelo botão "?" ---------- */
-const TOUR_STORAGE_KEY = 'multifoco_tour_seen';
+const TOUR_STORAGE_KEY = 'vendapronta_tour_seen';
 const TOUR_STEPS = [
   {
     title: 'Bem-vindo ao VENDAPRONTA PDV',

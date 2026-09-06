@@ -39,7 +39,7 @@ Você digita os itens de qualquer jeito (com erro de digitação, abreviação, 
 O navegador bloqueia `fetch` de arquivos locais por segurança, então é preciso servir os arquivos:
 
 ```bash
-cd gerboot
+cd precifacil
 python3 -m http.server 8000
 ```
 
@@ -48,7 +48,7 @@ Depois é só abrir `http://localhost:8000` no navegador.
 ## Estrutura
 
 ```
-gerboot/
+precifacil/
 ├── index.html      # marcação e estrutura da página
 ├── style.css       # estilos
 ├── app.js          # lógica da aplicação (busca, parsing, geração de pedido)

@@ -17,8 +17,8 @@ PORTIFOLIO/
 ├── js/site.js                # partículas animadas, contadores, revelação ao rolar
 ├── assets/                  # capas dos projetos, favicons
 │
-├── gerboot/                  # consulta de preços e pedidos (farmácia)
-├── multifoco-pdv/            # apoio ao vendedor em farmácias (PDV)
+├── precifacil/               # consulta de preços e pedidos (farmácia)
+├── vendapronta-pdv/          # apoio ao vendedor em farmácias (PDV)
 ├── encanto-decoracoes/       # gestão para empresas de decoração de eventos
 ├── corretora-de-milhoes/     # vitrine e painel para corretora de imóveis
 └── rs-turismo/               # site institucional (publicado de verdade)

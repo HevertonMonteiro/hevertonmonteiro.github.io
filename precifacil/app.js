@@ -531,7 +531,7 @@ function portfolioTagClass(portfolio) {
    Aparece uma vez (guardado em localStorage) e pode ser reaberto a qualquer
    momento pelo botão "?" no canto da tela.
    ========================================================================== */
-const TOUR_STORAGE_KEY = 'gerboot_tour_seen';
+const TOUR_STORAGE_KEY = 'precifacil_tour_seen';
 const TOUR_STEPS = [
   {
     title: 'Bem-vindo ao PRECIFÁCIL',

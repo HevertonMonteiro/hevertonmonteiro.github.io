@@ -50,7 +50,7 @@ Página estática, sem framework e sem etapa de build: só HTML, CSS e JavaScrip
 ## Como rodar localmente
 
 ```bash
-cd multifoco-pdv
+cd vendapronta-pdv
 python3 -m http.server 8000
 ```
 
