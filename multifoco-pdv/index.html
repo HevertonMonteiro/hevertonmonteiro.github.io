@@ -3,8 +3,11 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Multifoco PDV · Pedido &amp; Estoque em Loja (Demo)</title>
+<title>VENDAPRONTA PDV · Pedido &amp; Estoque em Loja (Demo)</title>
 <meta name="description" content="Ferramenta de apoio ao vendedor em farmácias: catálogo, estoque e pedido do cliente. Demonstração de portfólio com dados fictícios." />
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta name="theme-color" content="#0d3b54">
 <script src="libs/xlsx.full.min.js"></script>
 <script src="libs/jspdf.umd.min.js"></script>
 <script src="libs/jspdf.plugin.autotable.min.js"></script>
@@ -53,6 +56,11 @@
     display:flex;
     align-items:center;
     gap:16px;
+  }
+  .brand-icon{
+    border-radius:6px;
+    margin-right:-8px;
+    flex-shrink:0;
   }
   .brand{
     font-weight:800;
@@ -635,7 +643,8 @@
 
   <div class="topbar">
     <div class="brand-group">
-      <span class="brand">Multifoco PDV</span>
+      <img class="brand-icon" src="assets/icon-64.png" alt="" width="26" height="26">
+      <span class="brand">VENDAPRONTA PDV</span>
       <div class="topbar-stats" id="topbarStats"></div>
     </div>
     <div class="session-badge" id="sessionBadge">
@@ -970,7 +979,7 @@ function updateDistribuidorBadge(){
 const TOUR_STORAGE_KEY = 'multifoco_tour_seen';
 const TOUR_STEPS = [
   {
-    title: 'Bem-vindo ao Multifoco PDV',
+    title: 'Bem-vindo ao VENDAPRONTA PDV',
     text: 'Ferramenta de apoio ao atendimento em loja: consulta o catálogo, anota o estoque e monta o pedido do cliente. Este tour rápido mostra o essencial.'
   },
   {

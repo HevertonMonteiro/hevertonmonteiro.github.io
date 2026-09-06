@@ -1,4 +1,4 @@
-# Multifoco PDV (demo de portfólio)
+# VENDAPRONTA PDV (demo de portfólio)
 
 Ferramenta de apoio ao vendedor durante o atendimento presencial em farmácias: consulta o catálogo de produtos, anota o estoque da loja, monta o pedido do cliente e gera os arquivos prontos para importação, tudo direto do celular, tablet ou computador, sem instalar nada.
 

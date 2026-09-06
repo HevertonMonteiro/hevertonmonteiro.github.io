@@ -28,7 +28,7 @@ Cada projeto tem seu próprio `README.md` explicando o que foi adaptado em rela�
 
 ## Sobre estas demonstrações
 
-Quatro dos cinco projetos (GERBOOT, Multifoco PDV, Encanto Decorações, Corretora de Milhões) foram construídos originalmente para uso real, com dados de negócio reais: clientes, preços, contratos. Para publicar aqui como portfólio:
+Quatro dos cinco projetos (PRECIFÁCIL, VENDAPRONTA PDV, Encanto Decorações, Corretora de Milhões) foram construídos originalmente para uso real, com dados de negócio reais: clientes, preços, contratos. Para publicar aqui como portfólio:
 
 - **Dados fictícios**: nomes, preços, códigos de barras, CNPJ, contatos, tudo o que poderia identificar uma empresa ou pessoa real foi substituído.
 - **Sem backend**: projetos que originalmente dependiam de banco de dados (Supabase) ou de um framework server-side (Django) foram adaptados para rodar 100% no navegador, com os dados guardados em `localStorage`. Nenhuma dessas quatro demonstrações depende de servidor, chave de API ou conexão externa.

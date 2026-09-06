@@ -1,8 +1,8 @@
-# GERBOOT · Consulta e Pedidos (demo de portfólio)
+# PRECIFÁCIL · Consulta e Pedidos (demo de portfólio)
 
 Ferramenta para consultar preços e montar pedidos em segundos, direto do celular, sem depender de planilha aberta ou internet depois do primeiro carregamento.
 
-Você digita os itens de qualquer jeito (com erro de digitação, abreviação, nome incompleto), ou simplesmente navega pelo catálogo, e o GERBOOT cruza com a tabela de preços e devolve o resultado pronto para colar no WhatsApp ou lançar em um sistema.
+Você digita os itens de qualquer jeito (com erro de digitação, abreviação, nome incompleto), ou simplesmente navega pelo catálogo, e o PRECIFÁCIL cruza com a tabela de preços e devolve o resultado pronto para colar no WhatsApp ou lançar em um sistema.
 
 > **Sobre esta versão:** este projeto nasceu para uso real em uma distribuidora de genéricos. A versão publicada aqui é uma demonstração de portfólio: nome da empresa, logo, preços e códigos de barras foram substituídos por dados fictícios. A lógica de busca, o motor de correspondência e todas as funcionalidades são as mesmas do projeto original.
 
@@ -64,4 +64,4 @@ A planilha `TABELAS.xlsx` mantém a mesma estrutura do arquivo original (nomes d
 
 ## Aviso
 
-O GERBOOT usa heurísticas para interpretar o que foi digitado e casar com o produto certo da tabela. Como toda ferramenta desse tipo, não é infalível, o aviso aparece diretamente nas telas de resultado do app.
+O PRECIFÁCIL usa heurísticas para interpretar o que foi digitado e casar com o produto certo da tabela. Como toda ferramenta desse tipo, não é infalível, o aviso aparece diretamente nas telas de resultado do app.

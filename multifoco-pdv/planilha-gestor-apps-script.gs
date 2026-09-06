@@ -1,10 +1,10 @@
 /*
-  PLANILHA DO GESTOR — integração com o Multifoco PDV
+  PLANILHA DO GESTOR — integração com o VENDAPRONTA PDV
   ======================================================
 
   O QUE ISSO FAZ
   Recebe, via internet, cada observação de preço da concorrência que um
-  vendedor registra no app (Multifoco PDV) e grava como uma linha nova
+  vendedor registra no app (VENDAPRONTA PDV) e grava como uma linha nova
   numa aba desta Planilha Google. O gestor abre a planilha normalmente
   e vê tudo chegando em tempo real, de qualquer loja/vendedor.
 
@@ -13,7 +13,7 @@
   2. No menu, vá em: Extensões > Apps Script.
   3. Apague o conteúdo padrão do arquivo "Code.gs" e cole todo o código
      abaixo no lugar.
-  4. Salve o projeto (ícone de disquete). Dê um nome, ex: "Multifoco PDV - Sync".
+  4. Salve o projeto (ícone de disquete). Dê um nome, ex: "VENDAPRONTA PDV - Sync".
   5. Clique em "Implantar" (Deploy) > "Nova implantação".
      - Tipo de implantação: "App da Web" (Web app).
      - Descrição: à vontade.
@@ -25,7 +25,7 @@
      script a acessar a planilha — autorize com sua conta.
   7. Copie a URL que aparece (termina em "/exec"). Essa é a URL que você
      vai colar em "⚙ Configurar planilha do gestor" dentro do app
-     Multifoco PDV (em cada dispositivo/vendedor que for usar).
+     VENDAPRONTA PDV (em cada dispositivo/vendedor que for usar).
 
   IMPORTANTE
   - Se você editar este script depois, precisa criar uma "Nova

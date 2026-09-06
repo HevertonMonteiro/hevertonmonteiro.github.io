@@ -411,7 +411,7 @@ function parseLineCandidates(line) {
   const UNIT_WORDS = new Set(['MG','ML','MCG','MCL','UI','G','L','KG']);
   // além do número solto ("23 dipirona"), o cliente às vezes cola a
   // quantidade entre parênteses (ex: cola de volta a lista de preços que o
-  // GERBOOT mandou, com a quantidade anotada no fim: "Pregabalina 75mg C/30
+  // PRECIFÁCIL mandou, com a quantidade anotada no fim: "Pregabalina 75mg C/30
   // — R$ 6,33 (75)") - "(75)" também conta como candidato de quantidade
   const digitIdx = [];
   tokens.forEach((t, i) => {
@@ -534,7 +534,7 @@ function portfolioTagClass(portfolio) {
 const TOUR_STORAGE_KEY = 'gerboot_tour_seen';
 const TOUR_STEPS = [
   {
-    title: 'Bem-vindo ao GERBOOT',
+    title: 'Bem-vindo ao PRECIFÁCIL',
     text: 'Ferramenta para consultar preços e montar pedidos digitando uma lista de itens, ou navegando pelo catálogo. Este tour rápido mostra como usar.'
   },
   {
@@ -547,11 +547,11 @@ const TOUR_STEPS = [
   },
   {
     title: '3. Digite do seu jeito',
-    text: 'Escreva os itens como quiser, com abreviação, erro de digitação ou fora de ordem (ex: "dipirona gts 2" ou "2 dipirona gts"). O GERBOOT interpreta e casa com o produto certo.'
+    text: 'Escreva os itens como quiser, com abreviação, erro de digitação ou fora de ordem (ex: "dipirona gts 2" ou "2 dipirona gts"). O PRECIFÁCIL interpreta e casa com o produto certo.'
   },
   {
     title: '4. Confirme quando houver dúvida',
-    text: 'Se mais de um item pode ser o que você quis dizer, o GERBOOT pergunta antes de decidir por conta própria.'
+    text: 'Se mais de um item pode ser o que você quis dizer, o PRECIFÁCIL pergunta antes de decidir por conta própria.'
   },
   {
     title: 'Pronto para testar',
@@ -745,7 +745,7 @@ function renderCtxBar() {
   const topbar = document.querySelector('.topbar');
   if (topbar) topbar.style.display = '';
 
-  // o estado escolhido mora embaixo do nome "GERBOOT" (clicável, troca de
+  // o estado escolhido mora embaixo do nome "PRECIFÁCIL" (clicável, troca de
   // estado), não mais como pill+botão separados na barra de contexto - isso
   // evitava que a barra empilhasse alto demais no celular
   const stateLabelEl = document.getElementById('stateLabel');
@@ -788,7 +788,7 @@ function renderStateSelect() {
   ).join('');
   mainEl.innerHTML = `
     <div class="state-select">
-      <img class="state-select-logo" src="logo.png" alt="GERBOOT">
+      <img class="state-select-logo" src="logo.png" alt="PRECIFÁCIL">
       <h1>Selecione seu estado</h1>
       <div class="state-grid">${buttons}</div>
     </div>
@@ -844,10 +844,10 @@ function renderSelectTable() {
       real de uma distribuidora e aqui roda com nome, logo, preços e códigos de barras totalmente
       fictícios, só para demonstração.</div>
     <h1 class="screen-title">Qual tabela deseja utilizar?</h1>
-    <p class="screen-sub">GERBOOT – Ferramenta inteligente para auxiliar na consulta de preços e na
+    <p class="screen-sub">PRECIFÁCIL – Ferramenta inteligente para auxiliar na consulta de preços e na
       digitação de pedidos.<br>Escolha a tabela para começar.</p>
     <div class="card-grid cols-3">${cards}</div>
-    <p class="footer-note">GERBOOT · demonstração de portfólio para a FarmaCerta Genéricos · atualize a planilha TABELAS.xlsx no GitHub para renovar os preços</p>
+    <p class="footer-note">PRECIFÁCIL · demonstração de portfólio para a FarmaCerta Genéricos · atualize a planilha TABELAS.xlsx no GitHub para renovar os preços</p>
   `;
   renderCtxBar();
   document.getElementById('helpFab').style.display = 'block';
@@ -1527,7 +1527,7 @@ function formatClientPriceLine(item) {
 const AI_DISCLAIMER_HTML = `
   <div class="ai-disclaimer">
     <span class="icon">⚠️</span>
-    <span><strong>Atenção:</strong> o GERBOOT é uma ferramenta inteligente desenvolvida para auxiliar e
+    <span><strong>Atenção:</strong> o PRECIFÁCIL é uma ferramenta inteligente desenvolvida para auxiliar e
     acelerar processos do dia a dia. As informações geradas podem conter inconsistências.
     Sempre confira os dados antes de enviar qualquer informação ou pedido ao cliente.</span>
   </div>`;
