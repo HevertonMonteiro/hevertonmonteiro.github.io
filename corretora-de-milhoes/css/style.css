@@ -28,6 +28,7 @@
 
 * { box-sizing: border-box; }
 
+html, body { overflow-x: hidden; max-width: 100%; }
 html { scroll-behavior: smooth; }
 
 body {
@@ -37,7 +38,10 @@ body {
   background: var(--cor-fundo);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  overflow-wrap: break-word;
 }
+
+img, svg, iframe, video { max-width: 100%; }
 
 h1, h2, h3, h4 { font-family: var(--fonte-titulo); font-weight: 700; line-height: 1.2; }
 
@@ -328,10 +332,12 @@ section > .container > p.section-sub { color: var(--cor-texto-suave); margin-top
 .filtros label { font-size: 0.78rem; color: var(--cor-texto-suave); display: block; margin-bottom: 4px; font-weight: 600; }
 .filtros select, .filtros input {
   width: 100%;
+  max-width: 100%;
   padding: 10px 12px;
   border-radius: 8px;
   border: 1px solid var(--cor-borda);
   font-family: inherit;
+  font-size: 16px;
   transition: border-color var(--transicao);
 }
 .filtros select:focus, .filtros input:focus { outline: none; border-color: var(--cor-rose); }
@@ -350,10 +356,12 @@ form p { margin-bottom: 14px; }
 form label { display: block; font-weight: 600; margin-bottom: 4px; font-size: 0.9rem; }
 form input, form select, form textarea {
   width: 100%;
+  max-width: 100%;
   padding: 11px 12px;
   border-radius: 8px;
   border: 1px solid var(--cor-borda);
   font-family: inherit;
+  font-size: 16px;
   transition: border-color var(--transicao);
 }
 form input:focus, form select:focus, form textarea:focus { outline: none; border-color: var(--cor-rose); }
@@ -447,6 +455,34 @@ footer .social a { font-weight: 600; display: inline-flex; align-items: center; 
 table { width: 100%; border-collapse: collapse; margin-top: 16px; }
 table th, table td { text-align: left; padding: 12px 10px; border-bottom: 1px solid var(--cor-borda); }
 table th { font-family: var(--fonte-titulo); color: var(--cor-grafite); }
+
+/* Tabelas do painel viram cartões empilhados no celular, sem precisar
+   arrastar a tela pro lado pra ler cada coluna. */
+@media (max-width: 700px) {
+  table thead { display: none; }
+  table, table tbody, table tr, table td { display: block; width: 100%; }
+  table tr {
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    margin-bottom: 14px;
+    padding: 6px 14px;
+  }
+  table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--cor-borda);
+    text-align: right;
+  }
+  table td:last-child { border-bottom: none; }
+  table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--cor-texto-suave);
+    text-align: left;
+  }
+}
 
 /* ===== Demonstração de portfólio ===== */
 .demo-banner {

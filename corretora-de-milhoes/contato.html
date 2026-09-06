@@ -20,15 +20,26 @@
 <main>
 <section class="container" style="max-width: 560px;">
   <h2>Fale com a corretora</h2>
-  <p>Preencha os dados abaixo. Você será redirecionado direto para o WhatsApp com a mensagem pronta.
-     <em style="color:var(--cor-texto-suave); font-size:0.85rem;">(Nesta demo, o número é fictício: o WhatsApp pode abrir uma conversa vazia.)</em></p>
+  <p id="contato-intro">Preencha os dados abaixo: a corretora recebe sua mensagem na hora, e você ainda pode continuar a conversa pelo WhatsApp.
+     <em style="color:var(--cor-texto-suave); font-size:0.85rem;">(Nesta demo, nenhuma mensagem real é enviada.)</em></p>
   <form id="form-contato">
     <p><label for="nome">Nome</label><input class="input" type="text" id="nome" name="nome" required></p>
     <p><label for="telefone">Telefone</label><input class="input" type="text" id="telefone" name="telefone" required></p>
     <p><label for="email">E-mail</label><input class="input" type="email" id="email" name="email"></p>
     <p><label for="mensagem">Mensagem</label><textarea class="input" id="mensagem" name="mensagem" rows="4"></textarea></p>
-    <button type="submit" class="btn btn-whatsapp">Continuar no WhatsApp</button>
+    <button type="submit" class="btn btn-whatsapp">Enviar</button>
   </form>
+
+  <div id="contato-sucesso" style="display:none;">
+    <ul class="mensagens">
+      <li>Mensagem enviada! A corretora vai entrar em contato em breve.</li>
+    </ul>
+    <p>Quer adiantar o assunto e já puxar uma conversa no WhatsApp agora?</p>
+    <p>
+      <a id="link-whatsapp-sucesso" href="#" class="btn btn-whatsapp">Sim, iniciar conversa no WhatsApp</a>
+      <a href="index.html" class="btn btn-outline">Não, obrigado</a>
+    </p>
+  </div>
 </section>
 </main>
 
@@ -59,7 +70,10 @@
     const partes = [`Olá, meu nome é ${nome}.`];
     if (imovelRelacionado) partes.push(`Tenho interesse no imóvel ${imovelRelacionado.codigo_referencia} (${imovelRelacionado.titulo}).`);
     if (mensagem) partes.push(mensagem);
-    window.location.href = linkWhatsapp(perfil, partes.join(' '));
+    document.getElementById('link-whatsapp-sucesso').href = linkWhatsapp(perfil, partes.join(' '));
+
+    document.getElementById('form-contato').style.display = 'none';
+    document.getElementById('contato-sucesso').style.display = 'block';
   });
 </script>
 

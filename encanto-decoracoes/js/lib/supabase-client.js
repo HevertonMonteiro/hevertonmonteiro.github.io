@@ -789,7 +789,7 @@ function instalarInterceptorApi() {
     if (url.includes('/api/google-agenda-status')) {
       return respostaJson({ conectado: false });
     }
-    if (url.includes('/api/google-agenda-conectar') || url.includes('/api/google-agenda-desconectar')) {
+    if (url.includes('/api/google-agenda-conectar') || url.includes('/api/google-agenda-desconectar') || url.includes('/api/google-agenda-sincronizar-tudo')) {
       return respostaJson({ ok: false, motivo: 'Integração com Google Agenda desativada nesta demonstração.' });
     }
     if (url.includes('/api/criar-cobranca')) {

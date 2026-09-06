@@ -36,9 +36,9 @@
     </div>
 
     <div class="filtros" style="grid-template-columns: repeat(3, 1fr); margin-bottom:14px;">
-      <div><label for="valor">Valor (R$)</label><input class="input" type="number" step="0.01" id="valor" required></div>
-      <div><label for="valor_condominio">Condomínio (R$)</label><input class="input" type="number" step="0.01" id="valor_condominio"></div>
-      <div><label for="valor_iptu">IPTU (R$)</label><input class="input" type="number" step="0.01" id="valor_iptu"></div>
+      <div><label for="valor">Valor</label><input class="input" type="text" inputmode="decimal" placeholder="R$ 0,00" id="valor" data-moeda oninput="aplicarMascaraMoeda(this)" required></div>
+      <div><label for="valor_condominio">Condomínio</label><input class="input" type="text" inputmode="decimal" placeholder="R$ 0,00" id="valor_condominio" data-moeda oninput="aplicarMascaraMoeda(this)"></div>
+      <div><label for="valor_iptu">IPTU</label><input class="input" type="text" inputmode="decimal" placeholder="R$ 0,00" id="valor_iptu" data-moeda oninput="aplicarMascaraMoeda(this)"></div>
     </div>
 
     <div class="filtros" style="grid-template-columns: repeat(4, 1fr); margin-bottom:14px;">
@@ -80,6 +80,7 @@
 <script src="../js/store.js"></script>
 <script src="../js/auth.js"></script>
 <script src="../js/layout.js"></script>
+<script src="../js/moeda.js"></script>
 <script>
   if (!exigirLogin('login.html')) { /* redireciona */ } else {
     montarLayout({ painel: true, base: '../' });
@@ -101,10 +102,13 @@
     popularSelect('tipo_imovel', TIPOS_IMOVEL, imovelExistente?.tipo_imovel || 'apartamento');
     popularSelect('status', STATUS_IMOVEL, imovelExistente?.status || 'disponivel');
 
-    const campos = ['titulo', 'descricao', 'valor', 'valor_condominio', 'valor_iptu', 'area_construida', 'area_terreno',
+    const campos = ['titulo', 'descricao', 'area_construida', 'area_terreno',
       'quartos', 'suites', 'banheiros', 'vagas_garagem', 'cidade', 'bairro', 'endereco', 'cep', 'latitude', 'longitude', 'video_url'];
     if (imovelExistente) {
       campos.forEach((c) => { if (imovelExistente[c] != null) document.getElementById(c).value = imovelExistente[c]; });
+      ['valor', 'valor_condominio', 'valor_iptu'].forEach((c) => {
+        if (imovelExistente[c] != null) document.getElementById(c).value = numeroParaMoeda(imovelExistente[c]);
+      });
       document.getElementById('destaque').checked = !!imovelExistente.destaque;
     }
 
@@ -149,9 +153,9 @@
         tipo_negocio: document.getElementById('tipo_negocio').value,
         tipo_imovel: document.getElementById('tipo_imovel').value,
         status: document.getElementById('status').value,
-        valor: Number(document.getElementById('valor').value || 0),
-        valor_condominio: document.getElementById('valor_condominio').value ? Number(document.getElementById('valor_condominio').value) : null,
-        valor_iptu: document.getElementById('valor_iptu').value ? Number(document.getElementById('valor_iptu').value) : null,
+        valor: moedaParaNumero(document.getElementById('valor').value) || 0,
+        valor_condominio: moedaParaNumero(document.getElementById('valor_condominio').value),
+        valor_iptu: moedaParaNumero(document.getElementById('valor_iptu').value),
         area_construida: document.getElementById('area_construida').value ? Number(document.getElementById('area_construida').value) : null,
         area_terreno: document.getElementById('area_terreno').value ? Number(document.getElementById('area_terreno').value) : null,
         quartos: Number(document.getElementById('quartos').value || 0),

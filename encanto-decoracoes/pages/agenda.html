@@ -111,6 +111,7 @@
             </p>
             <a class="btn btn-secondary btn-block" id="btn-google-conectar" href="/api/google-agenda-conectar" style="margin-top:var(--sp-3); display:none">Conectar Google Agenda</a>
             <button class="btn btn-ghost btn-block" id="btn-google-desconectar" style="margin-top:var(--sp-3); display:none">Desconectar</button>
+            <button class="btn btn-ghost btn-block" id="btn-google-sincronizar" style="margin-top:var(--sp-2);">Sincronizar agora</button>
           </div>
         </div>
 
@@ -445,6 +446,19 @@
     btn.disabled = false;
     showToast('Google Agenda desconectado.', 'success');
     carregarStatusGoogle();
+  });
+
+  // Força uma resincronização manual de todos os eventos pendentes, em vez de
+  // esperar a sincronização automática de cada criação/edição individual.
+  document.getElementById('btn-google-sincronizar').addEventListener('click', async () => {
+    const btn = document.getElementById('btn-google-sincronizar');
+    btn.disabled = true;
+    const resp = await fetch('/api/google-agenda-sincronizar-tudo', { method: 'POST', headers: await cabecalhoAutenticado() }).catch(() => null);
+    btn.disabled = false;
+    if (!resp) { showToast('Não foi possível sincronizar agora.', 'danger'); return; }
+    const { ok, motivo } = await resp.json();
+    if (ok) showToast('Eventos sincronizados com o Google Agenda.', 'success');
+    else showToast(motivo || 'Não foi possível sincronizar agora.', 'danger');
   });
 
   // Depois do callback do OAuth (api/google-agenda-callback.js), a Vercel

@@ -45,15 +45,15 @@
       }
       tbody.innerHTML = imoveis.map((i) => `
         <tr>
-          <td>${i.codigo_referencia}</td>
-          <td>${escapeHtml(i.titulo)}</td>
-          <td>
+          <td data-label="Ref.">${i.codigo_referencia}</td>
+          <td data-label="Título">${escapeHtml(i.titulo)}</td>
+          <td data-label="Status">
             <select class="input select-status" data-id="${i.id}" style="width:auto;">
               ${Object.entries(STATUS_IMOVEL).map(([v, r]) => `<option value="${v}" ${i.status === v ? 'selected' : ''}>${r}</option>`).join('')}
             </select>
           </td>
-          <td>R$ ${formatoMoeda(i.valor)}</td>
-          <td>
+          <td data-label="Valor">R$ ${formatoMoeda(i.valor)}</td>
+          <td data-label="Ações">
             <a class="btn btn-sm btn-outline" href="imovel-form.html?id=${i.id}">Editar</a>
             <button type="button" class="btn btn-sm btn-danger btn-excluir" data-id="${i.id}">Excluir</button>
           </td>

@@ -228,6 +228,16 @@ const STATUS_IMOVEL = {
 function formatoMoeda(v) {
   return Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
+/* Aceita o número com ou sem o código do país: limpa tudo que não for dígito
+   e, se sobrarem 10 ou 11 dígitos (DDD + número, sem o 55), prefixa com ele. */
+function normalizarWhatsapp(numero) {
+  const digitos = String(numero || '').replace(/\D/g, '');
+  if (!digitos) return '';
+  if (!digitos.startsWith('55') && (digitos.length === 10 || digitos.length === 11)) {
+    return '55' + digitos;
+  }
+  return digitos;
+}
 function linkWhatsapp(perfil, texto) {
-  return `https://wa.me/${perfil.whatsapp}?text=${encodeURIComponent(texto)}`;
+  return `https://wa.me/${normalizarWhatsapp(perfil.whatsapp)}?text=${encodeURIComponent(texto)}`;
 }

@@ -48,11 +48,11 @@
       }
       tbody.innerHTML = depoimentos.map((d) => `
         <tr>
-          <td>${escapeHtml(d.nome_cliente)}</td>
-          <td>${'★'.repeat(d.nota)}</td>
-          <td>${escapeHtml(truncar(d.texto, 15))}</td>
-          <td>${d.aprovado ? 'Aprovado' : 'Pendente'}</td>
-          <td>
+          <td data-label="Cliente">${escapeHtml(d.nome_cliente)}</td>
+          <td data-label="Nota">${'★'.repeat(d.nota)}</td>
+          <td data-label="Texto">${escapeHtml(truncar(d.texto, 15))}</td>
+          <td data-label="Status">${d.aprovado ? 'Aprovado' : 'Pendente'}</td>
+          <td data-label="Ações">
             ${!d.aprovado ? `<button type="button" class="btn btn-sm btn-primary btn-aprovar" data-id="${d.id}">Aprovar</button>` : ''}
             <button type="button" class="btn btn-sm btn-danger btn-excluir" data-id="${d.id}">Excluir</button>
           </td>

@@ -14,12 +14,13 @@ Abra `painel/login.html`. **Não existe usuário/senha real nesta demo: qualquer
 - Home com destaques, negócios fechados recentes, depoimentos e estatísticas animadas.
 - Vitrine de imóveis com busca por texto e filtros (negócio, tipo, cidade, bairro, quartos, faixa de valor): filtro em tempo real, sem recarregar a página.
 - Página de cada imóvel: galeria de fotos com lightbox, características, mapa (embed do Google Maps) e botão de interesse.
-- Formulário de contato: registra o contato e redireciona para o WhatsApp com a mensagem pronta.
+- Formulário de contato: registra o contato e mostra uma tela de confirmação, com a opção de continuar a conversa pelo WhatsApp.
 - Formulário de depoimento, com aprovação pendente até revisão da corretora.
+- Tabelas do painel viram cartões no celular, e formulários travam o botão de envio contra duplo clique.
 
 **Painel da corretora** (login fictício, `/painel/`):
 - Dashboard com contadores (imóveis, disponíveis, fechados, leads pendentes, depoimentos pendentes).
-- Cadastro/edição de imóveis, com upload de várias fotos.
+- Cadastro/edição de imóveis, com upload de várias fotos e campos de valor com máscara de moeda.
 - Troca rápida de status (disponível/reservado/vendido/alugado) direto na listagem.
 - Publicar "negócio fechado" (aparece na home).
 - Moderar depoimentos (aprovar/excluir).

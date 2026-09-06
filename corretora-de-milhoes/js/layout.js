@@ -20,6 +20,7 @@ function montarLayout({ painel = false, base = '', ativo = '' } = {}) {
   ativarMenuMobile();
   ativarReveal();
   ativarContadores();
+  ativarProtecaoDuploEnvio();
   if (painel) ativarLogout(base);
   iniciarTourDemo(painel);
 }
@@ -72,7 +73,7 @@ function montarFooter(base, perfil) {
         <p class="social">
           ${perfil.instagram_url ? `<a href="${escapeHtml(perfil.instagram_url)}" target="_blank" rel="noopener">${ICONE_INSTAGRAM} Instagram</a>` : ''}
           ${perfil.facebook_url ? `<a href="${escapeHtml(perfil.facebook_url)}" target="_blank" rel="noopener">${ICONE_FACEBOOK} Facebook</a>` : ''}
-          ${perfil.whatsapp ? `<a href="https://wa.me/${perfil.whatsapp}" target="_blank" rel="noopener">${ICONE_WHATSAPP} WhatsApp</a>` : ''}
+          ${perfil.whatsapp ? `<a href="https://wa.me/${normalizarWhatsapp(perfil.whatsapp)}" target="_blank" rel="noopener">${ICONE_WHATSAPP} WhatsApp</a>` : ''}
         </p>
       </div>
     </footer>`;
@@ -84,8 +85,27 @@ function montarSocialFloat(perfil) {
   mount.innerHTML = `
     <div class="social-float">
       ${perfil.facebook_url ? `<a class="facebook-float" href="${escapeHtml(perfil.facebook_url)}" target="_blank" rel="noopener" aria-label="Facebook">${ICONE_FACEBOOK}</a>` : ''}
-      ${perfil.whatsapp ? `<a class="whatsapp-float" href="https://wa.me/${perfil.whatsapp}" target="_blank" rel="noopener" aria-label="Falar no WhatsApp">${ICONE_WHATSAPP}<span>Falar no WhatsApp</span></a>` : ''}
+      ${perfil.whatsapp ? `<a class="whatsapp-float" href="https://wa.me/${normalizarWhatsapp(perfil.whatsapp)}" target="_blank" rel="noopener" aria-label="Falar no WhatsApp">${ICONE_WHATSAPP}<span>Falar no WhatsApp</span></a>` : ''}
     </div>`;
+}
+
+/* Trava o botão de envio de qualquer formulário (exceto o de filtros, que
+   nem chega a navegar) assim que ele é enviado, pra um duplo clique não
+   disparar o mesmo cadastro/envio duas vezes. */
+function ativarProtecaoDuploEnvio() {
+  document.addEventListener('submit', (e) => {
+    const form = e.target;
+    if (!(form instanceof HTMLFormElement) || form.id === 'form-filtros') return;
+    const botao = form.querySelector('button[type="submit"], input[type="submit"]') || form.querySelector('button:not([type])');
+    if (!botao || botao.disabled) return;
+    botao.dataset.textoOriginal = botao.dataset.textoOriginal || botao.textContent;
+    botao.disabled = true;
+    botao.textContent = 'Enviando...';
+    setTimeout(() => {
+      botao.disabled = false;
+      botao.textContent = botao.dataset.textoOriginal;
+    }, 1500);
+  });
 }
 
 function ativarMenuMobile() {

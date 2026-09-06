@@ -447,44 +447,6 @@ section {
   aspect-ratio: 4 / 3.1;
 }
 
-.hero-badge {
-  position: absolute;
-  left: -1.5rem;
-  bottom: -1.5rem;
-  background: #fff;
-  color: var(--color-ink);
-  padding: 1.1rem 1.4rem;
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  max-width: 250px;
-}
-
-.hero-badge .icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  background: var(--color-primary);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.hero-badge strong {
-  display: block;
-  font-family: var(--font-heading);
-  font-size: 0.95rem;
-}
-
-.hero-badge span {
-  font-size: 0.8rem;
-  color: var(--color-ink-soft);
-}
-
 /* Página interna - hero compacto */
 .page-hero {
   position: relative;
@@ -1590,13 +1552,6 @@ html.js-enabled .reveal.visible {
 
   .brand-text {
     font-size: 1.05rem;
-  }
-
-  .hero-badge {
-    left: 0.8rem;
-    bottom: -1.2rem;
-    max-width: 210px;
-    padding: 0.9rem 1.1rem;
   }
 
   .whatsapp-float {

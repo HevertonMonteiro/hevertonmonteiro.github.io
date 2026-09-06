@@ -105,8 +105,13 @@
     display:flex;
     align-items:center;
     gap:10px;
+    min-width:0;
   }
-  .session-badge b{color:var(--teal-dark);}
+  .session-badge b{
+    color:var(--teal-dark);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    display:inline-block;max-width:220px;vertical-align:bottom;
+  }
   .session-badge button{
     border:none;
     background:none;
@@ -121,6 +126,23 @@
     gap:20px;
     align-items:start;
   }
+  /* Sem isso, uma coluna do grid nunca encolhe além do conteúdo interno
+     (comportamento padrão do CSS Grid) — com a tabela cheia de steppers,
+     isso empurrava a largura total da página além da tela em janelas/
+     tablets mais estreitos, mesmo com a tabela tendo seu próprio scroll. */
+  .layout > .card{min-width:0;}
+  /* O painel "Seleção de Produtos" (carrinho/exportações) só faz sentido como
+     coluna lateral fixa no navegador de computador. Em qualquer dispositivo de
+     toque (celular, tablet, em qualquer orientação ou tamanho de tela) e quando
+     o app é aberto instalado (modo "aplicativo"), ele fica oculto: as mesmas
+     ações continuam disponíveis pelo chip "Total" no topo. `pointer:coarse`
+     identifica toque independente da largura da tela. */
+  @media (pointer:coarse){
+    .layout{grid-template-columns:1fr;}
+    #selecaoProdutos{display:none;}
+  }
+  html.standalone .layout{grid-template-columns:1fr;}
+  html.standalone #selecaoProdutos{display:none;}
   .card{
     background:var(--card);
     border-radius:var(--radius);
@@ -331,14 +353,43 @@
     position:fixed;inset:0;background:rgba(15,30,40,.45);
     display:flex;align-items:center;justify-content:center;
     z-index:50;padding:16px;
+    overflow-y:auto;
   }
   .hidden{display:none;}
   .modal{
     background:#fff;border-radius:var(--radius);
     width:100%;max-width:420px;
     padding:22px;
+    max-height:calc(100vh - 32px);
+    overflow-y:auto;
   }
   .modal.wide{max-width:720px;}
+  .modal.xwide{max-width:1180px;}
+  .overlay-fullscreen{padding:0;align-items:stretch;justify-content:stretch;}
+  .modal.fullscreen{
+    max-width:100%;width:100%;height:100%;max-height:100%;
+    border-radius:0;padding:0;
+    display:flex;flex-direction:column;
+    overflow:hidden;
+  }
+  .modal-fs-header{padding:16px 18px 0;flex-shrink:0;}
+  .modal-fs-header h3{margin:0 0 4px;font-size:18px;color:var(--teal-dark);}
+  .modal-fs-header p.hint{margin:0 0 12px;color:var(--muted);font-size:13px;}
+  .modal-fs-body{flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 18px 12px;}
+  .modal-fs-footer{
+    flex-shrink:0;display:flex;gap:10px;
+    padding:12px 18px calc(12px + env(safe-area-inset-bottom));
+    border-top:1px solid var(--border);background:#fff;
+  }
+  .modal-fs-footer button{flex:1;}
+  .distrib-totais{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+  .distrib-total-chip{
+    flex:1;min-width:120px;border-radius:10px;padding:8px 10px;
+    font-size:12.5px;font-weight:600;color:#fff;
+  }
+  .distrib-total-chip .valor{font-size:14.5px;font-weight:800;display:block;margin-top:2px;}
+  .distrib-total-chip.abaixo{background:var(--danger);}
+  .distrib-total-chip.atingido{background:#1c8a4a;}
   .modal h3{margin:0 0 4px;font-size:18px;color:var(--teal-dark);}
   .modal p.hint{margin:0 0 16px;color:var(--muted);font-size:13px;}
   .field{margin-bottom:12px;}
@@ -355,15 +406,116 @@
   .sheet-table th, .sheet-table td{border:1px solid var(--border);padding:6px 8px;text-align:left;white-space:nowrap;}
   .sheet-table th{background:var(--teal-light);color:var(--teal-dark);}
   .sheet-wrap{overflow-x:auto;max-height:320px;}
-  .pill{
-    display:inline-block;font-size:11px;background:#e7f3f1;color:var(--accent);
-    padding:2px 7px;border-radius:6px;margin-left:6px;
-  }
 
-  /* ---------- Responsivo: tablet ---------- */
-  @media (max-width:1024px){
+  /* Aviso de estoque das distribuidoras (dado fictício, para demonstração) */
+  .distrib-note{font-size:12px;color:var(--muted);margin:-6px 0 12px;}
+  .distrib-note a{color:var(--teal);cursor:pointer;}
+
+  /* Tela de revisão do pedido (distribuidoras) */
+  .distrib-item{
+    border:1px solid var(--border);border-radius:var(--radius);
+    padding:12px;margin-bottom:10px;
+  }
+  .distrib-item-name{font-weight:700;}
+  .distrib-item-sub{
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+    color:var(--muted);font-size:12.5px;margin-bottom:8px;
+  }
+  .distrib-item-sub button{
+    width:24px;height:24px;border-radius:6px;border:1px solid var(--border);
+    background:var(--teal-light);color:var(--teal-dark);font-weight:700;cursor:pointer;line-height:1;
+  }
+  .distrib-item-sub button:hover{background:var(--teal);color:#fff;}
+  .distrib-item-sub button:disabled{opacity:.4;cursor:not-allowed;background:var(--teal-light);color:var(--teal-dark);}
+  .distrib-item-sub .qty-val{font-weight:700;color:var(--text);min-width:44px;text-align:center;}
+  .distrib-selected{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    cursor:pointer;padding:8px 10px;border:1px solid var(--border);
+    border-radius:8px;background:#fafcfe;
+  }
+  .distrib-selected.insuficiente{background:#fdecea;border-color:#e6a29a;}
+  .distrib-nome{font-weight:600;}
+  .distrib-info{color:var(--muted);font-size:12.5px;}
+  .distrib-calc{color:var(--muted);font-size:12px;margin-top:4px;}
+  .distrib-deficit{color:#b35c00;font-weight:700;}
+  .distrib-insuf-tag{color:var(--danger);font-size:11px;font-weight:600;margin-top:2px;}
+  .distrib-chevron{color:var(--muted);font-size:12px;}
+  .distrib-options{margin-top:8px;display:flex;flex-direction:column;gap:6px;}
+  .distrib-option{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:8px 10px;border:1px solid var(--border);border-radius:8px;cursor:pointer;
+  }
+  .distrib-option:hover{background:var(--teal-light);}
+  .distrib-option.is-selected{background:var(--teal-light);border-color:var(--teal);}
+  .distrib-option.is-disabled{opacity:.5;cursor:not-allowed;}
+  .distrib-tag{color:var(--teal-dark);font-size:11px;font-weight:600;margin-top:2px;}
+
+  /* Tela de sugestão de pedido */
+  .sugestao-list{max-height:55vh;overflow-y:auto;margin-bottom:6px;}
+  .sugestao-row{
+    display:flex;align-items:center;justify-content:space-between;gap:14px;
+    padding:10px 4px;border-bottom:1px solid var(--border);
+  }
+  .sugestao-row:last-child{border-bottom:none;}
+  .sugestao-input{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;}
+  .sugestao-input label{font-size:11px;color:var(--muted);font-weight:600;}
+  .sugestao-input input{width:80px;padding:7px 8px;border-radius:8px;border:1px solid var(--border);font-size:15px;text-align:center;}
+
+  /* ---------- Responsivo: tablet (retrato e paisagem) e celular ----------
+     Qualquer tela ≤1300px troca as tabelas largas por listas de cartões e
+     empilha o painel do carrinho embaixo, pra nunca precisar arrastar pro
+     lado pra enxergar uma coluna. */
+  @media (max-width:1300px){
     .layout{grid-template-columns:1fr;}
     .page{padding:16px;}
+
+    /* Tabelas (produtos e observações) viram listas de cartões */
+    .table-wrap{border:none;overflow-x:visible;}
+    table, .sheet-table{min-width:0;width:100%;}
+    .sheet-wrap{overflow-x:visible;max-height:none;}
+    thead, .sheet-table thead{display:none;}
+    tbody, .sheet-table tbody{display:block;}
+    tbody tr, .sheet-table tbody tr{
+      display:block;
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:10px 12px;
+      margin-bottom:10px;
+    }
+    tbody tr:hover, .sheet-table tbody tr:hover{background:var(--card);}
+    tbody td, .sheet-table tbody td{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      padding:8px 0;
+      border:none;
+      border-top:1px solid var(--border);
+      white-space:normal;
+    }
+    tbody td:first-child, .sheet-table tbody td:first-child{border-top:none;padding-top:0;display:block;}
+    tbody td:first-child::before, .sheet-table tbody td:first-child::before{content:none;}
+    tbody td::before, .sheet-table tbody td::before{
+      content:attr(data-label);
+      font-weight:600;
+      color:var(--muted);
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.3px;
+      flex-shrink:0;
+    }
+    tfoot{display:block;}
+    tfoot tr{display:flex;flex-direction:column;gap:4px;padding:10px 2px 0;border-top:2px solid var(--border);}
+    tfoot td{display:block;border-top:none;padding:2px 0;}
+    tfoot td:first-child, tfoot td:nth-child(3), tfoot td:nth-child(4), tfoot td:nth-child(6){display:none;}
+    tfoot td:nth-child(2)::before{content:"Total estoque anotado: ";font-weight:600;}
+    tfoot td:nth-child(5)::before{content:"Total pedido: ";font-weight:600;}
+
+    /* Alvos de toque maiores (tablet também é tela de toque) */
+    .stepper button, .add-btn, .clear-btn{width:34px;height:34px;font-size:16px;}
+    .stepper input{width:60px;font-size:16px;padding:8px 4px;}
+    .obs-btn{padding:8px 10px;}
   }
 
   /* ---------- Responsivo: celular ---------- */
@@ -380,51 +532,6 @@
 
     .filters{flex-direction:column;}
     .filters input[type=text], .filters select{min-width:0;width:100%;}
-
-    /* Tabela vira lista de cartões */
-    .table-wrap{border:none;overflow-x:visible;}
-    table{min-width:0;width:100%;}
-    thead{display:none;}
-    tbody{display:block;}
-    tbody tr{
-      display:block;
-      background:var(--card);
-      border:1px solid var(--border);
-      border-radius:var(--radius);
-      padding:10px 12px;
-      margin-bottom:10px;
-    }
-    tbody tr:hover{background:var(--card);}
-    tbody td{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      padding:8px 0;
-      border-top:1px solid var(--border);
-    }
-    tbody td:first-child{border-top:none;padding-top:0;display:block;}
-    tbody td:first-child::before{content:none;}
-    tbody td::before{
-      content:attr(data-label);
-      font-weight:600;
-      color:var(--muted);
-      font-size:11px;
-      text-transform:uppercase;
-      letter-spacing:.3px;
-      flex-shrink:0;
-    }
-    tfoot{display:block;}
-    tfoot tr{display:flex;flex-direction:column;gap:4px;padding:10px 2px 0;border-top:2px solid var(--border);}
-    tfoot td{display:block;border-top:none;padding:2px 0;}
-    tfoot td:first-child, tfoot td:nth-child(3), tfoot td:nth-child(5){display:none;}
-    tfoot td:nth-child(2)::before{content:"Total estoque anotado: ";font-weight:600;}
-    tfoot td:nth-child(4)::before{content:"Total pedido: ";font-weight:600;}
-
-    /* Alvos de toque maiores */
-    .stepper button, .add-btn, .clear-btn{width:34px;height:34px;font-size:16px;}
-    .stepper input{width:60px;font-size:15px;padding:8px 4px;}
-    .obs-btn{padding:8px 10px;}
 
     .modal{padding:16px;max-width:100%;}
     .modal-actions{flex-direction:column;}
@@ -546,12 +653,15 @@
         </select>
       </div>
 
+      <div class="distrib-note" id="distribuidorBadge"></div>
+
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
               <th>Descrição</th>
               <th>Estoque na Loja</th>
+              <th>Estoque</th>
               <th>Preço</th>
               <th>Pedido do Cliente</th>
               <th>Observação</th>
@@ -562,6 +672,7 @@
             <tr>
               <td>Total</td>
               <td id="footEstoque">0</td>
+              <td></td>
               <td></td>
               <td id="footPedido">0</td>
               <td></td>
@@ -584,9 +695,8 @@
       </div>
 
       <button class="btn-primary" onclick="exportPedido()">Exportar pedido (.xlsx pronto para importar)</button>
-      <button class="btn-secondary" onclick="exportEstoqueCsv()">Exportar estoque na loja (CSV)</button>
-      <button class="btn-secondary" onclick="exportEstoquePdf()">Exportar estoque na loja (PDF)</button>
-      <button class="btn-secondary" onclick="finalizeAttendance()">Finalizar pedido (começar um novo)</button>
+      <button class="btn-secondary" onclick="abrirSugestaoPedido()">📝 Sugestão de pedido</button>
+      <button class="btn-secondary" onclick="abrirFinalizarPedido()">Finalizar pedido</button>
       <button class="btn-link" onclick="openSheetPreview()">Ver observações desta sessão</button>
       <button class="btn-link" onclick="retrySyncPending()" id="retryBtn" style="display:none;">🔄 Reenviar observações pendentes</button>
 
@@ -641,8 +751,8 @@
       <input type="text" id="obsLab" placeholder="Ex: Laboratório" />
     </div>
     <div class="field">
-      <label>Preço informado pelo cliente (R$)</label>
-      <input type="number" id="obsPrice" step="0.01" min="0" placeholder="Ex: 12.50" />
+      <label>Preço informado pelo cliente</label>
+      <input type="text" inputmode="numeric" id="obsPrice" placeholder="R$ 0,00" oninput="maskCurrency(this)" />
     </div>
     <div class="field">
       <label>Observação (opcional)</label>
@@ -657,9 +767,9 @@
 
 <!-- Manager sheet preview modal -->
 <div class="overlay hidden" id="sheetOverlay">
-  <div class="modal wide">
+  <div class="modal xwide">
     <h3>Observações desta sessão</h3>
-    <p class="hint">Prévia local do que foi registrado. Cada observação já foi (ou será, quando reenviada) enviada para a planilha real do gestor.</p>
+    <p class="hint">Uma linha por observação registrada, mais recente primeiro. Cada uma já foi (ou será, quando reenviada) enviada para a planilha real do gestor.</p>
     <div class="sheet-wrap">
       <table class="sheet-table" id="sheetTable"></table>
     </div>
@@ -672,13 +782,60 @@
 <!-- Export menu modal -->
 <div class="overlay hidden" id="exportMenuOverlay">
   <div class="modal">
-    <h3>Exportar pedido</h3>
-    <p class="hint">Escolha o que deseja exportar. No celular, você poderá compartilhar direto pelo WhatsApp, pelo sistema de vendas ou salvar o arquivo; no computador, o arquivo é baixado.</p>
-    <button class="btn-secondary" onclick="chooseExport('pedido')">📦 Pedido (.xlsx pronto para importar)</button>
-    <button class="btn-secondary" onclick="chooseExport('estoqueCsv')">📋 Estoque na loja (CSV)</button>
-    <button class="btn-secondary" onclick="chooseExport('estoquePdf')">📄 Estoque na loja (PDF)</button>
+    <h3>Ações do pedido</h3>
+    <p class="hint">Acesso rápido às ações do pedido de qualquer ponto da tela.</p>
+    <button class="btn-secondary" onclick="chooseExport('pedido')">📦 Exportar pedido (.xlsx pronto para importar)</button>
+    <button class="btn-secondary" onclick="closeExportMenu(); abrirSugestaoPedido();">📝 Sugestão de pedido</button>
+    <button class="btn-secondary" onclick="closeExportMenu(); abrirFinalizarPedido();">Finalizar pedido</button>
+    <button class="btn-link" onclick="closeExportMenu(); openSheetPreview();">Ver observações desta sessão</button>
+    <button class="btn-link" onclick="closeExportMenu(); retrySyncPending();" id="retryBtnMenu" style="display:none;">🔄 Reenviar observações pendentes</button>
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeExportMenu()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tela de sugestão de pedido -->
+<div class="overlay hidden" id="sugestaoOverlay">
+  <div class="modal wide">
+    <h3>Sugestão de pedido</h3>
+    <p class="hint">Baseado no estoque anotado na loja. Informe a quantidade sugerida para cada item.</p>
+    <div id="sugestaoBody"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="fecharSugestaoPedido()">Voltar</button>
+      <button class="btn-secondary" onclick="exportSugestaoCsv()">Exportar (CSV)</button>
+      <button class="btn-primary" onclick="exportSugestaoPdf()">Exportar (PDF)</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tela de revisão do pedido: escolha de distribuidora por item -->
+<div class="overlay overlay-fullscreen hidden" id="revisaoOverlay">
+  <div class="modal fullscreen">
+    <div class="modal-fs-header">
+      <h3>Revisão do pedido: Distribuidoras</h3>
+      <p class="hint">Escolha a distribuidora de cada item. Estoque de exemplo (fictício), só para demonstração.</p>
+      <div id="revisaoTotais" class="distrib-totais"></div>
+      <button class="btn-secondary" onclick="abrirExportarPorDistribuidora()">📦 Exportar pedido por distribuidora (.xlsx)</button>
+    </div>
+    <div class="modal-fs-body" id="revisaoBody"></div>
+    <div class="modal-fs-footer">
+      <button class="btn-ghost" onclick="fecharRevisaoPedido()">Voltar</button>
+      <button class="btn-primary" onclick="finalizeAttendance()">Confirmar pedido</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tela de escolha do arquivo de pedido por distribuidora -->
+<div class="overlay hidden" id="exportDistribOverlay">
+  <div class="modal">
+    <h3>Exportar pedido por distribuidora</h3>
+    <p class="hint">Só aparecem as distribuidoras que têm item atribuído a elas. Cada botão gera o arquivo (.xlsx) só daquela distribuidora, clique em uma por vez.</p>
+    <div id="exportDistribBody"></div>
+    <button class="btn-secondary" onclick="exportPedidoPdfPorDistribuidora()">📄 Gerar 1 PDF com todas as distribuidoras separadas</button>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="fecharExportarPorDistribuidora()">Fechar</button>
+      <button class="btn-primary" onclick="confirmarNovoAtendimento()">Finalizar</button>
     </div>
   </div>
 </div>
@@ -692,12 +849,122 @@ const state = {
   estoque: {},   // ean -> {touched:bool, value:number}
   pedido: {},    // ean -> {touched:bool, value:number}
   obs: {},       // ean -> [{lab, price, note, ts}]
+  sugestao: {},  // ean -> number (quantidade sugerida, digitada manualmente)
+  pedidoDistribuidor: {}, // ean -> nome da distribuidora escolhida para o item
 };
 PRODUCTS.forEach(p=>{
   state.estoque[p.ean] = {touched:false, value:0};
   state.pedido[p.ean]  = {touched:false, value:0};
   state.obs[p.ean] = [];
+  state.sugestao[p.ean] = 0;
 });
+
+/* ---------- Persistência local (sobrevive a F5 / fechar a aba) ---------- */
+const STORAGE_KEY = 'multifoco_pdv_state_v1';
+const SESSION_TIMEOUT_MS = 5 * 60 * 1000; // fechou e voltou depois de 5min+: limpa tudo
+function persistState(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify({savedAt: Date.now(), state})); }
+  catch(e){ /* localStorage indisponível (modo privado, etc.) — segue só em memória */ }
+}
+function loadStateFromLocalStorage(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return false;
+    const envelope = JSON.parse(raw);
+    if(!envelope || typeof envelope !== 'object') return false;
+    if(typeof envelope.savedAt !== 'number' || (Date.now() - envelope.savedAt) > SESSION_TIMEOUT_MS){
+      localStorage.removeItem(STORAGE_KEY);
+      return false;
+    }
+    const saved = envelope.state;
+    if(!saved || typeof saved !== 'object') return false;
+    if(saved.session) state.session = saved.session;
+    PRODUCTS.forEach(p=>{
+      if(saved.estoque && saved.estoque[p.ean]) state.estoque[p.ean] = saved.estoque[p.ean];
+      if(saved.pedido && saved.pedido[p.ean]) state.pedido[p.ean] = saved.pedido[p.ean];
+      if(saved.obs && saved.obs[p.ean]) state.obs[p.ean] = saved.obs[p.ean];
+      if(saved.sugestao && typeof saved.sugestao[p.ean] === 'number') state.sugestao[p.ean] = saved.sugestao[p.ean];
+    });
+    if(saved.pedidoDistribuidor) state.pedidoDistribuidor = saved.pedidoDistribuidor;
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+
+/* ---------- Distribuidoras ----------
+   Dado FICTÍCIO, só para demonstração: fetchDistribuidorStock() simula a resposta
+   da API das distribuidoras. Em uso real, o corpo dessa função vira uma chamada
+   de verdade (fetch) — o formato de retorno {ean: [{nome, estoque}]} é mantido,
+   o resto do fluxo (tela de revisão, estoque consolidado, etc.) já está pronto
+   para consumi-lo. */
+const DISTRIBUIDORES = ['Distribuidora Horizonte', 'Distribuidora União', 'Distribuidora Rápida'];
+const PEDIDO_MINIMO_DISTRIBUIDOR = {
+  'Distribuidora Horizonte': 500,
+  'Distribuidora União': 300,
+  'Distribuidora Rápida': 200,
+};
+
+let distribuidorStock = {};        // ean -> [{nome, estoque}]
+let distribuidorAtualizadoEm = null; // Date da última "atualização"
+
+/* Demo: 30 produtos espalhados pelo catálogo (não só os primeiros) ficam
+   propositalmente sem estoque em nenhuma distribuidora, para dar para testar
+   esse cenário sem precisar procurar muito. */
+const EANS_SEM_ESTOQUE_TESTE = new Set(
+  Array.from({length: 30}, (_, i) => PRODUCTS[Math.floor(i * PRODUCTS.length / 30)].ean)
+);
+
+function hashSeed(str){
+  let h = 0;
+  for(let i=0;i<str.length;i++){ h = (h*31 + str.charCodeAt(i)) | 0; }
+  return Math.abs(h);
+}
+function seededRandom(seed){
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+function fetchDistribuidorStock(){
+  const janela = Math.floor(Date.now() / (30*60*1000)); // muda a cada 30min, como a API real faria
+  const result = {};
+  PRODUCTS.forEach(p=>{
+    const semEstoque = EANS_SEM_ESTOQUE_TESTE.has(p.ean);
+    result[p.ean] = DISTRIBUIDORES.map(nome=>{
+      if(semEstoque) return {nome, estoque: 0};
+      const seed = hashSeed(p.ean + nome + janela);
+      const estoque = 1 + Math.floor(seededRandom(seed) * 80); // 1 a 80 un.
+      return {nome, estoque};
+    });
+  });
+  return result;
+}
+function refreshDistribuidorStock(){
+  distribuidorStock = fetchDistribuidorStock();
+  distribuidorAtualizadoEm = new Date();
+  renderTable();
+  updateDistribuidorBadge();
+}
+function estoqueDistribuidoresTotal(ean){
+  return (distribuidorStock[ean] || []).reduce((s,d)=>s+d.estoque, 0);
+}
+/* Prioriza uma distribuidora que já tenha estoque suficiente para a quantidade
+   pedida; só recorre a uma com estoque insuficiente se nenhuma outra atender,
+   nesse caso a tela de revisão sinaliza o item com o déficit. */
+function defaultDistribuidorFor(ean, qty){
+  const disponiveis = (distribuidorStock[ean] || []).filter(d=>d.estoque>0);
+  if(disponiveis.length===0) return null;
+  const suficientes = disponiveis.filter(d=>d.estoque>=qty);
+  const pool = suficientes.length>0 ? suficientes : disponiveis;
+  pool.sort((a,b)=>b.estoque-a.estoque);
+  return pool[0].nome;
+}
+function updateDistribuidorBadge(){
+  const el = document.getElementById('distribuidorBadge');
+  if(!el || !distribuidorAtualizadoEm) return;
+  const min = Math.max(0, Math.floor((Date.now()-distribuidorAtualizadoEm.getTime())/60000));
+  const texto = min<1 ? 'Estoque das distribuidoras atualizado agora' : `Estoque das distribuidoras atualizado há ${min} min`;
+  el.innerHTML = `${texto} · <a onclick="refreshDistribuidorStock()">atualizar agora</a>`;
+}
 
 /* ---------- Tour de boas-vindas: aparece uma vez (localStorage), reaberto pelo botão "?" ---------- */
 const TOUR_STORAGE_KEY = 'multifoco_tour_seen';
@@ -720,7 +987,7 @@ const TOUR_STEPS = [
   },
   {
     title: '4. Exporte quando terminar',
-    text: 'No painel direito: pedido em .xlsx pronto para importar, estoque em CSV ou PDF. "Finalizar pedido" limpa a tela para o próximo atendimento.'
+    text: 'No painel direito: pedido em .xlsx pronto para importar, ou uma sugestão de pedido baseada no estoque anotado. "Finalizar pedido" revisa a distribuidora de cada item e limpa a tela para o próximo atendimento.'
   }
 ];
 let tourStepIdx = 0;
@@ -761,7 +1028,16 @@ function closeTour(){
 }
 
 /* ---------- Init ---------- */
+/* App aberto instalado (adicionado à tela inicial / modo "aplicativo"), em vez
+   de numa aba de navegador comum. Ver CSS de `html.standalone`. */
+function isStandaloneApp(){
+  return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+    || window.navigator.standalone === true;
+}
+
 function init(){
+  if(isStandaloneApp()) document.documentElement.classList.add('standalone');
+
   const labs = [...new Set(PRODUCTS.map(p=>p.lab))];
   const sel = document.getElementById('labFilter');
   labs.forEach(l=>{
@@ -769,10 +1045,27 @@ function init(){
     o.value = l; o.textContent = l;
     sel.appendChild(o);
   });
+  const oIncluidos = document.createElement('option');
+  oIncluidos.value = 'INCLUIDOS'; oIncluidos.textContent = 'Incluídos';
+  sel.appendChild(oIncluidos);
   document.getElementById('inData').valueAsDate = new Date();
-  renderTable();
+
+  const restaurado = loadStateFromLocalStorage();
+  if(restaurado && state.session){
+    document.getElementById('sessionOverlay').classList.add('hidden');
+    document.getElementById('sessionBadge').innerHTML =
+      `<b title="${escapeHtml(state.session.loja)}">${escapeHtml(state.session.loja)}</b> · CNPJ ${escapeHtml(state.session.cnpj)} <button onclick="reopenSession()">trocar</button>`;
+    document.getElementById('inLoja').value = state.session.loja;
+    document.getElementById('inCnpj').value = state.session.cnpj;
+    document.getElementById('inVendedor').value = state.session.vendedor;
+    if(state.session.data) document.getElementById('inData').value = state.session.data;
+  }
+
+  refreshDistribuidorStock(); // já chama renderTable()
   renderCart();
   updateRetryButtonVisibility();
+  setInterval(refreshDistribuidorStock, 30*60*1000);
+  setInterval(updateDistribuidorBadge, 60*1000);
 }
 
 function fillExampleSession(){
@@ -796,8 +1089,9 @@ function startSession(){
   }
   state.session = {loja, cnpj, vendedor, data};
   document.getElementById('sessionBadge').innerHTML =
-    `<b>${escapeHtml(loja)}</b> · CNPJ ${escapeHtml(cnpj)} <button onclick="reopenSession()">trocar</button>`;
+    `<b title="${escapeHtml(loja)}">${escapeHtml(loja)}</b> · CNPJ ${escapeHtml(cnpj)} <button onclick="reopenSession()">trocar</button>`;
   document.getElementById('sessionOverlay').classList.add('hidden');
+  persistState();
   resetProductState();
   document.getElementById('helpFab').style.display = 'block';
   maybeShowTour();
@@ -812,20 +1106,95 @@ function resetProductState(){
     state.estoque[p.ean] = {touched:false, value:0};
     state.pedido[p.ean]  = {touched:false, value:0};
     state.obs[p.ean] = [];
+    state.sugestao[p.ean] = 0;
   });
+  state.pedidoDistribuidor = {};
+  revisaoAberto = {};
   renderTable();
   renderCart();
   updateRetryButtonVisibility();
+  persistState();
 }
 
-/* Botão "Finalizar pedido": encerra o atendimento atual do cliente e limpa a tela
-   para o próximo, mantendo a mesma loja/vendedor/data. */
+/* Botão "Finalizar pedido": abre a revisão por distribuidora (se houver itens no
+   pedido) ou, se o carrinho estiver vazio, encerra o atendimento direto. */
+function abrirFinalizarPedido(){
+  if(cartItems().length===0){
+    finalizeAttendance();
+    return;
+  }
+  garantirDistribuidorasAtribuidas();
+  renderRevisaoPedido();
+  document.getElementById('revisaoOverlay').classList.remove('hidden');
+}
+function fecharRevisaoPedido(){
+  document.getElementById('revisaoOverlay').classList.add('hidden');
+}
+
+/* Encerra o atendimento atual e volta para a tela de novo atendimento (loja/CNPJ),
+   pronta para outro cliente. Chamada tanto direto (carrinho vazio) quanto pelo
+   botão "Confirmar pedido" dentro da tela de revisão por distribuidora. Antes de
+   perguntar se quer começar de novo, oferece exportar o pedido separado por
+   distribuidora, última chance de gerar esse arquivo antes de tudo ser limpo. */
 function finalizeAttendance(){
+  if(cartItems().length>0){
+    const exportar = confirm('Deseja exportar os arquivos de pedido separados por distribuidora antes de confirmar?');
+    if(exportar){
+      abrirExportarPorDistribuidora();
+      return; // vendedor exporta o que precisar e clica em "Finalizar" ali mesmo, ou em "Confirmar pedido" de novo depois
+    }
+  }
+  confirmarNovoAtendimento();
+}
+
+/* Pergunta se quer iniciar um novo pedido e, se sim, limpa a tela e reabre o
+   início, sem perguntar de novo se quer exportar por distribuidora. Chamada
+   pelo fim de finalizeAttendance() e também pelo botão "Finalizar" na própria
+   tela de exportar por distribuidora, para não precisar fechar e clicar em
+   "Confirmar pedido" outra vez só para seguir. */
+function confirmarNovoAtendimento(){
   const pending = pendingObservations().length;
   const pendingMsg = pending>0 ? `\n\nAtenção: ${pending} observação(ões) ainda não foram sincronizadas com a planilha do gestor e serão perdidas.` : '';
-  const ok = confirm(`Finalizar este pedido vai limpar o estoque anotado, o pedido e as observações desta tela. Já exportou os relatórios necessários?${pendingMsg}\n\nClique OK para finalizar e começar um novo pedido.`);
+  const ok = confirm(`Pedido confirmado. Isso vai limpar o estoque anotado, o pedido e as observações desta tela.${pendingMsg}\n\nDeseja iniciar um novo pedido agora, para atender outro cliente?`);
   if(!ok) return;
+
   resetProductState();
+  document.getElementById('revisaoOverlay').classList.add('hidden');
+  document.getElementById('exportDistribOverlay').classList.add('hidden');
+  abrirNovoAtendimento();
+}
+
+/* Limpa a loja/CNPJ/vendedor da sessão e reabre a tela de início, pronta
+   para preencher os dados do próximo cliente. */
+function abrirNovoAtendimento(){
+  state.session = null;
+  persistState();
+  document.getElementById('sessionBadge').textContent = 'Nenhum atendimento iniciado';
+  document.getElementById('inLoja').value = '';
+  document.getElementById('inCnpj').value = '';
+  document.getElementById('inVendedor').value = '';
+  document.getElementById('inData').valueAsDate = new Date();
+  window.scrollTo(0, 0);
+  document.getElementById('sessionOverlay').classList.remove('hidden');
+}
+
+/* Formata o campo de preço enquanto digita: o vendedor só digita números (sem
+   vírgula/ponto), tratados como centavos, ex: digitar "1250" vira "R$ 12,50"
+   na hora. */
+function maskCurrency(el){
+  let digits = el.value.replace(/\D/g,'');
+  if(!digits){ el.value = ''; return; }
+  digits = digits.replace(/^0+(?=\d)/, '');
+  while(digits.length < 3) digits = '0' + digits;
+  const reais = digits.slice(0, -2);
+  const centavos = digits.slice(-2);
+  el.value = `R$ ${parseInt(reais,10).toLocaleString('pt-BR')},${centavos}`;
+}
+/* Converte de volta o texto formatado ("R$ 12,50") para o número 12.5. */
+function parseCurrencyValue(str){
+  const digits = String(str).replace(/\D/g,'');
+  if(!digits) return NaN;
+  return parseInt(digits,10) / 100;
 }
 
 /* ---------- Table rendering ---------- */
@@ -836,7 +1205,7 @@ function renderTable(){
   tbody.innerHTML = '';
 
   let list = PRODUCTS.filter(p=>{
-    const matchesLab = (lab==='Todos') || p.lab===lab;
+    const matchesLab = (lab==='Todos') || (lab==='INCLUIDOS' ? (state.estoque[p.ean].touched || state.pedido[p.ean].touched) : p.lab===lab);
     const matchesQ = !q || p.ean.toLowerCase().includes(q) || p.name.toLowerCase().includes(q) || p.codigo.toLowerCase().includes(q);
     return matchesLab && matchesQ;
   });
@@ -849,6 +1218,7 @@ function renderTable(){
         <span class="lab-tag">${escapeHtml(p.lab)}</span>
       </td>
       <td data-label="Estoque na Loja">${stepperHtml(p.ean,'estoque')}</td>
+      <td data-label="Estoque">${estoqueDistribuidoresTotal(p.ean)} un.</td>
       <td data-label="Preço" class="price">R$ ${p.price.toFixed(2).replace('.',',')}</td>
       <td data-label="Pedido do Cliente">${stepperHtml(p.ean,'pedido')}</td>
       <td data-label="Observação">${obsButtonHtml(p.ean)}</td>
@@ -866,11 +1236,12 @@ function stepperHtml(ean, kind){
   }
   return `
     <div class="stepper">
+      <button class="clear-btn" title="Remover anotação" onclick="clearCell('${ean}','${kind}')">×</button>
       <button onclick="stepCell('${ean}','${kind}',-1)">−</button>
       <input type="number" min="0" value="${cell.value}"
+        onfocus="this.select()"
         onchange="setCell('${ean}','${kind}', this.value)" />
       <button onclick="stepCell('${ean}','${kind}',1)">+</button>
-      <button class="clear-btn" title="Remover anotação" onclick="clearCell('${ean}','${kind}')">×</button>
     </div>
   `;
 }
@@ -887,12 +1258,14 @@ function touchCell(ean, kind){
   state[kind][ean] = {touched:true, value: kind==='pedido' ? 1 : 0};
   renderTable();
   if(kind==='pedido') renderCart();
+  persistState();
 }
 function stepCell(ean, kind, delta){
   const cell = state[kind][ean];
   cell.value = Math.max(0, cell.value + delta);
   renderTable();
   if(kind==='pedido') renderCart();
+  persistState();
 }
 function setCell(ean, kind, rawVal){
   let v = parseInt(rawVal,10);
@@ -900,11 +1273,13 @@ function setCell(ean, kind, rawVal){
   state[kind][ean] = {touched:true, value:v};
   renderTable();
   if(kind==='pedido') renderCart();
+  persistState();
 }
 function clearCell(ean, kind){
   state[kind][ean] = {touched:false, value:0};
   renderTable();
   if(kind==='pedido') renderCart();
+  persistState();
 }
 
 function updateFooterTotals(){
@@ -915,11 +1290,14 @@ function updateFooterTotals(){
 }
 
 /* ---------- Cart (right panel) — driven ONLY by "pedido do cliente" ---------- */
-function renderCart(){
-  const area = document.getElementById('cartArea');
-  const items = PRODUCTS
+function cartItems(){
+  return PRODUCTS
     .map(p=>({p, qty: state.pedido[p.ean].touched ? state.pedido[p.ean].value : 0}))
     .filter(x=>x.qty>0);
+}
+function renderCart(){
+  const area = document.getElementById('cartArea');
+  const items = cartItems();
 
   if(items.length===0){
     area.innerHTML = `<div class="cart-empty">🛒<br/>Nenhum produto adicionado</div>`;
@@ -980,31 +1358,47 @@ function updateStickyOffsets(){
 
 /* ---------- Observation modal ---------- */
 let currentObsEan = null;
+/* Normaliza o nome do laboratório concorrente (maiúsculo/minúsculo/espaços)
+   para que "germed", "Germed" e "GERMED" virem sempre o mesmo texto salvo,
+   sem isso cada variação de digitação virava um "concorrente" diferente na
+   prévia e na planilha do gestor. */
+function normalizeLabName(raw){
+  return String(raw).trim().replace(/\s+/g, ' ').toUpperCase();
+}
+
 function openObsModal(ean){
   currentObsEan = ean;
   const p = PRODUCTS.find(x=>x.ean===ean);
   document.getElementById('obsProdName').textContent = `${p.ean} · ${p.name}`;
-  document.getElementById('obsLab').value = '';
-  document.getElementById('obsPrice').value = '';
-  document.getElementById('obsNote').value = '';
+  const entries = state.obs[ean];
+  const ultima = entries.length>0 ? entries[entries.length-1] : null;
+  document.getElementById('obsLab').value = ultima ? ultima.lab : '';
+  document.getElementById('obsPrice').value = ultima ? `R$ ${ultima.price.toFixed(2).replace('.',',')}` : '';
+  document.getElementById('obsNote').value = ultima ? ultima.note : '';
   document.getElementById('obsOverlay').classList.remove('hidden');
 }
 function closeObsModal(){
   document.getElementById('obsOverlay').classList.add('hidden');
   currentObsEan = null;
 }
+/* Sempre cria um registro NOVO no histórico, mesmo se já existir uma observação
+   do mesmo laboratório para esse item, cada envio é um dado próprio (pode ter
+   vindo de outro atendimento, outro vendedor, outro preço), e o gestor precisa
+   ver todos, não só o mais recente. */
 function saveObservation(){
-  const lab = document.getElementById('obsLab').value.trim();
-  const price = parseFloat(document.getElementById('obsPrice').value);
+  const lab = normalizeLabName(document.getElementById('obsLab').value);
+  const price = parseCurrencyValue(document.getElementById('obsPrice').value);
   const note = document.getElementById('obsNote').value.trim();
   if(!lab || isNaN(price)){
     alert('Informe o laboratório concorrente e o preço.');
     return;
   }
-  const entry = {lab, price, note, ts:new Date().toISOString(), synced:false};
+  const vendedor = (state.session && state.session.vendedor) || '';
+  const entry = {lab, price, note, vendedor, ts:new Date().toISOString(), synced:false};
   state.obs[currentObsEan].push(entry);
   closeObsModal();
   renderTable();
+  persistState();
   syncObservationToSheet(currentObsEan, entry);
 }
 
@@ -1029,7 +1423,7 @@ function syncObservationToSheet(ean, entry){
   const payload = {
     loja: s.loja || '',
     cnpj: s.cnpj || '',
-    vendedor: s.vendedor || '',
+    vendedor: entry.vendedor || s.vendedor || '', // vendedor de quando a observação foi registrada, não o atual
     dataAtendimento: s.data || '',
     ean: p.ean,
     produto: p.name,
@@ -1060,41 +1454,52 @@ function pendingObservations(){
   return list;
 }
 function updateRetryButtonVisibility(){
-  const btn = document.getElementById('retryBtn');
-  if(!btn) return;
   const hasUrl = !!getGestorSheetUrl();
   const pending = pendingObservations().length;
-  btn.style.display = (hasUrl && pending>0) ? '' : 'none';
-  if(hasUrl && pending>0) btn.textContent = `🔄 Reenviar observações pendentes (${pending})`;
+  const show = hasUrl && pending>0;
+  const label = `🔄 Reenviar observações pendentes (${pending})`;
+  ['retryBtn', 'retryBtnMenu'].forEach(id=>{
+    const btn = document.getElementById(id);
+    if(!btn) return;
+    btn.style.display = show ? '' : 'none';
+    if(show) btn.textContent = label;
+  });
 }
 function retrySyncPending(){
   pendingObservations().forEach(({ean, entry})=>syncObservationToSheet(ean, entry));
 }
 
-/* ---------- Manager sheet preview (dynamic competitor columns) ---------- */
+/* ---------- Manager sheet preview (histórico cronológico) ---------- */
+/* Lista cronológica: uma linha por observação registrada, sem agrupar nem
+   sobrescrever pelo laboratório, o mesmo laboratório pode aparecer em várias
+   linhas (visitas/vendedores diferentes) e o gestor precisa ver todas, com
+   quem registrou cada uma. */
 function openSheetPreview(){
-  const competitorLabs = [...new Set(
-    Object.values(state.obs).flat().map(o=>o.lab)
-  )];
-
-  const productsWithObs = PRODUCTS.filter(p=>state.obs[p.ean].length>0);
+  const allEntries = [];
+  PRODUCTS.forEach(p=>{
+    state.obs[p.ean].forEach(entry=>allEntries.push({p, entry}));
+  });
+  allEntries.sort((a,b)=> new Date(b.entry.ts) - new Date(a.entry.ts));
 
   const table = document.getElementById('sheetTable');
-  if(productsWithObs.length===0){
-    table.innerHTML = `<tr><td style="padding:14px;color:#6b7785;">Nenhuma observação de concorrência registrada ainda. Registre uma pelo botão "+ observação" na tabela de produtos.</td></tr>`;
+  if(allEntries.length===0){
+    table.innerHTML = `<tbody><tr><td style="padding:14px;color:#6b7785;">Nenhuma observação de concorrência registrada ainda. Registre uma pelo botão "+ observação" na tabela de produtos.</td></tr></tbody>`;
   } else {
-    let head = `<tr><th>EAN</th><th>Nome do Produto</th><th>Preço de Tabela</th>` +
-      competitorLabs.map(l=>`<th>${escapeHtml(l)} <span class="pill">novo</span></th>`).join('') + `</tr>`;
-    let rows = productsWithObs.map(p=>{
-      let cells = competitorLabs.map(l=>{
-        const entries = state.obs[p.ean].filter(o=>o.lab===l);
-        if(entries.length===0) return `<td>–</td>`;
-        const latest = entries[entries.length-1];
-        return `<td>R$ ${latest.price.toFixed(2).replace('.',',')}</td>`;
-      }).join('');
-      return `<tr><td>${p.ean}</td><td>${escapeHtml(p.name)}</td><td>R$ ${p.price.toFixed(2).replace('.',',')}</td>${cells}</tr>`;
+    const head = `<thead><tr><th>Data/Hora</th><th>EAN</th><th>Produto</th><th>Preço de Tabela</th><th>Laboratório</th><th>Preço Concorrente</th><th>Vendedor</th><th>Observação</th></tr></thead>`;
+    const rows = allEntries.map(({p, entry})=>{
+      const dtFmt = new Date(entry.ts).toLocaleString('pt-BR', {dateStyle:'short', timeStyle:'short'});
+      return `<tr>
+        <td data-label="Data/Hora">${dtFmt}</td>
+        <td data-label="EAN">${p.ean}</td>
+        <td data-label="Produto">${escapeHtml(p.name)}</td>
+        <td data-label="Preço de Tabela">R$ ${p.price.toFixed(2).replace('.',',')}</td>
+        <td data-label="Laboratório">${escapeHtml(entry.lab)}</td>
+        <td data-label="Preço Concorrente">R$ ${entry.price.toFixed(2).replace('.',',')}</td>
+        <td data-label="Vendedor">${escapeHtml(entry.vendedor || '-')}</td>
+        <td data-label="Observação">${escapeHtml(entry.note || '-')}</td>
+      </tr>`;
     }).join('');
-    table.innerHTML = head + rows;
+    table.innerHTML = head + `<tbody>${rows}</tbody>`;
   }
   document.getElementById('sheetOverlay').classList.remove('hidden');
 }
@@ -1112,8 +1517,6 @@ function closeExportMenu(){
 function chooseExport(type){
   closeExportMenu();
   if(type==='pedido') exportPedido();
-  else if(type==='estoqueCsv') exportEstoqueCsv();
-  else if(type==='estoquePdf') exportEstoquePdf();
 }
 
 /* ---------- Exports (compartilhamento nativo com fallback para download) ---------- */
@@ -1179,24 +1582,69 @@ function estoqueAnotadoList(){
     .filter(x=>x.c.touched);
 }
 
-function exportEstoqueCsv(){
+/* ---------- Sugestão de pedido ---------- */
+function abrirSugestaoPedido(){
+  renderSugestaoPedido();
+  document.getElementById('sugestaoOverlay').classList.remove('hidden');
+}
+function fecharSugestaoPedido(){
+  document.getElementById('sugestaoOverlay').classList.add('hidden');
+}
+function renderSugestaoPedido(){
+  const anotados = estoqueAnotadoList();
+  const body = document.getElementById('sugestaoBody');
+  if(anotados.length===0){
+    body.innerHTML = `<p class="hint">Nenhum item de estoque foi anotado ainda. Anote o estoque na tela principal antes de montar a sugestão de pedido.</p>`;
+    return;
+  }
+  body.innerHTML = `
+    <div class="sugestao-list">
+      ${anotados.map(({p,c})=>`
+        <div class="sugestao-row">
+          <div>
+            <div class="ean-name">${escapeHtml(p.name)}</div>
+            <div class="ean-code">${p.ean} · Estoque anotado: ${c.value} un.</div>
+          </div>
+          <div class="sugestao-input">
+            <label>Sugestão</label>
+            <div class="stepper">
+              <button onclick="stepSugestao('${p.ean}', -1)">−</button>
+              <input type="number" min="0" value="${state.sugestao[p.ean]||0}" onfocus="this.select()" onchange="setSugestao('${p.ean}', this.value)" />
+              <button onclick="stepSugestao('${p.ean}', 1)">+</button>
+            </div>
+          </div>
+        </div>`).join('')}
+    </div>
+  `;
+}
+function setSugestao(ean, rawVal){
+  let v = parseInt(rawVal,10);
+  if(isNaN(v) || v<0) v = 0;
+  state.sugestao[ean] = v;
+  persistState();
+}
+function stepSugestao(ean, delta){
+  const atual = state.sugestao[ean] || 0;
+  state.sugestao[ean] = Math.max(0, atual + delta);
+  renderSugestaoPedido();
+  persistState();
+}
+function exportSugestaoCsv(){
   const anotados = estoqueAnotadoList();
   if(anotados.length===0){
     alert('Nenhum item de estoque foi anotado ainda.');
     return;
   }
-  const rows = [...sessionHeaderRows(), ['EAN','Nome do Produto','Laboratório','Preço','Estoque Anotado (un.)']];
+  const rows = [...sessionHeaderRows(), ['EAN','Nome do Produto','Laboratório','Preço','Estoque Anotado (un.)','Sugestão de Pedido (un.)']];
   anotados.forEach(({p,c})=>{
-    rows.push([p.ean, p.name, p.lab, p.price.toFixed(2).replace('.',','), c.value]);
+    rows.push([p.ean, p.name, p.lab, p.price.toFixed(2).replace('.',','), c.value, state.sugestao[p.ean]||0]);
   });
-  const filename = buildFileName('estoque_loja', 'csv');
+  const filename = buildFileName('sugestao_pedido', 'csv');
   const blob = csvToBlob(rows);
   const file = new File([blob], filename, {type:'text/csv'});
   shareFileOrDownload(file, blob, filename);
 }
-
-/* Anotação de estoque em PDF: EAN, Descrição, Laboratório, Preço e Quantidade Anotada */
-function exportEstoquePdf(){
+function exportSugestaoPdf(){
   const anotados = estoqueAnotadoList();
   if(anotados.length===0){
     alert('Nenhum item de estoque foi anotado ainda.');
@@ -1207,30 +1655,191 @@ function exportEstoquePdf(){
   const s = state.session || {loja:'-',cnpj:'',vendedor:'-',data:'-'};
 
   doc.setFontSize(14);
-  doc.text('Anotação de Estoque na Loja', 40, 40);
+  doc.text('Sugestão de Pedido', 40, 40);
   doc.setFontSize(10);
   doc.text(`Loja: ${s.loja || '-'}   CNPJ: ${s.cnpj || '-'}`, 40, 58);
   doc.text(`Vendedor: ${s.vendedor || '-'}   Data: ${s.data || '-'}`, 40, 72);
 
   doc.autoTable({
     startY: 88,
-    head: [['EAN', 'Descrição', 'Laboratório', 'Preço', 'Qtd. Anotada']],
+    head: [['EAN', 'Descrição', 'Laboratório', 'Preço', 'Estoque na Loja', 'Sugestão']],
     body: anotados.map(({p,c})=>[
       p.ean,
       p.name,
       p.lab,
       `R$ ${p.price.toFixed(2).replace('.',',')}`,
-      String(c.value)
+      String(c.value),
+      String(state.sugestao[p.ean]||0)
     ]),
     styles: {fontSize: 9},
     headStyles: {fillColor: [20,83,116]},
-    columnStyles: { 0:{cellWidth:80}, 3:{cellWidth:60}, 4:{cellWidth:70} }
+    columnStyles: { 0:{cellWidth:80}, 3:{cellWidth:55}, 4:{cellWidth:60}, 5:{cellWidth:55} }
   });
 
-  const filename = buildFileName('estoque_loja', 'pdf');
+  const filename = buildFileName('sugestao_pedido', 'pdf');
   const blob = doc.output('blob');
   const file = new File([blob], filename, {type:'application/pdf'});
   shareFileOrDownload(file, blob, filename);
+}
+
+/* ---------- Revisão do pedido: escolha de distribuidora por item ---------- */
+let revisaoAberto = {}; // ean -> bool (lista de opções expandida)
+
+function toggleRevisaoItem(ean){
+  revisaoAberto[ean] = !revisaoAberto[ean];
+  renderRevisaoPedido();
+}
+/* Ajusta a quantidade do pedido direto na tela de revisão, útil para tentar
+   bater o pedido mínimo da distribuidora selecionada aumentando a quantidade,
+   ou reduzir. Não deixa passar do estoque que essa distribuidora tem. */
+function stepRevisaoQty(ean, delta){
+  const cell = state.pedido[ean];
+  const nomeSelecionado = state.pedidoDistribuidor[ean];
+  const opcao = nomeSelecionado ? (distribuidorStock[ean] || []).find(o=>o.nome===nomeSelecionado) : null;
+  const max = opcao ? opcao.estoque : Infinity;
+  let novo = cell.value + delta;
+  novo = Math.max(1, novo);
+  if(isFinite(max)) novo = Math.min(max, novo);
+  cell.value = novo;
+  renderTable();
+  renderCart();
+  renderRevisaoPedido();
+  persistState();
+}
+/* Trocar para uma distribuidora com estoque insuficiente (mas >0) é permitido,
+   avisa o vendedor e oferece ajustar a quantidade do pedido para o disponível.
+   Distribuidora com estoque zerado nunca chega aqui (opção fica desabilitada). */
+function selecionarDistribuidorPedido(ean, nome){
+  const opcao = (distribuidorStock[ean] || []).find(o=>o.nome===nome);
+  const qtyAtual = state.pedido[ean].value;
+  if(opcao && opcao.estoque>0 && opcao.estoque<qtyAtual){
+    const ajustar = confirm(
+      `${nome} tem ${opcao.estoque} un. disponíveis, mas o pedido é de ${qtyAtual} un.\n\n` +
+      `Clique OK para trocar para ${nome} e ajustar a quantidade do pedido para ${opcao.estoque} un., ` +
+      `ou Cancelar para manter a distribuidora atual selecionada para este item.`
+    );
+    if(!ajustar){
+      revisaoAberto[ean] = false;
+      renderRevisaoPedido();
+      return;
+    }
+    state.pedido[ean].value = opcao.estoque;
+    renderTable();
+    renderCart();
+  }
+  state.pedidoDistribuidor[ean] = nome;
+  revisaoAberto[ean] = false;
+  renderRevisaoPedido();
+  persistState();
+}
+/* O valor de cada distribuidora soma só a quantidade que ela de fato consegue
+   atender (min(pedido, estoque dela)), um item sem estoque em lugar nenhum não
+   tem distribuidora atribuída (nome fica null) e não entra em nenhum total; um
+   item com estoque parcial só conta pela parte que será atendida. */
+function distribuidorTotais(){
+  const totals = {};
+  DISTRIBUIDORES.forEach(n=>totals[n]=0);
+  cartItems().forEach(({p,qty})=>{
+    const nome = state.pedidoDistribuidor[p.ean];
+    if(!nome) return;
+    const opcao = (distribuidorStock[p.ean] || []).find(o=>o.nome===nome);
+    const atendida = opcao ? Math.min(qty, opcao.estoque) : 0;
+    totals[nome] = (totals[nome]||0) + atendida*p.price;
+  });
+  return totals;
+}
+function renderRevisaoTotais(){
+  const totals = distribuidorTotais();
+  const el = document.getElementById('revisaoTotais');
+  el.innerHTML = DISTRIBUIDORES.map(nome=>{
+    const valor = totals[nome] || 0;
+    const minimo = PEDIDO_MINIMO_DISTRIBUIDOR[nome] || 0;
+    const atingiu = valor >= minimo;
+    return `
+      <div class="distrib-total-chip ${atingiu?'atingido':'abaixo'}">
+        ${escapeHtml(nome)}
+        <span class="valor">R$ ${valor.toFixed(2).replace('.',',')} de R$ ${minimo.toFixed(2).replace('.',',')}</span>
+      </div>`;
+  }).join('');
+}
+function renderRevisaoPedido(){
+  const items = cartItems();
+  renderRevisaoTotais();
+
+  const body = document.getElementById('revisaoBody');
+  body.innerHTML = items.map(({p, qty})=>{
+    const opcoes = (distribuidorStock[p.ean] || []).slice().sort((a,b)=>b.estoque-a.estoque);
+    const selecionadoNome = state.pedidoDistribuidor[p.ean];
+    const selecionadoObj = opcoes.find(o=>o.nome===selecionadoNome);
+    /* Sem distribuidora selecionada (estoque zerado em todas), exibe a primeira
+       mesmo assim, só para visualização/comparação, ela continua desabilitada. */
+    const exibidoObj = selecionadoObj || opcoes[0] || null;
+    const aberto = !!revisaoAberto[p.ean];
+
+    const atendida = exibidoObj ? Math.min(qty, exibidoObj.estoque) : 0;
+    const faltam = qty - atendida;
+    const insuficiente = exibidoObj && faltam > 0;
+    const zerado = exibidoObj && exibidoObj.estoque === 0;
+
+    /* Quantidade só pode subir até o estoque da distribuidora SELECIONADA
+       (não a exibida como fallback), dá para aumentar para tentar bater o
+       pedido mínimo, ou diminuir, sem estourar o que ela realmente tem. */
+    const maxQty = selecionadoObj ? selecionadoObj.estoque : Infinity;
+    const atMax = zerado || qty >= maxQty;
+    const atMin = zerado || qty <= 1;
+
+    const resumoHtml = exibidoObj ? `
+        <div class="distrib-selected ${zerado?'insuficiente':''}" onclick="toggleRevisaoItem('${p.ean}')">
+          <div>
+            <div class="distrib-nome">${escapeHtml(exibidoObj.nome)}</div>
+            <div class="distrib-info">${exibidoObj.estoque} un. disponíveis</div>
+            ${insuficiente?`
+              <div class="distrib-calc">Solicitado: ${qty} un. · Atendido: ${atendida} un. · <span class="distrib-deficit">Faltam: ${faltam} un.</span></div>
+              <div class="distrib-insuf-tag">Estoque insuficiente</div>
+            `:''}
+          </div>
+          <span class="distrib-chevron">${aberto?'▲':'▼'}</span>
+        </div>` : '';
+
+    const listaHtml = aberto ? `
+      <div class="distrib-options">
+        ${opcoes.map(o=>{
+          const isSel = o.nome===selecionadoNome;
+          const disabled = o.estoque<=0;
+          const optAtendida = Math.min(qty, o.estoque);
+          const optFaltam = qty - optAtendida;
+          const optInsuficiente = !disabled && optFaltam > 0;
+          return `
+            <div class="distrib-option ${isSel?'is-selected':''} ${disabled?'is-disabled':''}"
+                 ${disabled?'':`onclick="selecionarDistribuidorPedido('${p.ean}','${o.nome}')"`}>
+              <div>
+                <div class="distrib-nome">${escapeHtml(o.nome)}</div>
+                <div class="distrib-info">${o.estoque} un. disponíveis${disabled?' · sem estoque':''}</div>
+                ${optInsuficiente?`
+                  <div class="distrib-calc">Solicitado: ${qty} un. · Atendido: ${optAtendida} un. · <span class="distrib-deficit">Faltam: ${optFaltam} un.</span></div>
+                  <div class="distrib-insuf-tag">Estoque insuficiente</div>
+                `:''}
+                ${isSel?'<div class="distrib-tag">Distribuidor selecionado</div>':''}
+              </div>
+            </div>`;
+        }).join('')}
+      </div>` : '';
+
+    return `
+      <div class="distrib-item">
+        <div class="distrib-item-head">
+          <div class="distrib-item-name">${escapeHtml(p.name)}</div>
+          <div class="distrib-item-sub">
+            <button ${atMin?'disabled':''} onclick="stepRevisaoQty('${p.ean}', -1)" title="Diminuir quantidade">−</button>
+            <span class="qty-val">${qty} un.</span>
+            <button ${atMax?'disabled':''} onclick="stepRevisaoQty('${p.ean}', 1)" title="Aumentar quantidade (até o estoque da distribuidora selecionada)">+</button>
+            <span>· R$ ${p.price.toFixed(2).replace('.',',')} cada</span>
+          </div>
+        </div>
+        ${resumoHtml}
+        ${listaHtml}
+      </div>`;
+  }).join('');
 }
 
 /* Pedido do cliente: gera .xlsx no modelo pronto para importação (CNPJ, EAN, Quantidade) */
@@ -1261,6 +1870,123 @@ function exportPedido(){
   const arrayBuffer = XLSX.write(wb, {type:'array', bookType:'xlsx'});
   const blob = new Blob([arrayBuffer], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
   const file = new File([blob], filename, {type: blob.type});
+  shareFileOrDownload(file, blob, filename);
+}
+
+/* Garante que todo item do pedido já tem uma distribuidora atribuída (usa a de
+   maior estoque quando ainda não foi escolhida manualmente). Chamada tanto ao
+   abrir a revisão quanto ao exportar por distribuidora direto da tela
+   principal, sem precisar passar pela revisão primeiro. */
+function garantirDistribuidorasAtribuidas(){
+  cartItems().forEach(({p, qty})=>{
+    if(!state.pedidoDistribuidor[p.ean]){
+      state.pedidoDistribuidor[p.ean] = defaultDistribuidorFor(p.ean, qty);
+    }
+  });
+}
+
+/* Abre a tela com uma opção de arquivo .xlsx (CNPJ/EAN/Quantidade) por
+   distribuidora, só aparecem as que têm pelo menos um item atribuído a elas;
+   uma distribuidora sem nenhum item não vira opção. Cada botão gera só o
+   arquivo daquela distribuidora, então dá para baixar um de cada vez. */
+function abrirExportarPorDistribuidora(){
+  const items = cartItems();
+  if(items.length===0){
+    alert('O cliente ainda não pediu nenhum item.');
+    return;
+  }
+  const cnpj = (state.session && state.session.cnpj) || '';
+  if(!cnpj){
+    alert('Informe o CNPJ da loja no atendimento antes de exportar o pedido.');
+    return;
+  }
+  garantirDistribuidorasAtribuidas();
+
+  const comItens = DISTRIBUIDORES.filter(nome=>
+    items.some(({p})=>state.pedidoDistribuidor[p.ean]===nome)
+  );
+  if(comItens.length===0){
+    alert('Nenhum item do pedido tem uma distribuidora com estoque disponível ainda.');
+    return;
+  }
+
+  const body = document.getElementById('exportDistribBody');
+  body.innerHTML = comItens.map(nome=>{
+    const qtdItens = items.filter(({p})=>state.pedidoDistribuidor[p.ean]===nome).length;
+    return `<button class="btn-secondary" onclick="exportPedidoDeUmaDistribuidora('${escapeHtml(nome).replace(/'/g,"\\'")}')">📦 ${escapeHtml(nome)}: ${qtdItens} ${qtdItens===1?'item':'itens'}</button>`;
+  }).join('');
+  document.getElementById('exportDistribOverlay').classList.remove('hidden');
+}
+function fecharExportarPorDistribuidora(){
+  document.getElementById('exportDistribOverlay').classList.add('hidden');
+}
+function exportPedidoDeUmaDistribuidora(nome){
+  const itensDist = cartItems().filter(({p})=>state.pedidoDistribuidor[p.ean]===nome);
+  const cnpj = (state.session && state.session.cnpj) || '';
+  const rows = [['CNPJ', 'EAN', 'Quantidade']];
+  itensDist.forEach(({p, qty})=>rows.push([cnpj, p.ean, qty]));
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Modelo Pedidos');
+  const filename = buildFileName(`pedido_import_${slugify(nome)}`, 'xlsx');
+  const arrayBuffer = XLSX.write(wb, {type:'array', bookType:'xlsx'});
+  const blob = new Blob([arrayBuffer], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const file = new File([blob], filename, {type: blob.type});
+  shareFileOrDownload(file, blob, filename);
+}
+
+/* Um único PDF com uma página por distribuidora (só as que têm item), cada uma
+   com sua própria tabela de itens, para imprimir ou anexar num só arquivo em
+   vez de vários .xlsx separados. */
+function exportPedidoPdfPorDistribuidora(){
+  const items = cartItems();
+  if(items.length===0){
+    alert('O cliente ainda não pediu nenhum item.');
+    return;
+  }
+  garantirDistribuidorasAtribuidas();
+  const comItens = DISTRIBUIDORES.filter(nome=>
+    items.some(({p})=>state.pedidoDistribuidor[p.ean]===nome)
+  );
+  if(comItens.length===0){
+    alert('Nenhum item do pedido tem uma distribuidora com estoque disponível ainda.');
+    return;
+  }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({orientation:'portrait', unit:'pt'});
+  const s = state.session || {loja:'-',cnpj:'',vendedor:'-',data:'-'};
+
+  comItens.forEach((nome, idx)=>{
+    if(idx>0) doc.addPage();
+    const itensDist = items.filter(({p})=>state.pedidoDistribuidor[p.ean]===nome);
+
+    doc.setFontSize(14);
+    doc.text(`Pedido: ${nome}`, 40, 40);
+    doc.setFontSize(10);
+    doc.text(`Loja: ${s.loja || '-'}   CNPJ: ${s.cnpj || '-'}`, 40, 58);
+    doc.text(`Vendedor: ${s.vendedor || '-'}   Data: ${s.data || '-'}`, 40, 72);
+
+    doc.autoTable({
+      startY: 88,
+      head: [['EAN', 'Descrição', 'Quantidade', 'Preço', 'Subtotal']],
+      body: itensDist.map(({p, qty})=>[
+        p.ean,
+        p.name,
+        String(qty),
+        `R$ ${p.price.toFixed(2).replace('.',',')}`,
+        `R$ ${(qty*p.price).toFixed(2).replace('.',',')}`
+      ]),
+      styles: {fontSize: 9},
+      headStyles: {fillColor: [20,83,116]},
+      columnStyles: { 0:{cellWidth:80}, 2:{cellWidth:60}, 3:{cellWidth:60}, 4:{cellWidth:70} }
+    });
+  });
+
+  const filename = buildFileName('pedido_por_distribuidora', 'pdf');
+  const blob = doc.output('blob');
+  const file = new File([blob], filename, {type:'application/pdf'});
   shareFileOrDownload(file, blob, filename);
 }
 

@@ -8,28 +8,28 @@ Você digita os itens de qualquer jeito (com erro de digitação, abreviação, 
 
 ## O que ele faz
 
+- **Seleção de estado**: a tela inicial pede o estado (hoje: Alagoas, Bahia, Paraíba, Pernambuco, Rio Grande do Norte e Sergipe), cada um com sua própria tabela de preços.
 - **Consulta de preços**: cola a lista de itens, recebe de volta "Produto: R$ XX,XX" pronto para encaminhar ao cliente.
 - **Geração de pedido por lista**: a partir da mesma lista (ou dos itens já consultados), gera "código de barras + quantidade", um por linha.
-- **Fazer pedido navegando pelo catálogo**: em vez de digitar, é possível abrir a tabela inteira, buscar ou filtrar por categoria e ir informando a quantidade de cada item.
+- **Fazer pedido navegando pelo catálogo**: em vez de digitar, é possível abrir a tabela inteira, buscar ou filtrar por categoria (Linha, Prioritário, Lançamento, Descontinuado, Combate) e por selo especial (Controlado, Antibiótico, Anticoncepcional, Oftálmico), e ir informando a quantidade de cada item.
 - **Busca inteligente e cautelosa**: entende erro de digitação e abreviação ("olme" = olmesartana, "gts" = gotas, "cp" = comprimido), mas nunca troca a dosagem pedida por outra parecida.
 - **Detecta ambiguidade de verdade**: quando existe mais de uma apresentação válida, o app para e pergunta qual é a certa, em vez de escolher sozinho.
 - **Editar antes de fechar**: dá para ajustar quantidades ou remover itens antes de gerar o pedido.
 - **Lista de Faltas**: itens não encontrados entram automaticamente numa lista separada, pronta para copiar.
 - **Funciona offline** depois de carregado, sem servidor, banco de dados ou login.
-- **Tour de boas-vindas**: na primeira visita, uma sequência de telas explica o fluxo; pode ser reaberta a qualquer momento pelo botão "?" no canto da tela.
+- **Tour de boas-vindas**: depois de escolher o estado, uma sequência de telas explica o fluxo; pode ser reaberta a qualquer momento pelo botão "?" no canto da tela.
 
 ## Como usar
 
-1. Na tela inicial, escolha a tabela (Tabela 1, 2 ou 3), ou clique em **Fazer pedido** no topo para ir direto ao catálogo navegável.
-2. Decida o que precisa: consultar preço ou gerar pedido a partir de uma lista digitada.
-3. Cole a lista de itens (um por linha) ou navegue/busque pelo catálogo e informe as quantidades.
-4. Confira o resultado, copie e use como quiser.
+1. Na tela inicial, escolha o estado.
+2. Escolha a tabela (Tabela 1, 2 ou 3), ou clique em **Fazer pedido** no topo para ir direto ao catálogo navegável.
+3. Decida o que precisa: consultar preço ou gerar pedido a partir de uma lista digitada.
+4. Cole a lista de itens (um por linha) ou navegue/busque pelo catálogo e informe as quantidades.
+5. Confira o resultado, copie e use como quiser.
 
 ## Tecnologia
 
-Tudo roda em um único arquivo `index.html`, sem backend, sem build, sem dependência de npm:
-
-- **HTML + CSS + JavaScript puro**.
+- **HTML + CSS + JavaScript puro**, sem framework e sem etapa de build, dividido em `index.html` + `style.css` + `app.js`.
 - **[SheetJS](https://sheetjs.com/)** (via CDN) para ler a planilha `.xlsx` direto no navegador.
 - Motor de busca próprio (normalização de texto, extração de dosagem, comparação por similaridade).
 - Pensado para rodar no **GitHub Pages**: é só um link, sem custo de servidor.
@@ -49,8 +49,12 @@ Depois é só abrir `http://localhost:8000` no navegador.
 
 ```
 gerboot/
-├── index.html      # a aplicação inteira (HTML, CSS e JS)
-├── TABELAS.xlsx     # planilha com 3 tabelas de preço fictícias, uma por aba
+├── index.html      # marcação e estrutura da página
+├── style.css       # estilos
+├── app.js          # lógica da aplicação (busca, parsing, geração de pedido)
+├── TABELAS.xlsx    # planilha com as tabelas de preço fictícias, uma aba por estado/tabela
+├── manifest.json   # manifesto PWA
+├── logo.png, apple-touch-icon.png, icon-192.png, icon-512.png, og-image.png
 └── README.md
 ```
 

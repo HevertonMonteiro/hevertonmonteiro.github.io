@@ -46,11 +46,11 @@
         const data = new Date(l.criado_em);
         return `
           <tr>
-            <td>${escapeHtml(l.nome)}</td>
-            <td>${escapeHtml(l.telefone)}</td>
-            <td>${imovel ? escapeHtml(imovel.titulo) : '—'}</td>
-            <td>${data.toLocaleDateString('pt-BR')} ${data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td>
-            <td><button type="button" class="btn btn-sm btn-outline btn-atendido" data-id="${l.id}">${l.atendido ? 'Atendido ✓' : 'Marcar como atendido'}</button></td>
+            <td data-label="Nome">${escapeHtml(l.nome)}</td>
+            <td data-label="Telefone">${escapeHtml(l.telefone)}</td>
+            <td data-label="Imóvel">${imovel ? escapeHtml(imovel.titulo) : '—'}</td>
+            <td data-label="Data">${data.toLocaleDateString('pt-BR')} ${data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td>
+            <td data-label="Status"><button type="button" class="btn btn-sm btn-outline btn-atendido" data-id="${l.id}">${l.atendido ? 'Atendido ✓' : 'Marcar como atendido'}</button></td>
           </tr>`;
       }).join('');
 
