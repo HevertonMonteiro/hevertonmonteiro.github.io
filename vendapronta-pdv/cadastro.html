@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cadastrar empresa · VENDAPRONTA PDV</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta name="theme-color" content="#0d3b54">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<div class="page narrow">
+  <div class="logo-lockup">
+    <img src="assets/icon-64.png" alt="" width="40" height="40">
+    <b>VENDAPRONTA PDV</b>
+  </div>
+
+  <div id="tela-form" class="card">
+    <h2 style="margin-top:0;font-size:18px;color:var(--teal-900);">Cadastrar empresa</h2>
+    <p class="hint">Depois de enviar, o acesso fica pendente até a plataforma aprovar.</p>
+    <div class="field"><label for="nome">Nome da empresa</label><input type="text" id="nome" placeholder="Ex: Distribuidora Nova Aurora" required></div>
+    <div class="field"><label for="cnpj">CNPJ</label><input type="text" id="cnpj" placeholder="00.000.000/0000-00" maxlength="18" oninput="maskCnpjCadastro(this)" required></div>
+    <div class="field"><label for="telefone">Telefone</label><input type="text" id="telefone" placeholder="(00) 00000-0000" maxlength="15" oninput="maskTelefoneCadastro(this)" required></div>
+    <div class="field"><label for="email-gestor">E-mail do gestor</label><input type="email" id="email-gestor" placeholder="seu@email.com" required></div>
+    <div class="field"><label for="senha-gestor">Senha</label><input type="password" id="senha-gestor" placeholder="mínimo 6 caracteres" minlength="6" required></div>
+    <button type="button" class="btn btn-primary btn-block" onclick="enviarCadastro()">Cadastrar</button>
+    <p style="margin:14px 0 0;font-size:13.5px;"><a href="index.html" class="btn-link">Já tenho conta</a></p>
+  </div>
+
+  <div id="tela-sucesso" class="card" style="display:none;text-align:center;">
+    <h2 style="margin-top:0;font-size:18px;color:var(--teal-900);">Cadastro enviado! ✅</h2>
+    <p style="color:var(--slate-600);font-size:14px;">Assim que a plataforma aprovar o acesso, você poderá entrar com o e-mail e senha que acabou de cadastrar.</p>
+    <p class="hint">(Demo de portfólio: nesta simulação, nenhuma empresa nova é realmente criada. Use "Entrar como Gestor" na tela de login para explorar o painel já pronto.)</p>
+    <a href="index.html" class="btn btn-outline btn-block">Voltar pro login</a>
+  </div>
+</div>
+
+<script>
+  function maskCnpjCadastro(el) {
+    let v = el.value.replace(/\D/g, '').slice(0, 14);
+    v = v.replace(/^(\d{2})(\d)/, '$1.$2').replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3').replace(/\.(\d{3})(\d)/, '.$1/$2').replace(/(\d{4})(\d)/, '$1-$2');
+    el.value = v;
+  }
+  function maskTelefoneCadastro(el) {
+    let v = el.value.replace(/\D/g, '').slice(0, 11);
+    v = v.replace(/^(\d{2})(\d)/, '($1) $2').replace(/(\d{5})(\d)/, '$1-$2');
+    el.value = v;
+  }
+  function enviarCadastro() {
+    const nome = document.getElementById('nome').value.trim();
+    const cnpj = document.getElementById('cnpj').value.trim();
+    const telefone = document.getElementById('telefone').value.trim();
+    const email = document.getElementById('email-gestor').value.trim();
+    const senha = document.getElementById('senha-gestor').value;
+    if (!nome || cnpj.replace(/\D/g, '').length !== 14 || !telefone || !email || senha.length < 6) {
+      alert('Preencha todos os campos corretamente. O CNPJ precisa ter 14 números.');
+      return;
+    }
+    document.getElementById('tela-form').style.display = 'none';
+    document.getElementById('tela-sucesso').style.display = 'block';
+  }
+</script>
+</body>
+</html>

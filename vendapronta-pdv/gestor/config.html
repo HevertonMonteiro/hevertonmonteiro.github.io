@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Configurações · Gestor · VENDAPRONTA PDV</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<meta name="theme-color" content="#0d3b54">
+<link rel="stylesheet" href="../css/app.css">
+</head>
+<body>
+
+<div id="topbar-mount"></div>
+<div id="tabs-mount"></div>
+
+<div class="page">
+  <div class="card">
+    <h2 style="margin-top:0;font-size:17px;color:var(--teal-900);">Configurações</h2>
+    <div class="field">
+      <label>Código de acesso da equipe</label>
+      <input type="text" id="codigo" readonly style="background:var(--teal-50);font-weight:800;letter-spacing:.15em;color:var(--teal-900);">
+    </div>
+    <p class="hint" style="margin-top:0;">Passe esse código para seus vendedores. Cada um digita só uma vez, no aparelho dele, na tela de login.</p>
+  </div>
+
+  <div class="card">
+    <p style="font-size:13.5px;color:var(--slate-600);">Modelos de exportação de pedido da sua empresa: registre aqui o layout de planilha que vocês usam. Por enquanto isso fica só registrado; o pedido do vendedor continua sendo gerado no formato padrão até a geração automática nesse modelo ficar pronta.</p>
+    <div class="field">
+      <label>Modelo de planilha (.xlsx) para importar pedido</label>
+      <input type="file" id="input-modelo" accept=".xlsx" onchange="registrarModelo(this)">
+    </div>
+    <button class="btn btn-outline" onclick="document.getElementById('input-modelo').click()">Registrar modelo de planilha</button>
+    <p id="modelo-atual" class="hint"></p>
+  </div>
+</div>
+
+<script src="../js/data.js"></script>
+<script src="../js/layout.js"></script>
+<script>
+  const sessao = exigirSessao('gestor', '../');
+  const empresa = sessao ? getEmpresa(sessao.empresaId) : null;
+  if (empresa) bloqueioGestor(empresa);
+  montarTopbar({ papel: 'gestor', base: '../', empresaNome: empresa ? empresa.nome : '' });
+  montarAbasGestor('config', '../');
+
+  function render() {
+    const emp = getEmpresa(sessao.empresaId);
+    document.getElementById('codigo').value = emp.codigoAcesso || '------';
+    document.getElementById('modelo-atual').textContent = emp.modeloPlanilha
+      ? 'Modelo atual: ' + emp.modeloPlanilha
+      : 'Nenhum modelo registrado ainda. O pedido é exportado no formato padrão.';
+  }
+  function registrarModelo(input) {
+    if (!input.files[0]) return;
+    updateEmpresa(sessao.empresaId, { modeloPlanilha: input.files[0].name });
+    render();
+  }
+  render();
+  maybeShowTour('gestor');
+</script>
+</body>
+</html>

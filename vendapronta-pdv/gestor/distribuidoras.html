@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Distribuidoras · Gestor · VENDAPRONTA PDV</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<meta name="theme-color" content="#0d3b54">
+<link rel="stylesheet" href="../css/app.css">
+</head>
+<body>
+
+<div id="topbar-mount"></div>
+<div id="tabs-mount"></div>
+
+<div class="page">
+  <div class="card">
+    <h2 style="margin-top:0;font-size:17px;color:var(--teal-900);">Distribuidoras</h2>
+    <p class="hint">Cadastre as distribuidoras que você trabalha (até 6). O vendedor só passa a ver o nome delas depois que forem cadastradas aqui.</p>
+    <div id="lista"></div>
+    <div id="form-wrap"></div>
+  </div>
+</div>
+
+<script src="../js/data.js"></script>
+<script src="../js/layout.js"></script>
+<script>
+  const sessao = exigirSessao('gestor', '../');
+  const empresa = sessao ? getEmpresa(sessao.empresaId) : null;
+  if (empresa) bloqueioGestor(empresa);
+  montarTopbar({ papel: 'gestor', base: '../', empresaNome: empresa ? empresa.nome : '' });
+  montarAbasGestor('distribuidoras', '../');
+
+  function render() {
+    const emp = getEmpresa(sessao.empresaId);
+    const dists = emp.distribuidoras || [];
+    const lista = document.getElementById('lista');
+    if (!dists.length) {
+      lista.innerHTML = '<p class="empty-state">Nenhuma distribuidora cadastrada ainda.</p>';
+    } else {
+      lista.innerHTML = `<div style="border-top:1px solid var(--slate-200);margin-bottom:16px;">
+        ${dists.map((d) => `
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid var(--slate-200);">
+            <div>
+              <div style="font-weight:700;">${escapeHtml(d.nome)}</div>
+              <div style="font-size:13px;color:${d.pedidoMinimo ? 'var(--slate-600)' : 'var(--teal-800)'};">${d.pedidoMinimo ? 'Pedido mínimo: R$ ' + formatMoeda(d.pedidoMinimo) : 'Sem pedido mínimo'}</div>
+            </div>
+            <button class="btn btn-danger btn-sm" onclick="remover('${d.id}')">Remover</button>
+          </div>`).join('')}
+      </div>`;
+    }
+
+    const formWrap = document.getElementById('form-wrap');
+    if (dists.length >= 6) {
+      formWrap.innerHTML = '<p class="hint">Limite de 6 distribuidoras atingido. Remova uma para cadastrar outra.</p>';
+    } else {
+      formWrap.innerHTML = `
+        <div class="field"><label>Nome da distribuidora</label><input type="text" id="nome-dist" maxlength="40" placeholder="Ex: Distribuidora Nova Aurora"></div>
+        <div class="field">
+          <label>Pedido mínimo (R$)</label>
+          <input type="text" id="minimo-dist" placeholder="Ex: 300,00" inputmode="numeric" oninput="maskMinimo(this)">
+          <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-weight:400;">
+            <input type="checkbox" id="sem-minimo" onchange="document.getElementById('minimo-dist').disabled=this.checked;">
+            Sem pedido mínimo
+          </label>
+        </div>
+        <button class="btn btn-primary" onclick="adicionar()">Adicionar distribuidora</button>`;
+    }
+  }
+  function maskMinimo(el) {
+    let d = el.value.replace(/\D/g, '');
+    if (!d) { el.value = ''; return; }
+    while (d.length < 3) d = '0' + d;
+    el.value = parseInt(d.slice(0, -2), 10).toLocaleString('pt-BR') + ',' + d.slice(-2);
+  }
+  function adicionar() {
+    const nome = document.getElementById('nome-dist').value.trim();
+    const semMinimo = document.getElementById('sem-minimo').checked;
+    const minimoStr = document.getElementById('minimo-dist').value.replace(/\D/g, '');
+    const minimo = semMinimo ? 0 : (minimoStr ? parseInt(minimoStr, 10) / 100 : 0);
+    if (!nome) { alert('Informe o nome da distribuidora.'); return; }
+    if (!semMinimo && minimo <= 0) { alert('Informe um pedido mínimo maior que zero, ou marque "Sem pedido mínimo".'); return; }
+    const emp = getEmpresa(sessao.empresaId);
+    const dists = emp.distribuidoras.slice();
+    dists.push({ id: 'd' + Date.now(), nome, pedidoMinimo: semMinimo ? 0 : minimo });
+    updateEmpresa(sessao.empresaId, { distribuidoras: dists });
+    render();
+  }
+  function remover(id) {
+    const emp = getEmpresa(sessao.empresaId);
+    updateEmpresa(sessao.empresaId, { distribuidoras: emp.distribuidoras.filter((d) => d.id !== id) });
+    render();
+  }
+  render();
+  maybeShowTour('gestor');
+</script>
+</body>
+</html>

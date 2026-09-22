@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Observações · Gestor · VENDAPRONTA PDV</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<meta name="theme-color" content="#0d3b54">
+<link rel="stylesheet" href="../css/app.css">
+</head>
+<body>
+
+<div id="topbar-mount"></div>
+<div id="tabs-mount"></div>
+
+<div class="page">
+  <div class="card">
+    <h2 style="margin-top:0;font-size:17px;color:var(--teal-900);">Observações de preço da concorrência</h2>
+    <p class="hint">Produtos em que algum vendedor informou o preço de um concorrente. Exporte para analisar com calma.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:12px;">
+      <div><label style="display:block;font-size:11px;color:var(--slate-600);">De</label><input type="date" id="de" style="padding:7px 8px;border-radius:6px;border:1px solid var(--slate-300);" onchange="render()"></div>
+      <div><label style="display:block;font-size:11px;color:var(--slate-600);">Até</label><input type="date" id="ate" style="padding:7px 8px;border-radius:6px;border:1px solid var(--slate-300);" onchange="render()"></div>
+      <button id="btn-limpar" class="btn-link" style="display:none;" onclick="limparPeriodo()">Limpar período</button>
+      <button class="btn btn-outline" id="btn-exportar" onclick="exportar()">Exportar (.xlsx)</button>
+      <span id="contador" class="hint" style="margin:0;"></span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Data</th><th>Produto</th><th>Preço tabela</th><th>Lab. concorrente</th><th>Preço concorrente</th><th>Vendedor</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="../js/data.js"></script>
+<script src="../js/layout.js"></script>
+<script src="../vendedor/produtos.js"></script>
+<script>
+  const sessao = exigirSessao('gestor', '../');
+  const empresa = sessao ? getEmpresa(sessao.empresaId) : null;
+  if (empresa) bloqueioGestor(empresa);
+  montarTopbar({ papel: 'gestor', base: '../', empresaNome: empresa ? empresa.nome : '' });
+  montarAbasGestor('observacoes', '../');
+
+  function render() {
+    const emp = getEmpresa(sessao.empresaId);
+    const de = document.getElementById('de').value;
+    const ate = document.getElementById('ate').value;
+    document.getElementById('btn-limpar').style.display = (de || ate) ? 'inline' : 'none';
+
+    let lista = emp.observacoes.slice().sort((a, b) => new Date(b.ts) - new Date(a.ts));
+    const total = lista.length;
+    if (de) lista = lista.filter((o) => o.ts.slice(0, 10) >= de);
+    if (ate) lista = lista.filter((o) => o.ts.slice(0, 10) <= ate);
+
+    document.getElementById('contador').textContent = (de || ate) ? `${lista.length} observação(ões) de ${total} no total` : `${total} observação(ões)`;
+    document.getElementById('btn-exportar').disabled = !lista.length;
+
+    const tbody = document.getElementById('tbody');
+    if (!lista.length) {
+      tbody.innerHTML = `<tr><td colspan="6" class="empty-state">${(de || ate) ? 'Nenhuma observação nesse período.' : 'Nenhuma observação registrada ainda.'}</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = lista.map((o) => `
+      <tr>
+        <td data-label="Data">${new Date(o.ts).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</td>
+        <td data-label="Produto">${escapeHtml(o.produto)}</td>
+        <td data-label="Preço tabela">R$ ${formatMoeda(PRODUCTS.find((p) => p.ean === o.ean) ? PRODUCTS.find((p) => p.ean === o.ean).price : 0)}</td>
+        <td data-label="Lab. concorrente">${escapeHtml(o.labConcorrente)}</td>
+        <td data-label="Preço concorrente">R$ ${formatMoeda(o.precoConcorrente)}</td>
+        <td data-label="Vendedor">${escapeHtml(o.vendedor)}</td>
+      </tr>`).join('');
+  }
+  function limparPeriodo() {
+    document.getElementById('de').value = '';
+    document.getElementById('ate').value = '';
+    render();
+  }
+  function exportar() {
+    alert('Demo de portfólio: a exportação real (.xlsx) fica desativada aqui. No sistema publicado, isso baixa uma planilha com Data/Hora, EAN, Produto, Preço de Tabela, Laboratório, Preço Concorrente, Loja, CNPJ, Vendedor e Observação.');
+  }
+  render();
+  maybeShowTour('gestor');
+</script>
+</body>
+</html>

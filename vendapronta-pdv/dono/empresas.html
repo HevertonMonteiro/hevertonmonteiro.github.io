@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel da Plataforma · VENDAPRONTA PDV</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<meta name="theme-color" content="#0d3b54">
+<link rel="stylesheet" href="../css/app.css">
+</head>
+<body>
+
+<div id="topbar-mount"></div>
+
+<div class="page">
+  <div class="demo-banner"><strong>Demo de portfólio:</strong> painel do dono da plataforma. Aprove ou bloqueie empresas, marque pagamento e ligue/desligue funcionalidades por empresa, tudo fictício, guardado só neste navegador.</div>
+
+  <div class="card">
+    <h2 style="margin-top:0;font-size:17px;color:var(--teal-900);">Clientes</h2>
+    <p class="hint">Verde = pagamento em dia e acesso liberado. Vermelho = pagamento pendente, bloqueado ou aguardando aprovação. Entre no cliente para ver os detalhes e personalizar as funcionalidades dele.</p>
+    <div id="lista-empresas"></div>
+  </div>
+</div>
+
+<script src="../js/data.js"></script>
+<script src="../js/layout.js"></script>
+<script>
+  exigirSessao('dono', '../');
+  montarTopbar({ papel: 'dono', base: '../' });
+
+  function statusOk(empresa) {
+    return empresa.acesso === 'ativo' && empresa.pagamento === 'em_dia';
+  }
+
+  function renderLista() {
+    const empresas = getEmpresas();
+    const mount = document.getElementById('lista-empresas');
+    if (!empresas.length) {
+      mount.innerHTML = '<p class="empty-state">Nenhuma empresa cadastrada ainda.</p>';
+      return;
+    }
+    mount.innerHTML = `<div style="border-top:1px solid var(--slate-200);">
+      ${empresas.map((e) => `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-bottom:1px solid var(--slate-200);">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="width:10px;height:10px;border-radius:50%;background:${statusOk(e) ? '#10b981' : '#ef4444'};flex-shrink:0;"></span>
+            <span style="font-weight:600;">${escapeHtml(e.nome)}</span>
+          </div>
+          <a href="empresa.html?id=${e.id}" class="btn btn-outline btn-sm">Entrar</a>
+        </div>`).join('')}
+    </div>`;
+  }
+  renderLista();
+  maybeShowTour('dono');
+</script>
+</body>
+</html>

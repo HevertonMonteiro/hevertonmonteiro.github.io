@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Promoções · Gestor · VENDAPRONTA PDV</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<meta name="theme-color" content="#0d3b54">
+<link rel="stylesheet" href="../css/app.css">
+</head>
+<body>
+
+<div id="topbar-mount"></div>
+<div id="tabs-mount"></div>
+
+<div class="page">
+  <div class="card">
+    <h2 style="margin-top:0;font-size:17px;color:var(--teal-900);">Promoções</h2>
+    <p class="hint">Busque o produto na lista e informe o desconto direto na linha dele. A etiqueta com o preço novo aparece para o vendedor assim que salvar.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
+      <input type="text" id="busca" placeholder="Buscar produto por nome..." style="flex:1;min-width:200px;padding:9px 11px;border-radius:8px;border:1px solid var(--slate-300);" oninput="render()">
+      <label style="display:flex;align-items:center;gap:6px;font-size:13.5px;white-space:nowrap;">
+        <input type="checkbox" id="so-promo" onchange="render()"> Mostrar só os itens em promoção
+      </label>
+    </div>
+    <p id="contador" class="hint" style="margin-top:0;"></p>
+    <div id="lista" style="max-height:520px;overflow-y:auto;"></div>
+  </div>
+</div>
+
+<script src="../js/data.js"></script>
+<script src="../js/layout.js"></script>
+<script src="../vendedor/produtos.js"></script>
+<script>
+  const sessao = exigirSessao('gestor', '../');
+  const empresa = sessao ? getEmpresa(sessao.empresaId) : null;
+  if (empresa) bloqueioGestor(empresa);
+  montarTopbar({ papel: 'gestor', base: '../', empresaNome: empresa ? empresa.nome : '' });
+  montarAbasGestor('promocoes', '../');
+
+  function promoDe(ean) {
+    return getEmpresa(sessao.empresaId).promocoes.find((p) => p.ean === ean);
+  }
+  function precoComPromo(produto, promo) {
+    if (!promo) return produto.price;
+    return promo.tipo === 'percentual' ? produto.price * (1 - promo.valor / 100) : promo.valor;
+  }
+
+  function render() {
+    const q = document.getElementById('busca').value.trim().toLowerCase();
+    const soPromo = document.getElementById('so-promo').checked;
+    const emp = getEmpresa(sessao.empresaId);
+    let lista = PRODUCTS.filter((p) => !q || p.name.toLowerCase().includes(q));
+    if (soPromo) lista = lista.filter((p) => promoDe(p.ean));
+    lista = lista.slice(0, 150);
+
+    document.getElementById('contador').textContent = `${emp.promocoes.length} de ${PRODUCTS.length} produto(s) em promoção`;
+
+    const mount = document.getElementById('lista');
+    if (!lista.length) { mount.innerHTML = '<p class="empty-state">Nenhum produto encontrado.</p>'; return; }
+    mount.innerHTML = `<div style="border-top:1px solid var(--slate-200);">
+      ${lista.map((p) => {
+        const promo = promoDe(p.ean);
+        return `<div style="padding:12px 0;border-bottom:1px solid var(--slate-100);">
+          <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;">
+            <span style="font-size:13.5px;">${escapeHtml(p.name)}</span>
+            <span class="pill pill-teal">Preço atual: R$ ${formatMoeda(p.price)}</span>
+          </div>
+          ${promo ? `
+            <div style="margin-top:8px;font-size:13.5px;">
+              <span class="pill ${promo.distribuidora ? 'pill-amber' : 'pill-green'}">${promo.distribuidora ? 'só na ' + escapeHtml(promo.distribuidora) : 'todas as distribuidoras'}</span>
+              <span style="text-decoration:line-through;color:var(--slate-600);margin-left:8px;">R$ ${formatMoeda(p.price)}</span>
+              <strong style="color:#059669;margin-left:6px;">R$ ${formatMoeda(precoComPromo(p, promo))}</strong>
+              <div style="color:var(--slate-600);margin-top:4px;">Válida de ${formatData(promo.de)} até ${formatData(promo.ate)}</div>
+              <button class="btn btn-danger btn-sm" style="margin-top:8px;" onclick="removerPromo('${p.ean}')">Remover</button>
+            </div>` : `
+            <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:end;" id="form-${p.ean}">
+              <div><label style="display:block;font-size:11px;color:var(--slate-600);">Tipo</label>
+                <select id="tipo-${p.ean}" style="padding:7px 8px;border-radius:6px;border:1px solid var(--slate-300);">
+                  <option value="percentual">% desconto</option>
+                  <option value="fixo">Preço fixo</option>
+                </select>
+              </div>
+              <div><label style="display:block;font-size:11px;color:var(--slate-600);">Valor</label>
+                <input type="number" id="valor-${p.ean}" style="width:90px;padding:7px 8px;border-radius:6px;border:1px solid var(--slate-300);"></div>
+              <div><label style="display:block;font-size:11px;color:var(--slate-600);">Distribuidora</label>
+                <select id="dist-${p.ean}" style="padding:7px 8px;border-radius:6px;border:1px solid var(--slate-300);">
+                  <option value="">Todas distribuidoras</option>
+                  ${emp.distribuidoras.map((d) => `<option value="${escapeHtml(d.nome)}">${escapeHtml(d.nome)}</option>`).join('')}
+                </select>
+              </div>
+              <div><label style="display:block;font-size:11px;color:var(--slate-600);">De</label>
+                <input type="date" id="de-${p.ean}" style="padding:7px 8px;border-radius:6px;border:1px solid var(--slate-300);"></div>
+              <div><label style="display:block;font-size:11px;color:var(--slate-600);">até</label>
+                <input type="date" id="ate-${p.ean}" style="padding:7px 8px;border-radius:6px;border:1px solid var(--slate-300);"></div>
+              <button class="btn btn-primary btn-sm" onclick="salvarPromo('${p.ean}')">Salvar</button>
+            </div>`}
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+  function salvarPromo(ean) {
+    const tipo = document.getElementById('tipo-' + ean).value;
+    const valor = parseFloat(document.getElementById('valor-' + ean).value);
+    const distribuidora = document.getElementById('dist-' + ean).value || null;
+    const de = document.getElementById('de-' + ean).value;
+    const ate = document.getElementById('ate-' + ean).value;
+    if (!valor || !de || !ate) { alert('Preencha valor, data de início e fim.'); return; }
+    const emp = getEmpresa(sessao.empresaId);
+    const promocoes = emp.promocoes.filter((p) => p.ean !== ean);
+    promocoes.push({ ean, tipo, valor, distribuidora, de, ate });
+    updateEmpresa(sessao.empresaId, { promocoes });
+    render();
+  }
+  function removerPromo(ean) {
+    const emp = getEmpresa(sessao.empresaId);
+    updateEmpresa(sessao.empresaId, { promocoes: emp.promocoes.filter((p) => p.ean !== ean) });
+    render();
+  }
+  render();
+  maybeShowTour('gestor');
+</script>
+</body>
+</html>

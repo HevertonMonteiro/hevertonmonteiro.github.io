@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Destaques · Gestor · VENDAPRONTA PDV</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<meta name="theme-color" content="#0d3b54">
+<link rel="stylesheet" href="../css/app.css">
+</head>
+<body>
+
+<div id="topbar-mount"></div>
+<div id="tabs-mount"></div>
+
+<div class="page">
+  <div class="card">
+    <h2 style="margin-top:0;font-size:17px;color:var(--teal-900);">Produtos em destaque</h2>
+    <p class="hint">Escolha os produtos que quer destacar para o vendedor e o período em que o destaque fica valendo.</p>
+    <input type="text" id="busca" placeholder="Buscar produto por nome..." style="width:100%;padding:9px 11px;border-radius:8px;border:1px solid var(--slate-300);margin-bottom:12px;" oninput="render()">
+    <div id="lista" style="max-height:520px;overflow-y:auto;"></div>
+  </div>
+</div>
+
+<script src="../js/data.js"></script>
+<script src="../js/layout.js"></script>
+<script src="../vendedor/produtos.js"></script>
+<script>
+  const sessao = exigirSessao('gestor', '../');
+  const empresa = sessao ? getEmpresa(sessao.empresaId) : null;
+  if (empresa) bloqueioGestor(empresa);
+  montarTopbar({ papel: 'gestor', base: '../', empresaNome: empresa ? empresa.nome : '' });
+  montarAbasGestor('destaques', '../');
+
+  function destaqueDe(ean) {
+    return getEmpresa(sessao.empresaId).destaques.find((d) => d.ean === ean);
+  }
+  function render() {
+    const q = document.getElementById('busca').value.trim().toLowerCase();
+    const lista = PRODUCTS.filter((p) => !q || p.name.toLowerCase().includes(q)).slice(0, 150);
+    const mount = document.getElementById('lista');
+    if (!lista.length) { mount.innerHTML = '<p class="empty-state">Nenhum produto encontrado.</p>'; return; }
+    mount.innerHTML = `<div style="border-top:1px solid var(--slate-200);">
+      ${lista.map((p) => {
+        const d = destaqueDe(p.ean);
+        return `<div style="padding:12px 0;border-bottom:1px solid var(--slate-100);">
+          <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;">
+            <span style="font-size:13.5px;">${escapeHtml(p.name)}</span>
+            <span class="pill pill-teal">Preço atual: R$ ${formatMoeda(p.price)}</span>
+          </div>
+          ${d ? `
+            <div style="margin-top:8px;font-size:13.5px;">
+              <span class="pill pill-amber">⭐ Válido de ${formatData(d.de)} até ${formatData(d.ate)}</span>
+              <button class="btn btn-danger btn-sm" style="margin-left:8px;" onclick="removerDestaque('${p.ean}')">Remover</button>
+            </div>` : `
+            <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:end;">
+              <div><label style="display:block;font-size:11px;color:var(--slate-600);">De</label>
+                <input type="date" id="de-${p.ean}" style="padding:7px 8px;border-radius:6px;border:1px solid var(--slate-300);"></div>
+              <div><label style="display:block;font-size:11px;color:var(--slate-600);">até</label>
+                <input type="date" id="ate-${p.ean}" style="padding:7px 8px;border-radius:6px;border:1px solid var(--slate-300);"></div>
+              <button class="btn btn-primary btn-sm" onclick="destacar('${p.ean}')">Destacar</button>
+            </div>`}
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+  function destacar(ean) {
+    const de = document.getElementById('de-' + ean).value;
+    const ate = document.getElementById('ate-' + ean).value;
+    if (!de || !ate) { alert('Preencha as datas de início e fim.'); return; }
+    const emp = getEmpresa(sessao.empresaId);
+    const destaques = emp.destaques.filter((d) => d.ean !== ean);
+    destaques.push({ ean, de, ate });
+    updateEmpresa(sessao.empresaId, { destaques });
+    render();
+  }
+  function removerDestaque(ean) {
+    const emp = getEmpresa(sessao.empresaId);
+    updateEmpresa(sessao.empresaId, { destaques: emp.destaques.filter((d) => d.ean !== ean) });
+    render();
+  }
+  render();
+  maybeShowTour('gestor');
+</script>
+</body>
+</html>

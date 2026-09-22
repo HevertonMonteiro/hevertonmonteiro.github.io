@@ -1,51 +1,69 @@
 # VENDAPRONTA PDV (demo de portfólio)
 
-Ferramenta de apoio ao vendedor durante o atendimento presencial em farmácias: consulta o catálogo de produtos, anota o estoque da loja, monta o pedido do cliente e gera os arquivos prontos para importação, tudo direto do celular, tablet ou computador, sem instalar nada.
+Plataforma multi-empresa de apoio à equipe de vendas externa: cada empresa cliente cadastra seu próprio catálogo, distribuidoras, promoções e destaques; cada vendedor acessa pelo celular, tablet ou computador, sem instalar nada, para consultar preços, levantar estoque na loja, montar o pedido do cliente e exportar tudo pronto para importação.
 
-> **Sobre esta versão:** este projeto nasceu para uso real de vendedores em farmácias. A versão publicada aqui é uma demonstração de portfólio: nomes de indústria/laboratório, preços e códigos de barras foram substituídos por dados fictícios, e a integração com a planilha do gestor está desligada (sem URL configurada). Todas as demais funcionalidades são as mesmas do projeto original.
+> **Sobre esta versão:** este projeto nasceu para uso real de uma distribuidora de genéricos, hoje reconstruído como SaaS (Next.js + Postgres real). A versão publicada aqui é uma demonstração de portfólio, 100% estática: nome da empresa, distribuidoras, laboratórios, preços e códigos de barras foram substituídos por dados fictícios, e as três telas de login (Dono, Gestor e Vendedor) aceitam qualquer credencial.
+
+## Papéis do sistema
+
+| Papel | Acesso nesta demo |
+|---|---|
+| **Dono** | Vê todas as empresas clientes da plataforma, aprova cadastros, marca pagamento e liga/desliga funcionalidades por empresa. Entre pela tela inicial em "Entrar como Dono". |
+| **Gestor** | Cadastra catálogo, distribuidoras, promoções e destaques; consulta observações de preço da concorrência enviadas pelos vendedores. Entre pela tela inicial em "Entrar como Gestor" (a demo sempre usa a empresa "Distribuidora Central Farma", ativa e com pagamento em dia). |
+| **Vendedor** | Sem login/senha: entra com o código de 6 dígitos gerado na aprovação da empresa (`482913` para a empresa de demonstração). Sessão de atendimento (loja/CNPJ/carrinho) é efêmera, guardada só no navegador por até 5 minutos. |
 
 ## Funcionalidades
 
-- **Catálogo de produtos** com busca por descrição, EAN ou código do produto, e filtro por laboratório (ou só os itens já incluídos no atendimento).
-- **Anotação de estoque da loja**, com o estoque das distribuidoras (dado fictício nesta demo) mostrado lado a lado para comparação.
-- **Montagem do pedido do cliente**, exportado em `.xlsx` já no formato pronto para importação (CNPJ, EAN, Quantidade).
-- **Sugestão de pedido**, calculada a partir do estoque anotado na loja, exportável em CSV ou PDF.
-- **Revisão do pedido por distribuidora**: ao finalizar, escolhe (ou ajusta manualmente) qual distribuidora atende cada item, mostra o total por distribuidora frente ao pedido mínimo de cada uma, e exporta um `.xlsx` por distribuidora ou um único PDF com todas separadas por página.
-- **Persistência local**: fechar a aba ou dar F5 não perde o atendimento em andamento (expira sozinho depois de alguns minutos de inatividade).
-- **Compartilhamento nativo**: no celular, os arquivos exportados podem ser enviados direto por qualquer app instalado; no computador, são baixados normalmente.
-- **Indicadores em tempo real** no topo: quantidade de itens e valor do pedido, por laboratório e total geral.
-- **Observações de preço da concorrência** registradas pelo vendedor, com histórico completo (cada registro fica salvo, nada é sobrescrito). Nesta demo ficam só no navegador; em uso real são sincronizadas com uma Planilha Google do gestor, com fila de reenvio caso a internet caia.
-- **Tour de boas-vindas** na primeira visita, reaberto a qualquer momento pelo botão "?" no canto da tela.
-- **Totalmente responsivo**: em tablet e celular a lista de produtos vira cartões e o painel de seleção fica acessível pelo chip "Total" no topo; em qualquer tela, a busca e o cabeçalho da tabela ficam fixos ao rolar.
+**Painel do Dono:**
+- Lista de empresas clientes com indicador visual de situação (verde = tudo em dia, vermelho = pendente ou bloqueado).
+- Aprovar cadastro (gera o código de acesso da equipe na primeira aprovação), bloquear/reativar acesso, marcar pagamento como em dia ou pendente.
+- Ligar/desligar por empresa: levantamento de estoque, sugestão de pedido, exportação por distribuidora, observações de concorrência e PDF único.
+
+**Painel do Gestor** (abas Catálogo, Promoções, Destaques, Distribuidoras, Observações e Configurações):
+- Importar a tabela de preços (simulado nesta demo, o catálogo já vem pronto).
+- Criar promoções por produto (percentual ou preço fixo, geral ou só para uma distribuidora, com vigência) e destaques (⭐, com vigência).
+- Cadastrar até 6 distribuidoras, cada uma com seu pedido mínimo.
+- Acompanhar e exportar as observações de preço da concorrência enviadas pelos vendedores.
+- Ver o código de acesso da equipe (aba Configurações).
+- Se a empresa é bloqueada ou fica com pagamento pendente pelo Dono, o painel do Gestor mostra um aviso e nenhuma aba fica acessível, tudo em tempo real.
+
+**App do Vendedor:**
+- Código de acesso da empresa (uma vez por aparelho), depois dados do atendimento (loja, CNPJ, vendedor, data).
+- Escolha entre **Fazer levantamento** (conta o estoque da loja, sem calcular valor) ou **Fazer pedido** direto; quem passa pelo levantamento ganha, na tela de pedido, uma coluna "Estoque Anotado" e um link para voltar e ajustar a contagem.
+- Catálogo com busca, filtro por laboratório, por itens já incluídos, em promoção ou em destaque; preços em promoção aparecem riscados com o valor novo ao lado.
+- Sugestão de pedido baseada no levantamento, revisão do pedido por distribuidora (com total por distribuidora frente ao pedido mínimo), exportação em `.xlsx`/PDF, e registro de preço da concorrência com histórico completo.
+- Funciona offline depois de carregado; sessão sobrevive a F5 por até 5 minutos.
 
 ## Como usar
 
-1. Abra `index.html` num navegador.
-2. Preencha loja, CNPJ, vendedor e data para iniciar o atendimento, ou clique em "Preencher com dados de exemplo".
-3. Use a busca para encontrar produtos e anote estoque e/ou pedido.
-4. Exporte o pedido, ou gere uma sugestão de pedido a partir do estoque anotado.
-5. Use "Finalizar pedido" para revisar a distribuidora de cada item e começar o próximo atendimento.
+1. Abra `index.html`, o link do card do portfólio já leva direto para cá.
+2. Escolha "Entrar como Dono" para ver a lista de empresas e aprovar/bloquear a que estiver pendente, ou "Entrar como Gestor" para mexer no catálogo, promoções e distribuidoras.
+3. Clique em "É vendedor? Entrar com o código da empresa" (ou abra `vendedor/index.html` direto) e use o código `482913` para explorar o aplicativo de atendimento.
 
 ## Estrutura do projeto
 
-| Arquivo | Descrição |
-|---|---|
-| `index.html` | Aplicação completa (HTML + CSS + JS), sem necessidade de build. |
-| `produtos.js` | Catálogo de produtos usado pelo app, com EAN e preços fictícios. |
-| `gerar-produtos.py` | Script original para gerar `produtos.js` a partir de uma planilha real de preços (não usado nesta demo). |
-| `planilha-gestor-apps-script.gs` | Código de referência para a integração com Google Sheets (não ativado nesta demo). |
-| `libs/` | Bibliotecas de terceiros usadas offline (SheetJS para `.xlsx`, jsPDF + AutoTable para PDF). |
+```
+vendapronta-pdv/
+├── index.html            # login (Dono/Gestor)
+├── cadastro.html          # cadastro de nova empresa
+├── dono/                  # lista de empresas + aprovação/funcionalidades
+├── gestor/                # catálogo, promoções, destaques, distribuidoras, observações, config
+├── vendedor/               # app do vendedor (índice + catálogo + libs)
+├── js/data.js              # empresas, distribuidoras, promoções, destaques e observações fictícias
+├── js/layout.js            # topbar, abas do gestor e tour de boas-vindas
+└── css/app.css             # estilos compartilhados do Dono e do Gestor
+```
 
 ## Dados fictícios
 
-`produtos.js` mantém a mesma estrutura do catálogo original (descrição, categoria/laboratório, código interno), mas com EAN gerado no prefixo `200...` (reservado pela GS1 para uso interno, nunca emitido a empresas reais), preços recalculados aleatoriamente a partir dos originais e os três laboratórios renomeados para nomes fictícios (VITALIS, DERMIX, BABYCARE). As distribuidoras usadas na revisão do pedido (Distribuidora Horizonte, União e Rápida) e o estoque que elas retornam também são fictícios, gerados na hora só para esta demonstração.
+O catálogo de produtos (em `vendedor/produtos.js`) mantém a mesma estrutura do original, mas com EAN gerado no prefixo `200...` (reservado pela GS1 para uso interno, nunca emitido a empresas reais), preços recalculados aleatoriamente e os laboratórios renomeados (VITALIS, DERMIX, BABYCARE). As três empresas do painel do Dono, as distribuidoras, promoções, destaques e observações de concorrência são todos fictícios, gerados uma vez e guardados no navegador.
 
 ## Tecnologia
 
-Página estática, sem framework e sem etapa de build: só HTML, CSS e JavaScript puro. Bibliotecas de terceiros vendorizadas em `libs/`:
+Página estática, sem framework e sem etapa de build: só HTML, CSS e JavaScript puro, com dados em `localStorage`. Bibliotecas de terceiros vendorizadas em `vendedor/libs/`:
 
 - [SheetJS (xlsx)](https://sheetjs.com/): geração do arquivo de pedido em `.xlsx`.
-- [jsPDF](https://github.com/parallax/jsPDF) + [jsPDF-AutoTable](https://github.com/simonbengtsson/jsPDF-AutoTable): geração do relatório de estoque em PDF.
+- [jsPDF](https://github.com/parallax/jsPDF) + [jsPDF-AutoTable](https://github.com/simonbengtsson/jsPDF-AutoTable): geração de relatórios em PDF.
 
 ## Como rodar localmente
 

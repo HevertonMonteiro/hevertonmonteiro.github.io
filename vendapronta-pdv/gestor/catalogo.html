@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Catálogo · Gestor · VENDAPRONTA PDV</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<meta name="theme-color" content="#0d3b54">
+<link rel="stylesheet" href="../css/app.css">
+</head>
+<body>
+
+<div id="topbar-mount"></div>
+<div id="tabs-mount"></div>
+
+<div class="page">
+  <div class="card">
+    <h2 style="margin-top:0;font-size:17px;color:var(--teal-900);">Catálogo</h2>
+    <p class="hint">Importe a planilha de preços mais recente quando o fornecedor enviar uma nova.</p>
+
+    <label class="btn btn-outline" style="border:2px dashed var(--teal-700);background:var(--teal-50);display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;">
+      📂 Importar tabela de produtos (.xlsx)
+      <input type="file" id="input-arquivo" accept=".xlsx" style="display:none;" onchange="onArquivoEscolhido(this)">
+    </label>
+    <p id="nome-arquivo" style="font-size:13px;color:var(--slate-600);margin:8px 0 0;"></p>
+    <button type="button" id="btn-atualizar" class="btn btn-primary" style="margin-top:10px;" disabled onclick="atualizarTabela()">Atualizar tabela</button>
+    <div id="feedback-import" style="margin-top:12px;"></div>
+
+    <div class="field" style="margin-top:20px;">
+      <input type="text" id="busca" placeholder="Buscar produto por nome..." oninput="renderLista()">
+    </div>
+    <div id="lista-produtos" style="max-height:420px;overflow-y:auto;"></div>
+  </div>
+</div>
+
+<script src="../js/data.js"></script>
+<script src="../js/layout.js"></script>
+<script src="../vendedor/produtos.js"></script>
+<script>
+  const sessao = exigirSessao('gestor', '../');
+  const empresa = sessao ? getEmpresa(sessao.empresaId) : null;
+  if (empresa) bloqueioGestor(empresa);
+  montarTopbar({ papel: 'gestor', base: '../', empresaNome: empresa ? empresa.nome : '' });
+  montarAbasGestor('catalogo', '../');
+
+  function onArquivoEscolhido(input) {
+    document.getElementById('nome-arquivo').textContent = input.files[0] ? input.files[0].name : '';
+    document.getElementById('btn-atualizar').disabled = !input.files[0];
+  }
+  function atualizarTabela() {
+    const btn = document.getElementById('btn-atualizar');
+    btn.textContent = 'Atualizando...';
+    btn.disabled = true;
+    setTimeout(() => {
+      document.getElementById('feedback-import').innerHTML =
+        '<div class="success-box">Tabela atualizada: 0 novo(s), ' + PRODUCTS.length + ' atualizado(s), 0 removido(s).</div>' +
+        '<p class="hint">(Demo de portfólio: o catálogo já vem pronto com ' + PRODUCTS.length + ' produtos fictícios; a importação real de planilha não está habilitada aqui.)</p>';
+      btn.textContent = 'Atualizar tabela';
+      document.getElementById('input-arquivo').value = '';
+      document.getElementById('nome-arquivo').textContent = '';
+    }, 700);
+  }
+
+  function renderLista() {
+    const q = document.getElementById('busca').value.trim().toLowerCase();
+    const lista = PRODUCTS.filter((p) => !q || p.name.toLowerCase().includes(q));
+    const mount = document.getElementById('lista-produtos');
+    if (!lista.length) { mount.innerHTML = '<p class="empty-state">Nenhum produto encontrado.</p>'; return; }
+    mount.innerHTML = `<div style="border-top:1px solid var(--slate-200);">
+      ${lista.slice(0, 200).map((p) => `
+        <div style="display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--slate-100);font-size:13.5px;">
+          <span>${escapeHtml(p.name)}</span>
+          <span style="color:var(--slate-600);white-space:nowrap;">R$ ${formatMoeda(p.price)}</span>
+        </div>`).join('')}
+    </div>`;
+  }
+  renderLista();
+  maybeShowTour('gestor');
+</script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Empresa · VENDAPRONTA PDV</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<meta name="theme-color" content="#0d3b54">
+<link rel="stylesheet" href="../css/app.css">
+</head>
+<body>
+
+<div id="topbar-mount"></div>
+
+<div class="page">
+  <p style="margin:0 0 14px;"><a href="empresas.html" class="btn-link">← Voltar</a></p>
+
+  <div class="card">
+    <h2 id="titulo-empresa" style="margin-top:0;font-size:17px;color:var(--teal-900);">Situação</h2>
+    <p id="contato-empresa" class="hint" style="margin-bottom:16px;"></p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+      <span id="pill-acesso"></span>
+      <span id="pill-pagamento"></span>
+    </div>
+    <p style="font-size:13.5px;color:var(--slate-600);margin-bottom:16px;">Código de registro: <strong id="codigo-registro"></strong></p>
+    <div id="acoes" style="display:flex;gap:10px;flex-wrap:wrap;"></div>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0;font-size:17px;color:var(--teal-900);">Funcionalidades</h2>
+    <p class="hint">Tudo vem ligado por padrão, desligue só o que essa empresa não usa.</p>
+    <div id="features"></div>
+  </div>
+</div>
+
+<script src="../js/data.js"></script>
+<script src="../js/layout.js"></script>
+<script>
+  exigirSessao('dono', '../');
+  montarTopbar({ papel: 'dono', base: '../' });
+
+  const empresaId = new URLSearchParams(location.search).get('id');
+  const FEATURE_LABELS = {
+    levantamento: 'Levantamento de estoque',
+    sugestao: 'Sugestão de pedido',
+    exportarDistribuidora: 'Exportar pedido por distribuidora',
+    observacoes: 'Observações de preço da concorrência',
+    pdfUnico: 'PDF único (sem separar por distribuidora)',
+  };
+
+  function pillAcesso(acesso) {
+    const map = { ativo: ['pill-green', 'Ativo'], pendente: ['pill-amber', 'Pendente'], bloqueado: ['pill-red', 'Bloqueado'] };
+    const [cls, label] = map[acesso] || map.pendente;
+    return `<span class="pill ${cls}">${label}</span>`;
+  }
+  function pillPagamento(pagamento) {
+    const map = { em_dia: ['pill-green', 'Pagamento em dia'], pendente: ['pill-amber', 'Pagamento pendente'] };
+    const [cls, label] = map[pagamento] || map.pendente;
+    return `<span class="pill ${cls}">${label}</span>`;
+  }
+
+  function gerarCodigo() {
+    return String(Math.floor(100000 + Math.random() * 900000));
+  }
+
+  function render() {
+    const empresa = getEmpresa(empresaId);
+    if (!empresa) { location.href = 'empresas.html'; return; }
+
+    document.getElementById('titulo-empresa').textContent = empresa.nome;
+    document.getElementById('contato-empresa').textContent = [empresa.cnpj, empresa.telefone, empresa.email].filter(Boolean).join(' · ');
+    document.getElementById('pill-acesso').innerHTML = pillAcesso(empresa.acesso);
+    document.getElementById('pill-pagamento').innerHTML = pillPagamento(empresa.pagamento);
+    document.getElementById('codigo-registro').textContent = empresa.codigoAcesso || 'ainda não gerado (gerado na aprovação)';
+
+    const acoes = [];
+    if (empresa.acesso === 'pendente') acoes.push(`<button class="btn btn-success" onclick="aprovar()">Aprovar</button>`);
+    if (empresa.acesso === 'ativo') acoes.push(`<button class="btn btn-danger" onclick="bloquear()">Bloquear</button>`);
+    if (empresa.acesso === 'bloqueado') acoes.push(`<button class="btn btn-primary" onclick="reativar()">Reativar</button>`);
+    if (empresa.pagamento === 'em_dia') acoes.push(`<button class="btn btn-outline" onclick="marcarPagamento('pendente')">Marcar pagamento como pendente</button>`);
+    else acoes.push(`<button class="btn btn-outline" onclick="marcarPagamento('em_dia')">Marcar pagamento como em dia</button>`);
+    document.getElementById('acoes').innerHTML = acoes.join('');
+
+    document.getElementById('features').innerHTML = Object.keys(FEATURE_LABELS).map((key) => `
+      <label style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--slate-100);cursor:pointer;">
+        <input type="checkbox" ${empresa.features[key] ? 'checked' : ''} onchange="toggleFeature('${key}', this.checked)">
+        <span style="font-size:14px;">${FEATURE_LABELS[key]}</span>
+      </label>`).join('');
+  }
+
+  function aprovar() {
+    const empresa = getEmpresa(empresaId);
+    const patch = { acesso: 'ativo' };
+    if (!empresa.codigoAcesso) patch.codigoAcesso = gerarCodigo();
+    updateEmpresa(empresaId, patch);
+    render();
+  }
+  function bloquear() { updateEmpresa(empresaId, { acesso: 'bloqueado' }); render(); }
+  function reativar() { updateEmpresa(empresaId, { acesso: 'ativo' }); render(); }
+  function marcarPagamento(status) { updateEmpresa(empresaId, { pagamento: status }); render(); }
+  function toggleFeature(key, checked) {
+    const empresa = getEmpresa(empresaId);
+    const features = Object.assign({}, empresa.features, { [key]: checked });
+    updateEmpresa(empresaId, { features });
+  }
+
+  render();
+</script>
+</body>
+</html>
