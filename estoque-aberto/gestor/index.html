@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Faltas · Gestor · Estoque Aberto</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<meta name="theme-color" content="#0f172a">
+<link rel="stylesheet" href="../css/app.css">
+</head>
+<body>
+
+<div id="topbar-mount"></div>
+
+<div class="page">
+  <div id="faixa-aviso"></div>
+  <div class="card">
+    <h2 style="margin-top:0;font-size:17px;">Faltas</h2>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:14px;">
+      <div><label style="display:block;font-size:11px;color:var(--slate-600);">Loja</label>
+        <select id="filtro-loja" style="padding:7px 8px;border-radius:6px;border:1px solid var(--slate-300);" onchange="render()">
+          <option value="">Todas as lojas</option>
+        </select>
+      </div>
+      <div><label style="display:block;font-size:11px;color:var(--slate-600);">Laboratório</label>
+        <select id="filtro-lab" style="padding:7px 8px;border-radius:6px;border:1px solid var(--slate-300);" onchange="render()">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div><label style="display:block;font-size:11px;color:var(--slate-600);">De</label><input type="date" id="filtro-de" style="padding:7px 8px;border-radius:6px;border:1px solid var(--slate-300);" onchange="render()"></div>
+      <div><label style="display:block;font-size:11px;color:var(--slate-600);">Até</label><input type="date" id="filtro-ate" style="padding:7px 8px;border-radius:6px;border:1px solid var(--slate-300);" onchange="render()"></div>
+      <button class="btn btn-outline" onclick="render()">Filtrar</button>
+      <button class="btn btn-outline" onclick="exportarExcel()">Exportar Excel</button>
+      <button class="btn btn-outline" onclick="exportarPdf()">Exportar PDF</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Data</th><th>Loja</th><th>CNPJ da loja</th><th>Tipo</th><th>Item</th><th>Laboratório</th><th>Detalhe</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="../js/data.js"></script>
+<script src="../js/layout.js"></script>
+<script>
+  const sessao = exigirSessaoEA('gestor', '../');
+  const empresa = sessao ? getEmpresaEA(sessao.empresaId) : null;
+  montarTopbarEA({ papel: 'gestor', base: '../', empresaNome: empresa ? empresa.nome : '', ativa: 'faltas' });
+  document.getElementById('faixa-aviso').innerHTML = faixaAvisoEA(empresa, 'gestor');
+
+  const selLoja = document.getElementById('filtro-loja');
+  empresa.lojas.forEach((l) => { const o = document.createElement('option'); o.value = l.id; o.textContent = l.nome; selLoja.appendChild(o); });
+  const selLab = document.getElementById('filtro-lab');
+  LABORATORIOS.forEach((lab) => { const o = document.createElement('option'); o.value = lab; o.textContent = lab; selLab.appendChild(o); });
+
+  function detalheLancamento(l) {
+    if (l.tipo === 'encomenda') return `${escapeHtmlEA(l.clienteNome || 'cliente removido (LGPD)')} · ${l.qtdEncomendada} un.`;
+    return l.qtdEstoque != null ? `${l.qtdEstoque} em estoque` : '—';
+  }
+  function nomeLoja(id) {
+    const l = empresa.lojas.find((x) => x.id === id);
+    return l ? l.nome : '-';
+  }
+  function cnpjLoja(id) {
+    const l = empresa.lojas.find((x) => x.id === id);
+    return (l && l.cnpj) || '-';
+  }
+  function render() {
+    const lojaId = selLoja.value;
+    const lab = selLab.value;
+    const de = document.getElementById('filtro-de').value;
+    const ate = document.getElementById('filtro-ate').value;
+    let lista = empresa.lancamentos.slice().sort((a, b) => new Date(b.ts) - new Date(a.ts));
+    if (lojaId) lista = lista.filter((l) => l.lojaId === lojaId);
+    if (lab) lista = lista.filter((l) => l.lab === lab);
+    if (de) lista = lista.filter((l) => l.ts.slice(0, 10) >= de);
+    if (ate) lista = lista.filter((l) => l.ts.slice(0, 10) <= ate);
+    lista = lista.slice(0, 300);
+
+    const tbody = document.getElementById('tbody');
+    if (!lista.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Nenhum lançamento encontrado para os filtros selecionados.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = lista.map((l) => `
+      <tr>
+        <td data-label="Data">${new Date(l.ts).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</td>
+        <td data-label="Loja">${escapeHtmlEA(nomeLoja(l.lojaId))}</td>
+        <td data-label="CNPJ da loja">${escapeHtmlEA(cnpjLoja(l.lojaId))}</td>
+        <td data-label="Tipo"><span class="pill ${TIPO_PILL[l.tipo]}">${TIPO_LABEL[l.tipo]}</span></td>
+        <td data-label="Item">${escapeHtmlEA(l.item)}</td>
+        <td data-label="Laboratório">${escapeHtmlEA(l.lab || '-')}</td>
+        <td data-label="Detalhe">${detalheLancamento(l)}</td>
+      </tr>`).join('');
+  }
+  function exportarExcel() {
+    alert('Demo de portfólio: a exportação real (.xlsx) fica desativada aqui. No sistema publicado, isso baixa uma planilha com Data/Hora, Loja, Tipo, Item, Laboratório, Qtd. em estoque, Qtd. encomendada, Cliente, Telefone e Observação.');
+  }
+  function exportarPdf() {
+    alert('Demo de portfólio: a exportação real (PDF) fica desativada aqui. No sistema publicado, isso gera um relatório em PDF com os mesmos filtros aplicados na tela.');
+  }
+  render();
+  maybeShowTourEA('gestor');
+</script>
+</body>
+</html>

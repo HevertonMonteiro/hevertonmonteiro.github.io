@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Registrar falta · Loja · Estoque Aberto</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<meta name="theme-color" content="#0f172a">
+<link rel="stylesheet" href="../css/app.css">
+</head>
+<body>
+
+<div id="topbar-mount"></div>
+
+<div class="page narrow" style="max-width:520px;">
+  <div id="faixa-aviso"></div>
+  <div class="card">
+    <h2 style="margin-top:0;font-size:17px;">Registrar falta</h2>
+
+    <div class="toggle-group" id="tipo-group">
+      <label><input type="radio" name="tipo" value="falta_comum" checked><span>Falta comum</span></label>
+      <label><input type="radio" name="tipo" value="urgencia"><span>Urgência (zerado)</span></label>
+      <label><input type="radio" name="tipo" value="encomenda"><span>Encomenda</span></label>
+    </div>
+
+    <div class="field"><label>Item (nome, descrição ou código de barras)</label><input type="text" id="item" placeholder="Ex: Dipirona 500mg"></div>
+
+    <div id="campo-estoque" class="field"><label>Quantidade em estoque (opcional)</label><input type="number" id="qtd-estoque" min="0"></div>
+
+    <div id="campos-encomenda" style="display:none;">
+      <div class="field"><label>Quantidade encomendada</label><input type="number" id="qtd-encomendada" min="1"></div>
+      <div class="field"><label>Nome do cliente</label><input type="text" id="cliente-nome"></div>
+      <div class="field"><label>Telefone do cliente</label><input type="text" id="cliente-telefone" placeholder="(11) 99999-9999"></div>
+    </div>
+
+    <div class="field">
+      <label for="lab">Laboratório (opcional)</label>
+      <input type="text" id="lab" list="labs-sugestoes" placeholder="Comece a digitar...">
+      <datalist id="labs-sugestoes"></datalist>
+    </div>
+
+    <div class="field"><label>Observação (opcional)</label><textarea id="observacao" rows="2" placeholder="Ex: laboratório de preferência, detalhes extras..."></textarea></div>
+
+    <div id="feedback"></div>
+    <button class="btn btn-primary btn-block" onclick="registrarFalta()" id="btn-registrar">Registrar falta</button>
+  </div>
+
+  <div class="card">
+    <h2 id="titulo-lancamentos" style="margin-top:0;font-size:17px;"></h2>
+    <div id="lista-lancamentos"></div>
+  </div>
+</div>
+
+<script src="../js/data.js"></script>
+<script src="../js/layout.js"></script>
+<script>
+  const sessao = exigirSessaoEA('loja', '../');
+  const empresa = sessao ? getEmpresaEA(sessao.empresaId) : null;
+  const loja = empresa ? empresa.lojas.find((l) => l.id === sessao.lojaId) : null;
+  montarTopbarEA({ papel: 'loja', base: '../', empresaNome: loja ? loja.nome : '' });
+  document.getElementById('faixa-aviso').innerHTML = faixaAvisoEA(empresa, 'loja');
+
+  document.getElementById('labs-sugestoes').innerHTML = LABORATORIOS.map((l) => `<option value="${l}">`).join('');
+
+  document.querySelectorAll('input[name="tipo"]').forEach((r) => r.addEventListener('change', atualizarCampos));
+  function atualizarCampos() {
+    const tipo = document.querySelector('input[name="tipo"]:checked').value;
+    document.getElementById('campo-estoque').style.display = tipo === 'encomenda' ? 'none' : 'block';
+    document.getElementById('campos-encomenda').style.display = tipo === 'encomenda' ? 'block' : 'none';
+  }
+
+  function registrarFalta() {
+    const tipo = document.querySelector('input[name="tipo"]:checked').value;
+    const item = document.getElementById('item').value.trim();
+    const lab = document.getElementById('lab').value.trim();
+    const observacao = document.getElementById('observacao').value.trim();
+    const feedback = document.getElementById('feedback');
+
+    if (!item) { feedback.innerHTML = '<div class="error-box">Informe o item.</div>'; return; }
+
+    const lancamento = { id: 'l' + Date.now(), lojaId: sessao.lojaId, tipo, item, lab, observacao, ts: new Date().toISOString() };
+    if (tipo === 'encomenda') {
+      const qtd = parseInt(document.getElementById('qtd-encomendada').value, 10);
+      const nome = document.getElementById('cliente-nome').value.trim();
+      const telefone = document.getElementById('cliente-telefone').value.trim();
+      if (!qtd || qtd < 1 || !nome || !telefone) {
+        feedback.innerHTML = '<div class="error-box">Preencha quantidade, nome e telefone do cliente para registrar uma encomenda.</div>';
+        return;
+      }
+      lancamento.qtdEncomendada = qtd;
+      lancamento.clienteNome = nome;
+      lancamento.clienteTelefone = telefone;
+    } else {
+      const qtdRaw = document.getElementById('qtd-estoque').value;
+      lancamento.qtdEstoque = qtdRaw !== '' ? parseInt(qtdRaw, 10) : null;
+    }
+
+    const emp = getEmpresaEA(sessao.empresaId);
+    updateEmpresaEA(sessao.empresaId, { lancamentos: emp.lancamentos.concat([lancamento]) });
+
+    feedback.innerHTML = '<div class="success-box">Falta registrada com sucesso.</div>';
+    document.getElementById('item').value = '';
+    document.getElementById('qtd-estoque').value = '';
+    document.getElementById('qtd-encomendada').value = '';
+    document.getElementById('cliente-nome').value = '';
+    document.getElementById('cliente-telefone').value = '';
+    document.getElementById('lab').value = '';
+    document.getElementById('observacao').value = '';
+    document.querySelector('input[name="tipo"][value="falta_comum"]').checked = true;
+    atualizarCampos();
+    renderHistorico();
+  }
+
+  function detalheLoja(l) {
+    if (l.tipo === 'encomenda') return `Cliente: ${escapeHtmlEA(l.clienteNome)}`;
+    return l.qtdEstoque != null ? `Em estoque: ${l.qtdEstoque}` : '';
+  }
+  function renderHistorico() {
+    const emp = getEmpresaEA(sessao.empresaId);
+    const meus = emp.lancamentos.filter((l) => l.lojaId === sessao.lojaId).sort((a, b) => new Date(b.ts) - new Date(a.ts)).slice(0, 20);
+    document.getElementById('titulo-lancamentos').textContent = 'Últimos lançamentos desta loja';
+    const mount = document.getElementById('lista-lancamentos');
+    if (!meus.length) { mount.innerHTML = '<p class="empty-state">Nenhum lançamento ainda.</p>'; return; }
+    mount.innerHTML = meus.map((l) => `
+      <div style="padding:10px 0;border-bottom:1px solid var(--slate-100);">
+        <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">
+          <strong style="font-size:13.5px;">${escapeHtmlEA(l.item)}</strong>
+          <span class="pill ${TIPO_PILL[l.tipo]}">${TIPO_LABEL[l.tipo]}</span>
+        </div>
+        <div style="font-size:12.5px;color:var(--slate-600);margin-top:3px;">
+          ${l.lab ? 'Lab: ' + escapeHtmlEA(l.lab) + ' · ' : ''}${detalheLoja(l)}${detalheLoja(l) ? ' · ' : ''}${new Date(l.ts).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
+        </div>
+      </div>`).join('');
+  }
+  renderHistorico();
+  maybeShowTourEA('loja');
+</script>
+</body>
+</html>

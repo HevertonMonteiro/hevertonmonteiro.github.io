@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Esqueci minha senha · Estoque Aberto</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta name="theme-color" content="#0f172a">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<div class="page narrow">
+  <p style="margin:0 0 14px;"><a href="login.html" class="btn-link">← Voltar</a></p>
+  <div class="card">
+    <div id="tela-form">
+      <h2 style="margin-top:0;font-size:18px;">Esqueci minha senha</h2>
+      <p class="hint">Informe o e-mail da sua conta e enviaremos um link para criar uma nova senha.</p>
+      <div class="field"><label>E-mail</label><input type="email" id="email" placeholder="seu@email.com"></div>
+      <button class="btn btn-primary btn-block" onclick="enviarLink()">Enviar link</button>
+    </div>
+    <div id="tela-enviado" style="display:none;">
+      <div class="success-box">Se esse e-mail estiver cadastrado, você vai receber um link de redefinição em instantes.</div>
+      <p class="hint">(Demo de portfólio: nenhum e-mail é enviado de verdade. Use "Entrar" na tela de login para explorar o painel com qualquer senha.)</p>
+    </div>
+    <p style="margin:16px 0 0;font-size:13.5px;"><a href="login.html" class="btn-link">Voltar para o login</a></p>
+  </div>
+</div>
+
+<script>
+  function enviarLink() {
+    document.getElementById('tela-form').style.display = 'none';
+    document.getElementById('tela-enviado').style.display = 'block';
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Entrar na loja · Estoque Aberto</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<meta name="theme-color" content="#0f172a">
+<link rel="stylesheet" href="../css/app.css">
+</head>
+<body>
+
+<div class="page narrow">
+  <p style="margin:0 0 14px;"><a href="../index.html" class="btn-link">← Voltar</a></p>
+  <div class="card">
+    <h2 style="margin-top:0;font-size:18px;">Entrar na loja</h2>
+    <p class="hint">Digite o código fornecido pelo seu gestor.</p>
+    <div class="demo-banner"><strong>Demo de portfólio:</strong> use o código <strong>7K3PXQ</strong> (Loja Centro, Rede Saúde Popular) para entrar.</div>
+    <div class="field">
+      <input type="text" id="codigo" autofocus placeholder="Ex: 7K3PXQ" style="text-transform:uppercase;letter-spacing:.15em;text-align:center;font-weight:700;font-size:18px;">
+    </div>
+    <div id="erro" class="error-box" style="display:none;"></div>
+    <button class="btn btn-primary btn-block" onclick="entrarNaLoja()">Entrar</button>
+    <p style="margin:14px 0 0;font-size:13.5px;">Sou gestor. <a href="../login.html" class="btn-link">Entrar</a></p>
+  </div>
+</div>
+
+<script src="../js/data.js"></script>
+<script>
+  function entrarNaLoja() {
+    const codigo = document.getElementById('codigo').value.trim().toUpperCase();
+    const erro = document.getElementById('erro');
+    let encontrado = null;
+    for (const empresa of getEmpresasEA()) {
+      const loja = empresa.lojas.find((l) => l.codigoAcesso === codigo && l.ativa);
+      if (loja) { encontrado = { empresaId: empresa.id, lojaId: loja.id }; break; }
+    }
+    if (!encontrado) {
+      erro.textContent = 'Código inválido, ou a loja está desativada. Confira com seu gestor.';
+      erro.style.display = 'block';
+      return;
+    }
+    setSessaoEA({ papel: 'loja', empresaId: encontrado.empresaId, lojaId: encontrado.lojaId });
+    window.location.href = 'index.html';
+  }
+</script>
+</body>
+</html>

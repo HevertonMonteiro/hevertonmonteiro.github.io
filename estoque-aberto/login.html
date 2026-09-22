@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Entrar · Estoque Aberto</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta name="theme-color" content="#0f172a">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<div class="page narrow">
+  <p style="margin:0 0 14px;"><a href="index.html" class="btn-link">← Voltar</a></p>
+  <div class="card">
+    <h2 style="margin-top:0;font-size:18px;">Entrar</h2>
+    <div class="demo-banner"><strong>Demo de portfólio:</strong> qualquer e-mail e senha entram. Escolha abaixo se quer entrar como gestor da empresa de demonstração ou como admin da plataforma.</div>
+    <div id="erro" class="error-box" style="display:none;"></div>
+    <form id="form-login">
+      <div class="field">
+        <label for="email">E-mail</label>
+        <input type="email" id="email" autocomplete="username" placeholder="seu@email.com">
+      </div>
+      <div class="field">
+        <label for="senha">Senha <a href="esqueci-senha.html" class="btn-link" style="float:right;">Esqueci minha senha</a></label>
+        <input type="password" id="senha" autocomplete="current-password" placeholder="••••••••">
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button type="submit" data-papel="gestor" class="btn btn-primary" style="flex:1;">Entrar</button>
+        <button type="submit" data-papel="admin" class="btn btn-outline" style="flex:1;">Entrar como Admin</button>
+      </div>
+    </form>
+    <p style="margin:16px 0 0;font-size:13.5px;">Ainda não tem conta? <a href="cadastro.html" class="btn-link">Criar empresa</a></p>
+    <p style="margin:8px 0 0;font-size:13.5px;">É balconista? <a href="loja/entrar.html" class="btn-link">Entrar com código da loja</a></p>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script>
+  document.getElementById('form-login').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const papel = e.submitter ? e.submitter.dataset.papel : 'gestor';
+    entrarComoEA(papel);
+    window.location.href = papel === 'admin' ? 'admin/index.html' : 'gestor/index.html';
+  });
+</script>
+</body>
+</html>

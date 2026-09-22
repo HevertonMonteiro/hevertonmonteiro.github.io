@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel do Admin · Estoque Aberto</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<meta name="theme-color" content="#0f172a">
+<link rel="stylesheet" href="../css/app.css">
+</head>
+<body>
+
+<div id="topbar-mount"></div>
+
+<div class="page">
+  <div class="demo-banner"><strong>Demo de portfólio:</strong> painel do admin da plataforma, com empresas clientes fictícias em diferentes situações de assinatura.</div>
+  <div class="card">
+    <h2 id="titulo" style="margin-top:0;font-size:17px;"></h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Empresa</th><th>CNPJ</th><th>Contato</th><th>Status</th><th>Liberado até</th><th>Lojas</th><th>Gestores</th><th>Criada em</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="../js/data.js"></script>
+<script src="../js/layout.js"></script>
+<script>
+  exigirSessaoEA('admin', '../');
+  montarTopbarEA({ papel: 'admin', base: '../' });
+
+  function render() {
+    const empresas = getEmpresasEA().slice().sort((a, b) => new Date(b.criadaEm) - new Date(a.criadaEm));
+    document.getElementById('titulo').textContent = `Empresas cadastradas (${empresas.length})`;
+    document.getElementById('tbody').innerHTML = empresas.map((e) => `
+      <tr>
+        <td data-label="Empresa">${escapeHtmlEA(e.nome)}</td>
+        <td data-label="CNPJ">${escapeHtmlEA(e.cnpj)}</td>
+        <td data-label="Contato">${escapeHtmlEA(e.emailContato)}</td>
+        <td data-label="Status"><span class="pill ${STATUS_PILL[e.status]}">${STATUS_LABEL[e.status]}</span></td>
+        <td data-label="Liberado até">
+          ${formatDataEA(e.liberadoAte)}
+          <div style="margin-top:6px;display:flex;gap:6px;align-items:center;">
+            <input type="date" id="liberar-${e.id}" style="padding:5px 6px;border-radius:6px;border:1px solid var(--slate-300);font-size:12px;">
+            <button class="btn btn-outline btn-sm" onclick="liberarAte('${e.id}')">Liberar até</button>
+          </div>
+        </td>
+        <td data-label="Lojas">${e.lojas.length}</td>
+        <td data-label="Gestores">${e.gestores.length}</td>
+        <td data-label="Criada em">${formatDataEA(e.criadaEm)}</td>
+      </tr>`).join('');
+  }
+  function liberarAte(id) {
+    const data = document.getElementById('liberar-' + id).value;
+    if (!data) { alert('Escolha uma data.'); return; }
+    updateEmpresaEA(id, { liberadoAte: data, status: 'ativa' });
+    render();
+  }
+  render();
+  maybeShowTourEA('admin');
+</script>
+</body>
+</html>

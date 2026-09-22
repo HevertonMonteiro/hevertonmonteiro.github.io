@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Assinatura · Gestor · Estoque Aberto</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<meta name="theme-color" content="#0f172a">
+<link rel="stylesheet" href="../css/app.css">
+</head>
+<body>
+
+<div id="topbar-mount"></div>
+
+<div class="page">
+  <div id="faixa-aviso"></div>
+  <div class="card">
+    <div style="font-size:12px;color:var(--slate-600);text-transform:uppercase;letter-spacing:.04em;font-weight:700;">Status da assinatura</div>
+    <div id="status-grande" style="font-size:24px;font-weight:800;margin:6px 0 12px;"></div>
+    <p id="dias-restantes" class="hint" style="display:none;"></p>
+    <p style="font-size:14px;color:var(--slate-700);">Plano mensal: <strong>R$ 99,90</strong> por empresa, com todas as lojas incluídas. Pagamento via Pix, boleto ou cartão.</p>
+    <div id="erro" class="error-box" style="display:none;"></div>
+    <button id="btn-assinar" class="btn btn-primary" onclick="assinar()">Assinar agora</button>
+  </div>
+</div>
+
+<script src="../js/data.js"></script>
+<script src="../js/layout.js"></script>
+<script>
+  const sessao = exigirSessaoEA('gestor', '../');
+  const empresa = sessao ? getEmpresaEA(sessao.empresaId) : null;
+  montarTopbarEA({ papel: 'gestor', base: '../', empresaNome: empresa ? empresa.nome : '', ativa: 'assinatura' });
+  document.getElementById('faixa-aviso').innerHTML = faixaAvisoEA(empresa, 'gestor');
+
+  function render() {
+    const emp = getEmpresaEA(sessao.empresaId);
+    document.getElementById('status-grande').textContent = STATUS_LABEL[emp.status];
+    const diasEl = document.getElementById('dias-restantes');
+    if (emp.status === 'trial') {
+      diasEl.style.display = 'block';
+      diasEl.textContent = `Restam ${diasRestantes(emp.trialTerminaEm)} dia(s) de período grátis.`;
+    } else {
+      diasEl.style.display = 'none';
+    }
+    document.getElementById('btn-assinar').style.display = emp.status === 'ativa' ? 'none' : 'inline-flex';
+  }
+  function assinar() {
+    const btn = document.getElementById('btn-assinar');
+    btn.disabled = true;
+    btn.textContent = 'Gerando pagamento...';
+    setTimeout(() => {
+      document.getElementById('erro').style.display = 'block';
+      document.getElementById('erro').textContent = 'Demo de portfólio: a cobrança real via Asaas fica desativada aqui. No sistema publicado, isso geraria um Pix, boleto ou link de cartão.';
+      btn.disabled = false;
+      btn.textContent = 'Assinar agora';
+    }, 700);
+  }
+  render();
+  maybeShowTourEA('gestor');
+</script>
+</body>
+</html>

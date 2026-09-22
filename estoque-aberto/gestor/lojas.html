@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lojas · Gestor · Estoque Aberto</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<meta name="theme-color" content="#0f172a">
+<link rel="stylesheet" href="../css/app.css">
+</head>
+<body>
+
+<div id="topbar-mount"></div>
+
+<div class="page">
+  <div id="faixa-aviso"></div>
+  <div class="card">
+    <h2 style="margin-top:0;font-size:17px;">Cadastrar nova loja</h2>
+    <div class="field"><label>Nome da loja</label><input type="text" id="nome-loja" placeholder="Ex: Loja Centro"></div>
+    <div class="field"><label>CNPJ da loja (opcional)</label><input type="text" id="cnpj-loja" placeholder="00.000.000/0000-00" maxlength="18" oninput="maskCnpjLoja(this)"></div>
+    <button class="btn btn-primary" onclick="criarLoja()">Criar loja</button>
+    <div id="codigo-gerado" style="display:none;margin-top:14px;" class="warn-box"></div>
+  </div>
+
+  <div class="card">
+    <h2 id="titulo-lista" style="margin-top:0;font-size:17px;"></h2>
+    <div id="lista"></div>
+  </div>
+</div>
+
+<script src="../js/data.js"></script>
+<script src="../js/layout.js"></script>
+<script>
+  const sessao = exigirSessaoEA('gestor', '../');
+  const empresa = sessao ? getEmpresaEA(sessao.empresaId) : null;
+  montarTopbarEA({ papel: 'gestor', base: '../', empresaNome: empresa ? empresa.nome : '', ativa: 'lojas' });
+  document.getElementById('faixa-aviso').innerHTML = faixaAvisoEA(empresa, 'gestor');
+
+  function maskCnpjLoja(el) {
+    let v = el.value.replace(/\D/g, '').slice(0, 14);
+    v = v.replace(/^(\d{2})(\d)/, '$1.$2').replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3').replace(/\.(\d{3})(\d)/, '.$1/$2').replace(/(\d{4})(\d)/, '$1-$2');
+    el.value = v;
+  }
+  function gerarCodigoLoja() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let s = '';
+    for (let i = 0; i < 6; i++) s += chars[Math.floor(Math.random() * chars.length)];
+    return s;
+  }
+  function criarLoja() {
+    const nome = document.getElementById('nome-loja').value.trim();
+    if (!nome) { alert('Informe o nome da loja.'); return; }
+    const cnpj = document.getElementById('cnpj-loja').value.trim();
+    const emp = getEmpresaEA(sessao.empresaId);
+    const codigo = gerarCodigoLoja();
+    const lojas = emp.lojas.concat([{ id: 'loja' + Date.now(), nome, cnpj, ativa: true, codigoAcesso: codigo }]);
+    updateEmpresaEA(sessao.empresaId, { lojas });
+    document.getElementById('nome-loja').value = '';
+    document.getElementById('cnpj-loja').value = '';
+    const aviso = document.getElementById('codigo-gerado');
+    aviso.style.display = 'block';
+    aviso.innerHTML = `Código de acesso da loja "${escapeHtmlEA(nome)}": <span style="font-family:monospace;font-size:18px;font-weight:800;letter-spacing:.15em;">${codigo}</span><br>Anote agora, por segurança, esse código não será mostrado novamente. Se perder, gere um novo na lista abaixo.`;
+    render();
+  }
+
+  function render() {
+    const emp = getEmpresaEA(sessao.empresaId);
+    document.getElementById('titulo-lista').textContent = `Lojas cadastradas (${emp.lojas.length})`;
+    const mount = document.getElementById('lista');
+    if (!emp.lojas.length) { mount.innerHTML = '<p class="empty-state">Nenhuma loja cadastrada ainda.</p>'; return; }
+    mount.innerHTML = `<div style="border-top:1px solid var(--slate-200);">
+      ${emp.lojas.map((l) => `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid var(--slate-200);flex-wrap:wrap;">
+          <div>
+            <div style="font-weight:700;">${escapeHtmlEA(l.nome)}</div>
+            <div style="font-size:12.5px;color:var(--slate-600);">${l.cnpj ? escapeHtmlEA(l.cnpj) : ''} ${!l.ativa ? '<span class="pill pill-vermelho">Loja desativada</span>' : ''}</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="btn btn-outline btn-sm" onclick="gerarNovoCodigo('${l.id}')">Gerar novo código</button>
+            <button class="btn ${l.ativa ? 'btn-danger' : 'btn-outline'} btn-sm" onclick="toggleAtiva('${l.id}')">${l.ativa ? 'Desativar' : 'Ativar'}</button>
+          </div>
+        </div>`).join('')}
+    </div>`;
+  }
+  function gerarNovoCodigo(id) {
+    const emp = getEmpresaEA(sessao.empresaId);
+    const codigo = gerarCodigoLoja();
+    const lojas = emp.lojas.map((l) => l.id === id ? Object.assign({}, l, { codigoAcesso: codigo }) : l);
+    updateEmpresaEA(sessao.empresaId, { lojas });
+    const loja = lojas.find((l) => l.id === id);
+    const aviso = document.getElementById('codigo-gerado');
+    aviso.style.display = 'block';
+    aviso.innerHTML = `Novo código de acesso da loja "${escapeHtmlEA(loja.nome)}": <span style="font-family:monospace;font-size:18px;font-weight:800;letter-spacing:.15em;">${codigo}</span><br>Anote agora, o código anterior deixou de funcionar.`;
+    render();
+  }
+  function toggleAtiva(id) {
+    const emp = getEmpresaEA(sessao.empresaId);
+    const lojas = emp.lojas.map((l) => l.id === id ? Object.assign({}, l, { ativa: !l.ativa }) : l);
+    updateEmpresaEA(sessao.empresaId, { lojas });
+    render();
+  }
+  render();
+  maybeShowTourEA('gestor');
+</script>
+</body>
+</html>

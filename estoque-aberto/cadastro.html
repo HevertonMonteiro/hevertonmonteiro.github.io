@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Criar minha empresa · Estoque Aberto</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta name="theme-color" content="#0f172a">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<div class="page narrow">
+  <p style="margin:0 0 14px;"><a href="index.html" class="btn-link">← Voltar</a></p>
+
+  <div id="tela-form" class="card">
+    <h2 style="margin-top:0;font-size:18px;">Criar minha empresa</h2>
+    <p class="hint">7 dias grátis com tudo liberado, sem precisar de cartão agora.</p>
+    <div class="field"><label>Nome da empresa</label><input type="text" id="nomeEmpresa" placeholder="Ex: Drogaria Bem Viver" required></div>
+    <div class="field"><label>CNPJ</label><input type="text" id="cnpj" placeholder="00.000.000/0000-00" maxlength="18" oninput="maskCnpjEA(this)" required></div>
+    <div class="field"><label>E-mail de contato da empresa</label><input type="email" id="emailContato" required></div>
+    <hr style="border:none;border-top:1px solid var(--slate-200);margin:18px 0;">
+    <div class="field"><label>Seu nome (gestor)</label><input type="text" id="nomeGestor" required></div>
+    <div class="field"><label>Seu e-mail de login</label><input type="email" id="emailGestor" required></div>
+    <div class="field"><label>Senha</label><input type="password" id="senha" minlength="8" required></div>
+    <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--slate-600);margin-bottom:16px;">
+      <input type="checkbox" id="aceite" style="margin-top:3px;">
+      Li e concordo com a <a href="privacidade.html" target="_blank" class="btn-link">Política de Privacidade</a>, incluindo o tratamento de dados de clientes em encomendas.
+    </label>
+    <div id="erro" class="error-box" style="display:none;"></div>
+    <button class="btn btn-primary btn-block" onclick="criarConta()">Criar conta</button>
+    <p style="margin:14px 0 0;font-size:13.5px;">Já tem conta? <a href="login.html" class="btn-link">Entrar</a></p>
+  </div>
+
+  <div id="tela-sucesso" class="card" style="display:none;text-align:center;">
+    <h2 style="margin-top:0;font-size:18px;">Empresa criada! ✅</h2>
+    <p style="color:var(--slate-600);font-size:14px;">Seus 7 dias grátis já começaram. Cadastre sua primeira loja no painel do gestor.</p>
+    <p class="hint">(Demo de portfólio: nesta simulação, nenhuma empresa nova é realmente criada. Use "Entrar" na tela de login para explorar o painel já pronto, com dados de exemplo.)</p>
+    <a href="login.html" class="btn btn-outline btn-block">Ir para o login</a>
+  </div>
+</div>
+
+<script>
+  function maskCnpjEA(el) {
+    let v = el.value.replace(/\D/g, '').slice(0, 14);
+    v = v.replace(/^(\d{2})(\d)/, '$1.$2').replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3').replace(/\.(\d{3})(\d)/, '.$1/$2').replace(/(\d{4})(\d)/, '$1-$2');
+    el.value = v;
+  }
+  function criarConta() {
+    const campos = ['nomeEmpresa', 'cnpj', 'emailContato', 'nomeGestor', 'emailGestor', 'senha'];
+    const vazio = campos.some((id) => !document.getElementById(id).value.trim());
+    const erro = document.getElementById('erro');
+    if (vazio || document.getElementById('cnpj').value.replace(/\D/g, '').length !== 14 || document.getElementById('senha').value.length < 8) {
+      erro.textContent = 'Preencha todos os campos corretamente. O CNPJ precisa ter 14 números e a senha, ao menos 8 caracteres.';
+      erro.style.display = 'block';
+      return;
+    }
+    if (!document.getElementById('aceite').checked) {
+      erro.textContent = 'É preciso concordar com a Política de Privacidade para continuar.';
+      erro.style.display = 'block';
+      return;
+    }
+    erro.style.display = 'none';
+    document.getElementById('tela-form').style.display = 'none';
+    document.getElementById('tela-sucesso').style.display = 'block';
+  }
+</script>
+</body>
+</html>

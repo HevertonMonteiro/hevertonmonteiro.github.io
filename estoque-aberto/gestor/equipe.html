@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Equipe · Gestor · Estoque Aberto</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<meta name="theme-color" content="#0f172a">
+<link rel="stylesheet" href="../css/app.css">
+</head>
+<body>
+
+<div id="topbar-mount"></div>
+
+<div class="page">
+  <div id="faixa-aviso"></div>
+  <div class="card">
+    <h2 style="margin-top:0;font-size:17px;">Convidar comprador</h2>
+    <p class="hint">A pessoa recebe um e-mail com um link para criar o próprio acesso ao painel de gestão.</p>
+    <div class="field"><label>E-mail</label><input type="email" id="email-convite" placeholder="pessoa@empresa.com"></div>
+    <div class="field"><label>Loja (opcional)</label>
+      <select id="loja-convite"><option value="">Nenhuma</option></select>
+    </div>
+    <div id="feedback-convite"></div>
+    <button class="btn btn-primary" onclick="enviarConvite()">Enviar convite</button>
+  </div>
+
+  <div class="card" id="card-pendentes" style="display:none;">
+    <h2 style="margin-top:0;font-size:17px;">Convites pendentes</h2>
+    <div id="lista-pendentes"></div>
+  </div>
+
+  <div class="card">
+    <h2 id="titulo-equipe" style="margin-top:0;font-size:17px;"></h2>
+    <div id="lista-equipe"></div>
+  </div>
+</div>
+
+<script src="../js/data.js"></script>
+<script src="../js/layout.js"></script>
+<script>
+  const sessao = exigirSessaoEA('gestor', '../');
+  const empresa = sessao ? getEmpresaEA(sessao.empresaId) : null;
+  montarTopbarEA({ papel: 'gestor', base: '../', empresaNome: empresa ? empresa.nome : '', ativa: 'equipe' });
+  document.getElementById('faixa-aviso').innerHTML = faixaAvisoEA(empresa, 'gestor');
+
+  const selLoja = document.getElementById('loja-convite');
+  empresa.lojas.forEach((l) => { const o = document.createElement('option'); o.value = l.id; o.textContent = l.nome; selLoja.appendChild(o); });
+
+  function nomeLojaEq(id) {
+    const l = empresa.lojas.find((x) => x.id === id);
+    return l ? l.nome : null;
+  }
+
+  function enviarConvite() {
+    const email = document.getElementById('email-convite').value.trim();
+    const feedback = document.getElementById('feedback-convite');
+    if (!email) { feedback.innerHTML = '<div class="error-box">Informe o e-mail.</div>'; return; }
+    const lojaId = selLoja.value || null;
+    const emp = getEmpresaEA(sessao.empresaId);
+    const daqui7dias = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const convites = emp.convitesPendentes.concat([{ id: 'c' + Date.now(), email, lojaId, expiraEm: daqui7dias }]);
+    updateEmpresaEA(sessao.empresaId, { convitesPendentes: convites });
+    document.getElementById('email-convite').value = '';
+    feedback.innerHTML = '<div class="success-box">Convite enviado.</div>';
+    render();
+  }
+  function cancelarConvite(id) {
+    const emp = getEmpresaEA(sessao.empresaId);
+    updateEmpresaEA(sessao.empresaId, { convitesPendentes: emp.convitesPendentes.filter((c) => c.id !== id) });
+    render();
+  }
+
+  function render() {
+    const emp = getEmpresaEA(sessao.empresaId);
+    const cardPendentes = document.getElementById('card-pendentes');
+    if (emp.convitesPendentes.length) {
+      cardPendentes.style.display = 'block';
+      document.getElementById('lista-pendentes').innerHTML = emp.convitesPendentes.map((c) => `
+        <div class="warn-box" style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+          <div>
+            <strong>${escapeHtmlEA(c.email)}</strong>${c.lojaId ? ' · ' + escapeHtmlEA(nomeLojaEq(c.lojaId)) : ''}
+            <div style="font-size:12px;">Expira em ${formatDataEA(c.expiraEm)}</div>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="cancelarConvite('${c.id}')">Cancelar</button>
+        </div>`).join('');
+    } else {
+      cardPendentes.style.display = 'none';
+    }
+
+    document.getElementById('titulo-equipe').textContent = `Equipe (${emp.gestores.length})`;
+    document.getElementById('lista-equipe').innerHTML = `<div style="border-top:1px solid var(--slate-200);">
+      ${emp.gestores.map((g) => `
+        <div style="padding:12px 0;border-bottom:1px solid var(--slate-100);font-size:13.5px;">
+          <strong>${escapeHtmlEA(g.nome)}</strong> · ${escapeHtmlEA(g.email)}${g.telefone ? ' · ' + escapeHtmlEA(g.telefone) : ''}${g.lojaId ? ' · ' + escapeHtmlEA(nomeLojaEq(g.lojaId)) : ''}
+        </div>`).join('')}
+    </div>`;
+  }
+  render();
+  maybeShowTourEA('gestor');
+</script>
+</body>
+</html>
