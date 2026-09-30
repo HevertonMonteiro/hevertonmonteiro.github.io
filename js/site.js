@@ -1,5 +1,5 @@
 /* ==========================================================================
-   PORTFÓLIO — Heverton Monteiro
+   PORTFÓLIO — Motriz Tecnologia
    Rede de partículas animada (hero), contadores e revelação ao rolar.
    ========================================================================== */
 

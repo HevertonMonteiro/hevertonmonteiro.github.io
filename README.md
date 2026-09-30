@@ -1,6 +1,6 @@
-# Portfólio · Heverton Monteiro
+# Portfólio · Motriz Tecnologia
 
-Site de portfólio com sistemas reais que construí, publicados aqui como demonstrações interativas, com dados fictícios, sem precisar de banco de dados nem servidor.
+Site de portfólio com sistemas reais que construímos, publicados aqui como demonstrações interativas, com dados fictícios, sem precisar de banco de dados nem servidor.
 
 ## 🔗 Acesse o portfólio online
 
